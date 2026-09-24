@@ -319,7 +319,7 @@ export function FilterBar({
               </div>
               <MenuLabel>Classification</MenuLabel>
               <div className="px-2 pb-2">
-                <Checkbox checked={!!filters.needsReview} onChange={(v) => onChange({ ...filters, needsReview: v || undefined })} label="Low confidence — needs review" />
+                <Checkbox checked={!!filters.needsReview} onChange={(v) => onChange({ ...filters, needsReview: v || undefined })} label="Job title was hard to place" />
               </div>
               <MenuLabel>Connected between</MenuLabel>
               <div className="flex items-center gap-1.5 px-2 pb-2">

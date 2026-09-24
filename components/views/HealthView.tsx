@@ -51,7 +51,7 @@ export function HealthView() {
             <div className="flex flex-wrap gap-2">
               <Pill tone="green">{people.filter((p) => p.classSource === "auto" && p.confidence >= 80).length.toLocaleString()} confident</Pill>
               <Pill tone="blue">{people.filter((p) => p.classSource === "auto" && p.confidence >= 60 && p.confidence < 80).length.toLocaleString()} likely</Pill>
-              <Pill tone="amber">{people.filter((p) => p.needsReview).length.toLocaleString()} needs review</Pill>
+              <Pill tone="amber">{people.filter((p) => p.needsReview).length.toLocaleString()} job titles unclear</Pill>
               <Pill tone="teal">{people.filter((p) => p.classSource !== "auto").length.toLocaleString()} yours</Pill>
             </div>
           </div>

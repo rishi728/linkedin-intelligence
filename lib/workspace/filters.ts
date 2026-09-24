@@ -500,8 +500,8 @@ export const HEALTH_LABELS: Record<HealthIssue, string> = {
   "missing-company": "Missing company",
   "missing-email": "Missing email",
   "missing-linkedin": "Missing LinkedIn URL",
-  unclassified: "Unclassified roles",
-  "low-confidence": "Low-confidence classifications",
+  unclassified: "No job title shared",
+  "low-confidence": "Job title hard to place",
   manual: "Manually classified",
 };
 

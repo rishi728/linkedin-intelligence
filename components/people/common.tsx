@@ -37,7 +37,17 @@ export function ConfidenceBadge({ person, showPercent = true }: { person: Person
   if (person.classSource === "manual") return <Pill tone="teal">Set by you</Pill>;
   if (person.classSource === "rule") return <Pill tone="teal">Your rule</Pill>;
   const tone: Tone = person.confidence >= 80 ? "green" : person.confidence >= 60 ? "blue" : "amber";
-  return <Pill tone={tone} title={person.reasons.join(" · ")}>{person.needsReview ? "Needs review" : "Auto"}{showPercent ? ` ${person.confidence}%` : ""}</Pill>;
+  // "Needs review" read as a judgement about the person. It is only ever about how
+  // well their job title could be read, so the label and tooltip now say so.
+  const title = person.needsReview
+    ? `Their job title was hard to place — ${person.confidence}% sure. Matched: ${person.reasons.join(" · ")}. Open them to correct it.`
+    : `${person.confidence}% sure. Matched: ${person.reasons.join(" · ")}`;
+  return (
+    <Pill tone={tone} title={title}>
+      {person.needsReview ? "Job unclear" : "Auto"}
+      {showPercent ? ` ${person.confidence}%` : ""}
+    </Pill>
+  );
 }
 
 export function RoleLine({ person, className }: { person: Person; className?: string }) {
