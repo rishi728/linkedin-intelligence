@@ -7,7 +7,7 @@ import { titleKey, type CustomRule, type Hierarchy } from "@/lib/intelligence";
 import { generateSampleCsv } from "@/lib/sample";
 import { archiveSeedPatches, autoClassifyAll, buildPeople, nextCadenceDate, statusChangePatch, type AutoCache } from "@/lib/workspace/build";
 import { todayISO } from "@/lib/workspace/dates";
-import { dbDelete, dbGet, dbSet } from "@/lib/workspace/db";
+import { dbDelete, dbGet, dbSet, requestPersistence } from "@/lib/workspace/db";
 import { defaultSettings } from "@/lib/workspace/defaults";
 import type { Activity, ArchiveData, Dataset, DatasetFile, Filters, Person, PersonRecord, Settings } from "@/lib/workspace/types";
 
@@ -171,7 +171,13 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       });
     }
   }, []);
+  const askedToPersist = useRef(false);
+
   const schedule = useCallback((patch: { records?: Records; settings?: Settings }) => {
+    if (!askedToPersist.current) {
+      askedToPersist.current = true;
+      void requestPersistence();
+    }
     Object.assign(pending.current, patch);
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(flush, 350);

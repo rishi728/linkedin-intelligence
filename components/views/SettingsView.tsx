@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Download, Plus, Trash2, Upload, X } from "lucide-react";
 import { CsvFormatError } from "@/lib/analyzer";
@@ -14,8 +14,9 @@ import type { StatusDef, Tone } from "@/lib/workspace/types";
 import { PageBody, PageHeader } from "@/components/shell/AppShell";
 import { Button, Card, CardTitle, Checkbox, Field, Input, Pill, Segmented, Select, Textarea, Toggle, cx } from "@/components/ui";
 import { ArchiveImport } from "@/components/workspace/ArchiveImport";
+import { storageStatus } from "@/lib/workspace/db";
 import { DEFAULT_WEIGHTS } from "@/lib/workspace/defaults";
-import { formatDate } from "@/lib/workspace/dates";
+import { addDays, formatDate, todayISO } from "@/lib/workspace/dates";
 import { useUI, useWorkspace } from "@/components/workspace/store";
 
 type Tab = "goals" | "targets" | "pipeline" | "outreach" | "templates" | "rules" | "data";
@@ -42,6 +43,15 @@ export function SettingsView() {
   const { toast } = useUI();
   const router = useRouter();
   const [tab, setTab] = useState<Tab>("goals");
+  const [storage, setStorage] = useState<{ persisted: boolean; usedMb: number | null }>({ persisted: false, usedMb: null });
+
+  useEffect(() => {
+    void storageStatus().then(setStorage);
+  }, []);
+
+  // Two weeks, compared as dates rather than with a clock read during render.
+  const staleBefore = addDays(todayISO(), -14);
+  const backupStale = !!settings.lastBackupAt && settings.lastBackupAt.slice(0, 10) < staleBefore;
   const [companyQuery, setCompanyQuery] = useState("");
   const [school, setSchool] = useState("");
   const csvInput = useRef<HTMLInputElement>(null);
@@ -547,6 +557,33 @@ export function SettingsView() {
 
               <Card>
                 <CardTitle hint="Everything is stored in this browser only">Backup & reset</CardTitle>
+                <div className="px-4 pt-3">
+                  <p className="text-[12.5px]">
+                    <span className={storage.persisted ? "text-[var(--t-green)]" : "text-[var(--t-amber)]"}>
+                      {storage.persisted
+                        ? "This browser has been asked to keep your data and agreed."
+                        : "This browser has not promised to keep your data."}
+                    </span>{" "}
+                    <span className="text-muted">
+                      {storage.usedMb !== null ? `Using about ${storage.usedMb} MB. ` : ""}
+                      {storage.persisted
+                        ? "It will not be cleared to free up space, but clearing site data still removes it."
+                        : "It could be cleared if the device runs low on space, or if you go a long time without opening the app."}
+                    </span>
+                  </p>
+                  <p className="mt-1.5 text-[12.5px]">
+                    {settings.lastBackupAt ? (
+                      <span className={backupStale ? "text-[var(--t-amber)]" : "text-muted"}>
+                        Last backup {formatDate(new Date(settings.lastBackupAt), true)}
+                        {backupStale ? ". Worth taking a fresh one." : "."}
+                      </span>
+                    ) : (
+                      <span className="text-[var(--t-amber)]">
+                        You have never downloaded a backup. If this browser is cleared, the work is gone.
+                      </span>
+                    )}
+                  </p>
+                </div>
                 <p className="px-4 pt-3 text-[12.5px] text-muted">
                   Your pipeline lives here: statuses, notes, follow-ups and classifications save the moment you change them
                   {savedAt ? ` (last saved ${formatDate(new Date(savedAt), true)})` : ""}. The Excel export is for sharing a list
@@ -562,6 +599,7 @@ export function SettingsView() {
                       a.download = `netlens-backup-${new Date().toISOString().slice(0, 10)}.json`;
                       a.click();
                       URL.revokeObjectURL(a.href);
+                      updateSettings((st) => ({ ...st, lastBackupAt: new Date().toISOString() }));
                       toast("Backup downloaded.");
                     }}
                   >

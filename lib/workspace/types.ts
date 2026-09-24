@@ -127,6 +127,8 @@ export interface Settings {
   templates: Template[];
   segments: Segment[];
   rules: CustomRule[];
+  /** ISO date of the last downloaded backup, so the app can nudge when it goes stale. */
+  lastBackupAt?: string;
 }
 
 export interface DatasetFile {

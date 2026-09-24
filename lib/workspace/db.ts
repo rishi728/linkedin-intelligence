@@ -69,3 +69,32 @@ export async function dbDelete(key: string): Promise<void> {
     }
   });
 }
+
+// ---------------------------------------------------------------------------
+// Keeping the data
+
+/**
+ * Without this, a browser is free to evict IndexedDB when disk runs low, and
+ * Safari clears script-writable storage for sites left untouched for a week.
+ * Asking once, after the user has actually put work in, usually gets a yes.
+ */
+export async function requestPersistence(): Promise<boolean> {
+  try {
+    if (!navigator.storage?.persist) return false;
+    if (await navigator.storage.persisted()) return true;
+    return await navigator.storage.persist();
+  } catch {
+    return false;
+  }
+}
+
+export async function storageStatus(): Promise<{ persisted: boolean; usedMb: number | null }> {
+  try {
+    const persisted = (await navigator.storage?.persisted?.()) ?? false;
+    const estimate = await navigator.storage?.estimate?.();
+    const usedMb = estimate?.usage ? Math.round((estimate.usage / 1024 / 1024) * 10) / 10 : null;
+    return { persisted, usedMb };
+  } catch {
+    return { persisted: false, usedMb: null };
+  }
+}
