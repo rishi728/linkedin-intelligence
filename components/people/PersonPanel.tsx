@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { usePathname } from "next/navigation";
 import { Building2, Calendar, CheckCircle2, Mail, MessageSquarePlus, Pencil, RotateCcw, X } from "lucide-react";
 import { domainLabel, functionLabel } from "@/lib/intelligence";
 import { DOMAINS, INDUSTRIES } from "@/lib/roles";
@@ -15,9 +16,9 @@ import { Avatar, Button, Checkbox, Field, IconButton, Input, Meter, Pill, Select
 import { ConfidenceBadge, LinkedInLink, PRIORITY_LABEL, ResearchMenu } from "./common";
 import { StatusMenu } from "./StatusMenu";
 
-function Section({ title, children, action }: { title: string; children: React.ReactNode; action?: React.ReactNode }) {
+function Section({ title, children, action, className }: { title: string; children: React.ReactNode; action?: React.ReactNode; className?: string }) {
   return (
-    <section className="border-t border-line px-5 py-4">
+    <section className={cx("border-t border-line px-5 py-4", className)}>
       <div className="mb-2.5 flex items-center justify-between gap-2">
         <h3 className="text-[11px] font-semibold uppercase tracking-wide text-muted">{title}</h3>
         {action}
@@ -128,6 +129,7 @@ export function PersonPanel() {
   const { personId, openPerson, openComposer, toast, setPeopleFilters } = useUI();
   const [editing, setEditing] = useState(false);
   const [openFor, setOpenFor] = useState<string | null>(null);
+  const pathname = usePathname();
   const person = personId ? byId.get(personId) : null;
 
   // Close the inline classification editor when a different person is opened.
@@ -140,6 +142,10 @@ export function PersonPanel() {
   const today = todayISO();
   const colleagues = person.companyKey ? people.filter((p) => p.companyKey === person.companyKey && p.id !== person.id).length : 0;
   const patch = (p: Parameters<typeof updateRecord>[1], activity?: Parameters<typeof updateRecord>[2]) => updateRecord(person.id, p, activity);
+
+  // Same person, different question depending on where you opened them from: mid
+  // conversation the history matters most, while researching you want the match.
+  const relationshipFirst = pathname === "/outreach" || pathname === "/follow-ups" || pathname === "/session";
 
   return (
     <Sheet open onClose={() => openPerson(null)} width={580}>
@@ -177,7 +183,7 @@ export function PersonPanel() {
         </Button>
       </div>
 
-      <div className="scroll-thin min-h-0 flex-1 overflow-auto">
+      <div className="scroll-thin flex min-h-0 flex-1 flex-col overflow-auto">
         <Section title="Why this person">
           <div className="mb-2 flex flex-wrap items-center gap-1.5">
             <Pill tone={person.priority === "high" ? "orange" : person.priority === "medium" ? "blue" : "gray"}>
@@ -207,7 +213,7 @@ export function PersonPanel() {
         </Section>
 
         {person.history || person.pastCompanies.length ? (
-          <Section title="Relationship">
+          <Section title="Relationship" className={relationshipFirst ? "order-first border-t-0" : undefined}>
             <div className="space-y-1">
               {person.history?.messageCount ? (
                 <>

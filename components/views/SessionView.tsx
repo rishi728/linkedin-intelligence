@@ -9,7 +9,6 @@ import { LINKEDIN_NOTE_LIMIT, renderTemplate, templateVars } from "@/lib/workspa
 import type { Person } from "@/lib/workspace/types";
 import { PageBody, PageHeader } from "@/components/shell/AppShell";
 import { Avatar, Button, Card, EmptyState, Field, Pill, Select, Textarea, cx } from "@/components/ui";
-import { Spark } from "@/components/shell/Spark";
 import { useUI, useWorkspace } from "@/components/workspace/store";
 
 /**
@@ -186,8 +185,6 @@ export function SessionView() {
       />
       <PageBody className="px-6 py-8">
         <div className="mx-auto w-full max-w-2xl">
-          {/* A principle before the person: a moment to think, not a banner. */}
-          <Spark categories={["conversation", "outreach", "coldOutreach", "confidence"]} seed={`session-${pos}`} compact className="mb-6 text-center" />
 
           {/* ---- carousel ------------------------------------------------- */}
           <div className="flex items-center gap-3">

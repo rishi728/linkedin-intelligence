@@ -2,14 +2,14 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Bell, CalendarClock, CalendarPlus, CheckCircle2, ExternalLink, StickyNote } from "lucide-react";
+import { Bell, CalendarClock, CalendarPlus, CheckCircle2, ExternalLink, MessageSquarePlus, MoreHorizontal, StickyNote } from "lucide-react";
 import { addDays, formatDate, relativeDue, todayISO } from "@/lib/workspace/dates";
 import { followUpBuckets } from "@/lib/workspace/insights";
 import { downloadFollowUpCalendar } from "@/lib/workspace/calendar";
 import type { DueBucket } from "@/lib/workspace/dates";
 import type { Person } from "@/lib/workspace/types";
 import { PageBody, PageHeader } from "@/components/shell/AppShell";
-import { Avatar, Button, Card, EmptyState, Input, Menu, MenuItem, MenuLabel, Pill, cx } from "@/components/ui";
+import { Avatar, Button, EmptyState, Input, Menu, MenuItem, MenuLabel, cx } from "@/components/ui";
 import { StatusMenu } from "@/components/people/StatusMenu";
 import { useUI, useWorkspace } from "@/components/workspace/store";
 
@@ -79,84 +79,106 @@ export function FollowUpsView() {
             action={<Button variant="primary" onClick={() => router.push("/people")}>Go to people</Button>}
           />
         ) : (
-          <div className="space-y-4">
+          <div className="mx-auto w-full max-w-3xl">
             {SECTIONS.map(({ key, label, tone }) => {
               const list = buckets[key];
               if (!list.length) return null;
               return (
-                <Card key={key}>
-                  <div className="flex items-center gap-2 px-4 pt-3.5">
-                    <span className={cx("size-2 rounded-full", `dot-${tone}`)} />
-                    <h3 className="text-[13.5px] font-semibold tracking-tight">{label}</h3>
-                    <span className="tabular text-[12px] text-muted">{list.length}</span>
+                <section key={key} className="mb-8 last:mb-0">
+                  {/* A plain temporal heading, not another boxed card. */}
+                  <div className="mb-2 flex items-center gap-2 border-b border-line pb-1.5">
+                    <span className={cx("size-1.5 rounded-full", `dot-${tone}`)} />
+                    <h3 className="text-[10.5px] font-medium uppercase tracking-[0.12em] text-muted">{label}</h3>
+                    <span className="tabular text-[11.5px] text-faint">{list.length}</span>
                   </div>
-                  <div className="p-2">
-                    {list.map((p) => (
-                      <div key={p.id} className="rounded-lg px-2 py-2 transition hover:bg-hover">
-                        <div className="flex flex-wrap items-center gap-3">
-                          <button type="button" onClick={() => openPerson(p.id)} className="flex min-w-0 flex-1 items-center gap-2.5 text-left">
-                            <Avatar name={p.name} size={30} />
-                            <span className="min-w-0">
-                              <span className="block truncate text-[13px] font-medium">{p.name}</span>
-                              <span className="block truncate text-[12px] text-muted">
-                                {p.role}{p.company ? ` · ${p.company}` : ""}
-                                {p.lastContactedAt ? ` · last contacted ${formatDate(p.lastContactedAt)}` : ""}
-                              </span>
+
+                  {list.map((p) => (
+                    <div key={p.id} className="group border-b border-line/50 py-2.5 last:border-0">
+                      <div className="flex items-center gap-3">
+                        <button type="button" onClick={() => openPerson(p.id)} className="flex min-w-0 flex-1 items-center gap-2.5 text-left">
+                          <Avatar name={p.name} size={30} />
+                          <span className="min-w-0">
+                            <span className="block truncate text-[13.5px] font-semibold tracking-tight group-hover:text-accent">{p.name}</span>
+                            <span className="block truncate text-[12px] text-muted">
+                              {p.role}{p.company ? ` · ${p.company}` : ""}
+                              {p.lastContactedAt ? <span className="text-faint"> · last spoke {formatDate(p.lastContactedAt)}</span> : null}
                             </span>
-                          </button>
-                          <Pill tone={key === "overdue" ? "orange" : key === "today" ? "teal" : "gray"}>{relativeDue(p.followUpAt, today)}</Pill>
-                          <StatusMenu person={p} size="sm" />
-                          <div className="flex items-center gap-1.5">
-                            <Button size="sm" icon={CheckCircle2} onClick={() => complete(p)}>Done</Button>
-                            <Menu
-                              width={180}
-                              align="right"
-                              trigger={({ toggle }) => <Button size="sm" onClick={toggle}>Snooze</Button>}
+                          </span>
+                        </button>
+
+                        <span className={cx("shrink-0 text-[12px]", key === "overdue" ? "font-medium text-[var(--t-orange)]" : "text-muted")}>
+                          {relativeDue(p.followUpAt, today)}
+                        </span>
+
+                        {/* One primary action. Everything else is one click away. */}
+                        <Button size="sm" variant="primary" icon={CheckCircle2} onClick={() => complete(p)}>Done</Button>
+                        <Menu
+                          width={210}
+                          align="right"
+                          trigger={({ toggle }) => (
+                            <button
+                              type="button"
+                              aria-label={`More actions for ${p.name}`}
+                              onClick={toggle}
+                              className="grid size-7 shrink-0 place-items-center rounded-lg text-muted transition hover:bg-hover hover:text-ink"
                             >
-                              {(close) => (
-                                <>
-                                  <MenuLabel>Remind me in</MenuLabel>
-                                  {[1, 3, 7, 14, 30].map((d) => (
-                                    <MenuItem key={d} onClick={() => { snooze(p, d); close(); }}>{d} day{d > 1 ? "s" : ""}</MenuItem>
-                                  ))}
-                                </>
-                              )}
-                            </Menu>
-                            <Input
-                              type="date"
-                              value={p.followUpAt}
-                              onChange={(e) => updateRecord(p.id, { followUpAt: e.target.value }, { kind: "followup", text: `Rescheduled to ${e.target.value}` })}
-                              className="h-7 w-[132px] text-[12px]"
-                            />
-                            <Button size="sm" icon={StickyNote} onClick={() => { setNoteFor(noteFor === p.id ? null : p.id); setNoteText(p.notes); }}>Note</Button>
-                            <Button size="sm" onClick={() => openComposer(p.id)}>Message</Button>
-                            {p.url ? (
-                              <Button size="sm" variant="ghost" icon={ExternalLink} onClick={() => window.open(p.url, "_blank", "noopener,noreferrer")}>
-                                LinkedIn
-                              </Button>
-                            ) : null}
-                          </div>
-                        </div>
-                        {noteFor === p.id ? (
-                          <div className="mt-2 flex items-center gap-2 pl-[42px]">
-                            <Input value={noteText} onChange={(e) => setNoteText(e.target.value)} placeholder="Add a note…" autoFocus />
-                            <Button
-                              size="sm"
-                              variant="primary"
-                              onClick={() => {
-                                updateRecord(p.id, { notes: noteText }, { kind: "note", text: "Note updated" });
-                                setNoteFor(null);
-                                toast("Note saved.");
-                              }}
-                            >
-                              Save
-                            </Button>
-                          </div>
-                        ) : null}
+                              <MoreHorizontal size={15} />
+                            </button>
+                          )}
+                        >
+                          {(close) => (
+                            <>
+                              <MenuLabel>Remind me in</MenuLabel>
+                              {[1, 3, 7, 14, 30].map((d) => (
+                                <MenuItem key={d} onClick={() => { snooze(p, d); close(); }}>{d} day{d > 1 ? "s" : ""}</MenuItem>
+                              ))}
+                              <MenuLabel>Or pick a date</MenuLabel>
+                              <div className="px-2 pb-2">
+                                <Input
+                                  type="date"
+                                  value={p.followUpAt}
+                                  onChange={(e) => {
+                                    updateRecord(p.id, { followUpAt: e.target.value }, { kind: "followup", text: `Rescheduled to ${e.target.value}` });
+                                    close();
+                                  }}
+                                  className="h-7 text-[12px]"
+                                />
+                              </div>
+                              <MenuLabel>Also</MenuLabel>
+                              <MenuItem icon={StickyNote} onClick={() => { setNoteFor(p.id); setNoteText(p.notes); close(); }}>Add a note</MenuItem>
+                              <MenuItem icon={MessageSquarePlus} onClick={() => { openComposer(p.id); close(); }}>Write a message</MenuItem>
+                              {p.url ? (
+                                <MenuItem icon={ExternalLink} onClick={() => { window.open(p.url, "_blank", "noopener,noreferrer"); close(); }}>
+                                  Open LinkedIn
+                                </MenuItem>
+                              ) : null}
+                              <MenuLabel>Status</MenuLabel>
+                              <div className="px-2 pb-1.5"><StatusMenu person={p} size="sm" /></div>
+                            </>
+                          )}
+                        </Menu>
                       </div>
-                    ))}
-                  </div>
-                </Card>
+
+                      {noteFor === p.id ? (
+                        <div className="anim-rise mt-2 flex items-center gap-2 pl-[42px]">
+                          <Input value={noteText} onChange={(e) => setNoteText(e.target.value)} placeholder="Add a note…" autoFocus />
+                          <Button
+                            size="sm"
+                            variant="primary"
+                            onClick={() => {
+                              updateRecord(p.id, { notes: noteText }, { kind: "note", text: "Note updated" });
+                              setNoteFor(null);
+                              toast("Note saved.");
+                            }}
+                          >
+                            Save
+                          </Button>
+                          <Button size="sm" variant="ghost" onClick={() => setNoteFor(null)}>Cancel</Button>
+                        </div>
+                      ) : null}
+                    </div>
+                  ))}
+                </section>
               );
             })}
           </div>

@@ -40,7 +40,7 @@ function sortPeople(people: Person[], key: SortKey): Person[] {
 
 export function PeopleView() {
   const { people, settings, setStatus, updateRecord, saveSegment } = useWorkspace();
-  const { peopleFilters, setPeopleFilters, openPerson, openExport, toast, openWizard } = useUI();
+  const { peopleFilters, setPeopleFilters, openPerson, personId, openExport, toast, openWizard } = useUI();
   const [mode, setMode] = useState<ViewMode>("table");
   const [sort, setSort] = useState<SortKey>("relevance");
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -120,6 +120,7 @@ export function PeopleView() {
         selected={selected}
         onSelect={toggle}
         onOpen={openPerson}
+        openId={personId}
         emptyBody={wider ? `Nothing matches this combination. Dropping “${wider.removed}” usually brings results back.` : undefined}
         emptyAction={
           wider ? (

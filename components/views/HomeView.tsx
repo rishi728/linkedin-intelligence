@@ -10,7 +10,6 @@ import { hasGoals } from "@/lib/workspace/priority";
 import { relativeDue, todayISO } from "@/lib/workspace/dates";
 import type { Filters, Person } from "@/lib/workspace/types";
 import { PageBody } from "@/components/shell/AppShell";
-import { Spark } from "@/components/shell/Spark";
 import { Avatar, Button, EmptyState, cx } from "@/components/ui";
 import { StatusMenu } from "@/components/people/StatusMenu";
 import { ArchiveImport } from "@/components/workspace/ArchiveImport";
@@ -134,7 +133,6 @@ export function HomeView() {
           </div>
         </header>
 
-        <Spark categories={["networking", "outreach", "relationships"]} seed="home" title="Daily spark" className="mt-9" />
 
         {/* ---- the shape of the network ------------------------------------ */}
         <section className="mt-10">

@@ -30,7 +30,7 @@ function FollowUpCell({ person }: { person: Person }) {
 }
 
 export function PeopleList({
-  people, mode, selected, onSelect, onOpen, emptyAction, emptyBody,
+  people, mode, selected, onSelect, onOpen, emptyAction, emptyBody, openId,
 }: {
   people: Person[];
   mode: ViewMode;
@@ -39,6 +39,8 @@ export function PeopleList({
   onOpen: (id: string) => void;
   emptyAction?: React.ReactNode;
   emptyBody?: string;
+  /** The person whose panel is open, highlighted in the list behind it. */
+  openId?: string | null;
 }) {
   const parentRef = useRef<HTMLDivElement>(null);
   const [lanes, setLanes] = useState(2);
@@ -82,6 +84,7 @@ export function PeopleList({
           {virtualizer.getVirtualItems().map((item) => {
             const person = people[item.index];
             const isSelected = selected.has(person.id);
+            const isOpen = person.id === openId;
             const style: React.CSSProperties = mode === "cards"
               ? { position: "absolute", top: 0, left: `${(item.lane * 100) / lanes}%`, width: `${100 / lanes}%`, height: item.size, transform: `translateY(${item.start}px)`, padding: 6 }
               : { position: "absolute", top: 0, left: 0, width: "100%", height: item.size, transform: `translateY(${item.start}px)` };
@@ -145,16 +148,17 @@ export function PeopleList({
                 key={person.id}
                 style={style}
                 className={cx(
-                  "grid grid-cols-[30px_minmax(190px,2fr)_minmax(130px,1.1fr)_minmax(140px,1.2fr)_150px_34px] items-center gap-3 border-b border-line/60 px-4 transition hover:bg-hover",
-                  isSelected && "bg-accent-soft/40",
+                  "group relative grid grid-cols-[30px_minmax(190px,2fr)_minmax(130px,1.1fr)_minmax(140px,1.2fr)_150px_34px] items-center gap-3 border-b border-line/50 px-4 transition",
+                  isOpen ? "bg-accent-soft/50" : isSelected ? "bg-accent-soft/30" : "hover:bg-hover",
                 )}
               >
+                {isOpen ? <span aria-hidden className="absolute left-0 top-0 h-full w-[2.5px] bg-accent" /> : null}
                 <Checkbox checked={isSelected} onChange={(v) => onSelect(person.id, v, false)} />
                 <button type="button" onClick={() => onOpen(person.id)} className="flex min-w-0 items-center gap-2.5 text-left">
                   <Avatar name={person.name} size={26} />
                   <span className="min-w-0">
                     <span className="flex items-center gap-1.5">
-                      <span className="truncate text-[13px] font-medium">{person.name}</span>
+                      <span className="truncate text-[13.5px] font-semibold tracking-tight group-hover:text-accent">{person.name}</span>
                       {person.needsReview ? <ConfidenceBadge person={person} showPercent={false} /> : null}
                     </span>
                     <span className="block truncate text-[12px] text-muted">{person.position || "No title shared"}</span>
@@ -162,9 +166,9 @@ export function PeopleList({
                 </button>
                 <span className="truncate text-[12.5px] text-ink-2" title={person.company}>
                   {person.company || "—"}
-                  {person.isTarget ? <span className="ml-1 text-[11px] text-accent">★</span> : null}
+                  {person.isTarget ? <span className="ml-1 text-[11px] text-accent" title="Target company">★</span> : null}
                 </span>
-                <span className="min-w-0 truncate text-[12.5px] text-ink-2" title={`${domainLabel(person.domain)} · ${functionLabel(person.fn)}`}>
+                <span className="min-w-0 truncate text-[12px] text-muted" title={`${domainLabel(person.domain)} · ${functionLabel(person.fn)}`}>
                   {person.fn === "unspecified" ? <span className="text-muted">Area not stated</span> : person.domain === "unclassified" ? <span className="text-muted">Role not shared</span> : (
                     <>
                       {domainLabel(person.domain)}
@@ -174,7 +178,14 @@ export function PeopleList({
                 </span>
                 <span className="min-w-0"><StatusMenu person={person} /></span>
                 {person.url ? (
-                  <a href={person.url} target="_blank" rel="noopener noreferrer" className="text-muted hover:text-accent" aria-label={`Open ${person.name} on LinkedIn`}>
+                  <a
+                    href={person.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="Open on LinkedIn"
+                    className="text-faint opacity-0 transition hover:text-accent focus-visible:opacity-100 group-hover:opacity-100"
+                    aria-label={`Open ${person.name} on LinkedIn`}
+                  >
                     <ExternalLink size={13} />
                   </a>
                 ) : <span />}
