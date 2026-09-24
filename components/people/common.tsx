@@ -33,6 +33,7 @@ export function PriorityBadge({ person }: { person: Person }) {
 }
 
 export function ConfidenceBadge({ person, showPercent = true }: { person: Person; showPercent?: boolean }) {
+  if (person.fn === "unspecified") return <Pill tone="amber" title="The title gives a level but never says what they work on. Open them to set it.">Area not stated</Pill>;
   if (person.domain === "unclassified") return <Pill tone="gray">No role data</Pill>;
   if (person.classSource === "manual") return <Pill tone="teal">Set by you</Pill>;
   if (person.classSource === "rule") return <Pill tone="teal">Your rule</Pill>;
@@ -53,7 +54,7 @@ export function ConfidenceBadge({ person, showPercent = true }: { person: Person
 export function RoleLine({ person, className }: { person: Person; className?: string }) {
   return (
     <span className={cx("truncate text-[12px] text-muted", className)}>
-      {person.domain === "unclassified" ? "Role not shared" : `${domainLabel(person.domain)} · ${functionLabel(person.fn)}`}
+      {person.fn === "unspecified" ? "Area not stated" : person.domain === "unclassified" ? "Role not shared" : `${domainLabel(person.domain)} · ${functionLabel(person.fn)}`}
     </span>
   );
 }

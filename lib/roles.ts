@@ -660,9 +660,12 @@ export const DOMAINS: DomainSpec[] = [
     ],
   },
   {
-    id: "unclassified", label: "Unclassified",
+    id: "unclassified", label: "Area not stated",
     functions: [
       { id: "unclassified", label: "Role not shared", generalist: "Role not shared", roles: [] },
+      // A title that is only a rung on the ladder: "Assistant Manager", "Senior
+      // Associate". We know how senior they are and nothing about what they do.
+      { id: "unspecified", label: "Area not stated", generalist: "Not specified", roles: [] },
     ],
   },
 ];

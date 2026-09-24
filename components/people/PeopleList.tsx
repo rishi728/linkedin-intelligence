@@ -165,7 +165,7 @@ export function PeopleList({
                   {person.isTarget ? <span className="ml-1 text-[11px] text-accent">★</span> : null}
                 </span>
                 <span className="min-w-0 truncate text-[12.5px] text-ink-2" title={`${domainLabel(person.domain)} · ${functionLabel(person.fn)}`}>
-                  {person.domain === "unclassified" ? <span className="text-muted">Role not shared</span> : (
+                  {person.fn === "unspecified" ? <span className="text-muted">Area not stated</span> : person.domain === "unclassified" ? <span className="text-muted">Role not shared</span> : (
                     <>
                       {domainLabel(person.domain)}
                       <span className="text-muted"> · {functionLabel(person.fn)}</span>

@@ -40,7 +40,8 @@ const CASES: Case[] = [
   ["Joint Secretary", "Ministry of Finance, Government of India", "public", "government", "Civil Servant"],
   ["President", "180 Degrees Consulting BITS Goa", "students", "campus", "Club Secretary", "Student"],
   ["Geoscientist", "ExxonMobil", "research", "sciences", "Geoscientist"],
-  ["Assistant Manager", "HDFC Bank", "finance", "corporate-finance", "Assistant Manager"],
+  // A level with no function: the employer gives the industry, never the job.
+  ["Assistant Manager", "HDFC Bank", "unclassified", "unspecified", "Assistant Manager", "Manager / Lead"],
   ["PM", "Swiggy", "product", "product-management", "Product Manager", "Mid-level"],
   ["Lead Product Manager", "Swiggy", "product", "product-management", "Lead Product Manager", "Manager / Lead"],
   ["Key Account Manager", "Nestle", "sales", "sales", "Key Account Manager", "Mid-level"],
@@ -65,6 +66,50 @@ describe("classifyAuto: confidence and industry", () => {
   it("infers industry from the employer only", () => {
     expect(classifyAuto("Recruiter", "Google").industry).toBe("Technology");
     expect(classifyAuto("Recruiter", "Acme Widgets").industry).toBe("Unknown");
+  });
+});
+
+describe("a title that is only a level says nothing about the work", () => {
+  it.each([
+    ["Assistant Manager", "Reliance", "Manager / Lead"],
+    ["Senior Manager", "Tata Motors", "Manager / Lead"],
+    ["Manager", "Nestle", "Manager / Lead"],
+    ["Director", "Siemens", "Director / Head"],
+    ["Vice President", "HDFC Bank", "VP"],
+    ["AVP", "ICICI", "VP"],
+    ["Executive", "Godrej", "Mid-level"],
+    ["Team Lead", "Infosys", "Manager / Lead"],
+    ["Manager II", "Amazon", "Manager / Lead"],
+  ])("%s @ %s keeps the level, invents no area", (position, company, seniority) => {
+    const c = classifyAuto(position, company);
+    expect(c).toMatchObject({ domain: "unclassified", fn: "unspecified", seniority });
+    expect(c.role).toBe(position);
+    expect(c.needsReview).toBe(true);
+  });
+
+  it("keeps the area when the employer only does one thing", () => {
+    // A consultancy's "Senior Associate" really is a consultant; a bank's is not.
+    expect(classifyAuto("Senior Associate", "PwC")).toMatchObject({ domain: "strategy", fn: "management-consulting", seniority: "Senior" });
+    expect(classifyAuto("Associate", "McKinsey & Company").domain).toBe("strategy");
+    expect(classifyAuto("Senior Associate", "HDFC Bank").fn).toBe("unspecified");
+    expect(classifyAuto("Senior Associate", "PwC").confidence).toBeLessThan(60);
+  });
+
+  it("still takes the industry from the employer", () => {
+    expect(classifyAuto("Assistant Manager", "HDFC Bank").industry).toBe("Financial Services");
+  });
+
+  it("a level plus an area keeps the area", () => {
+    expect(classifyAuto("Vice President Of Engineering", "Acme")).toMatchObject({ domain: "engineering", seniority: "VP" });
+    expect(classifyAuto("Director of Engineering", "Acme")).toMatchObject({ domain: "engineering", seniority: "Director / Head" });
+    expect(classifyAuto("AVP - Data Science", "ICICI")).toMatchObject({ domain: "data-ai", seniority: "VP" });
+    expect(classifyAuto("Senior Director, Product", "Adobe")).toMatchObject({ domain: "product", seniority: "Director / Head" });
+  });
+
+  it("leaves real job titles alone", () => {
+    expect(classifyAuto("Senior Product Manager", "Razorpay")).toMatchObject({ domain: "product", role: "Senior Product Manager" });
+    expect(classifyAuto("Supply Chain Analyst", "ExxonMobil")).toMatchObject({ domain: "operations", fn: "supply-chain" });
+    expect(classifyAuto("Software Engineer", "Google")).toMatchObject({ domain: "engineering", role: "Software Engineer" });
   });
 });
 

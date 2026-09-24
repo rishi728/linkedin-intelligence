@@ -162,6 +162,64 @@ const FOUNDER_TITLE = /\b(co[-\s]?founder|founder|founding\s+(member|partner|tea
 /** …except when the same words describe a job *near* a founder, or an ambition. */
 const FOUNDER_BLOCK = /\bfounder'?s?\s+office\b|\bfounding\s+engineer\b|\b(aspiring|future|wannabe|budding|incoming|ex|former|former ly)\b/i;
 
+/**
+ * Words that describe a *level*, not a job. ESCO's rule: modifiers about seniority
+ * play no part in deciding the occupation. A title made only of these — "Assistant
+ * Manager", "Senior Associate", "Team Lead" — says how senior someone is and
+ * nothing whatsoever about what they do, so we must not invent an area for them.
+ */
+const LEVEL_ONLY = new Set(
+  tokenize(
+    "assistant associate senior sr junior jr deputy trainee lead leader head chief vice president vp avp svp evp " +
+      "director manager executive officer staff principal member team global regional national country group " +
+      "corporate general grade level band designate designated acting interim",
+  ),
+);
+const LEVEL_FILLER = /^(of|the|and|for|at|in|to|a|an|ii|iii|iv|i{1,3}|\d+)$/i;
+
+/** The words in a title that actually say what the person does. */
+function contentWords(title: string): string[] {
+  return tokenize(title).filter((t) => !LEVEL_ONLY.has(t) && !LEVEL_FILLER.test(t));
+}
+
+/**
+ * "VP of Engineering" names an area rather than a job title, so area names have to
+ * be matchable too — otherwise the level word is the only thing left to go on.
+ */
+let areaIndex: PhraseIndex<{ domain: string; fn: string }> | null = null;
+function getAreaIndex() {
+  if (areaIndex) return areaIndex;
+  areaIndex = new Map();
+  const add = (name: string, value: { domain: string; fn: string }) => {
+    const tokens = tokenize(name.replace(/&/g, " ").split(/[(,]/)[0]);
+    if (tokens.length) addEntry(areaIndex!, tokens, () => value, () => {});
+  };
+  for (const d of DOMAINS) {
+    if (d.id === "unclassified") continue;
+    for (const f of d.functions) {
+      add(f.label, { domain: d.id, fn: f.id });
+      // "Engineering", "Marketing", "Finance" on their own point at the domain.
+      add(d.label, { domain: d.id, fn: d.functions[0].id });
+    }
+  }
+  return areaIndex;
+}
+
+/**
+ * Employers whose whole business *is* one function, so a level-only title there
+ * still says what the person does: "Senior Associate" at a consultancy is a
+ * consultant. A bank or a conglomerate says nothing of the sort, which is why this
+ * list is deliberately tiny.
+ */
+const EMPLOYER_IMPLIES_FUNCTION = new Set<CategoryId>(["consulting", "recruiting", "legal"]);
+
+/** Roles that are really just a rung on the ladder; a named function should beat them. */
+const LEVEL_ROLES = new Set([
+  "Vice President", "Senior Vice President", "Executive Vice President", "Assistant Vice President",
+  "Director", "Senior Director", "Associate Director", "Managing Director", "Manager", "Senior Manager",
+  "General Manager", "Executive", "Head", "Team Lead", "Lead", "Associate", "Senior Associate", "Analyst",
+]);
+
 const IC_MANAGER_ROLES = new Set([
   "Product Manager", "Senior Product Manager", "AI Product Manager", "Technical Product Manager", "Growth Product Manager",
   "Associate Product Manager", "Account Manager", "Key Account Manager", "Brand Manager", "Relationship Manager",
@@ -230,6 +288,25 @@ export function classifyAuto(rawPosition: string, rawCompany: string): PersonCla
     }
   }
 
+  // "Vice President Of Engineering" matches the rung before the job. When a level
+  // role wins but the title still names something, let that something decide.
+  const said = contentWords(current.length ? current.map((s) => s.title).join(" ") : position);
+  let areaOnly: { domain: string; fn: string; phrase: string } | null = null;
+  let employerArea = false;
+  if (said.length && (!best || LEVEL_ROLES.has(best.c.role))) {
+    for (const entry of matchPhrases(said, idx)) {
+      for (const c of entry.value) {
+        if (c.weak && c.domain !== categoryDomain) continue;
+        best = { c, score: 100, phrase: entry.phrase };
+      }
+    }
+    if (!best) {
+      for (const entry of matchPhrases(said, getAreaIndex())) {
+        areaOnly = { ...entry.value, phrase: entry.phrase };
+      }
+    }
+  }
+
   let domain: string;
   let fn: string;
   let role: string;
@@ -239,6 +316,27 @@ export function classifyAuto(rawPosition: string, rawCompany: string): PersonCla
     domain = "unclassified";
     fn = "unclassified";
     role = "Role not shared";
+  } else if (areaOnly) {
+    // The title named an area but no specific job: "Vice President of Engineering".
+    ({ domain, fn } = areaOnly);
+    role = FUNCTIONS.get(fn)!.generalist;
+    roleSpecific = true;
+    reasons.unshift(`area: “${areaOnly.phrase}”`);
+  } else if (!said.length && (!best || LEVEL_ROLES.has(best.c.role))) {
+    best = null;
+    const stated = tidyTitle(current[0]?.title ?? position);
+    if (base.companyCategory && EMPLOYER_IMPLIES_FUNCTION.has(base.companyCategory)) {
+      // The employer does one thing, so the level still tells us the job.
+      [domain, fn] = CATEGORY_DEFAULTS[base.companyCategory];
+      role = stated || FUNCTIONS.get(fn)!.generalist;
+      employerArea = true;
+      reasons.unshift("area: from the employer, not the title");
+    } else {
+      // Nothing but a level. Say the level, admit we do not know the area.
+      domain = "unclassified";
+      fn = "unspecified";
+      role = stated || "Not specified";
+    }
   } else if (best) {
     ({ domain, fn, role } = best.c);
     roleSpecific = true;
@@ -283,12 +381,17 @@ export function classifyAuto(rawPosition: string, rawCompany: string): PersonCla
 
   // --- Confidence --------------------------------------------------------------
   let confidence: number;
-  if (domain === "unclassified") confidence = 0;
+  // A level-only title is not a failure to read the title: we read it correctly and
+  // it simply does not say what they do. Low score, but flagged so it can be fixed.
+  if (fn === "unspecified") confidence = 30;
+  else if (employerArea) confidence = 45;
+  else if (domain === "unclassified") confidence = 0;
   else {
     const baseline = base.basis === "title"
       ? { high: 88, medium: 74, low: 56 }[base.confidence]
       : base.basis === "fuzzy" ? 45 : base.basis === "company" ? 40 : 50;
-    if (roleSpecific && best!.c.domain === categoryDomain) confidence = baseline + 8;
+    const matchedDomain = best?.c.domain ?? areaOnly?.domain;
+    if (roleSpecific && matchedDomain === categoryDomain) confidence = baseline + 8;
     else if (roleSpecific) confidence = Math.max(baseline, 70);
     else confidence = baseline - 6;
     if (campusOrg && domain === "students") confidence = Math.max(confidence, 80);
@@ -300,7 +403,7 @@ export function classifyAuto(rawPosition: string, rawCompany: string): PersonCla
     confidence,
     pastCompanies: extractPastCompanies(position),
     source: "auto",
-    needsReview: domain !== "unclassified" && confidence < 60,
+    needsReview: fn === "unspecified" || (domain !== "unclassified" && confidence < 60),
     reasons: reasons.slice(0, 5),
     category: base.category,
     tags: base.tags,

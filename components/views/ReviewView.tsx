@@ -148,7 +148,7 @@ export function ReviewView() {
                 </div>
                 <div className="text-right">
                   <Pill tone={person.domain === "unclassified" ? "gray" : person.confidence >= 60 ? "blue" : "amber"}>
-                    {person.domain === "unclassified" ? "No role data" : `${person.confidence}% sure`}
+                    {person.fn === "unspecified" ? "Area not stated" : person.domain === "unclassified" ? "No role data" : `${person.confidence}% sure`}
                   </Pill>
                   {person.priorityScore > 0 ? <p className="mt-1 text-[11px] text-muted">Priority {person.priority}</p> : null}
                 </div>
