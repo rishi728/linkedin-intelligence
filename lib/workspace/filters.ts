@@ -152,6 +152,7 @@ export function applyFilters(people: Person[], f: Filters, settings: Settings, t
     if (has(f.tags) && !f.tags.some((t) => p.tags.includes(t))) return false;
     if (audiences.length && !audiences.some((a) => a.test(p))) return false;
     if (f.targetOnly && !p.isTarget) return false;
+    if (f.inPipeline && p.status === "not_contacted") return false;
     if (f.needsReview && !p.needsReview) return false;
     if (f.health && !matchesHealth(p, f.health)) return false;
     if (f.history) {
@@ -449,6 +450,7 @@ export function describeFilters(f: Filters, settings: Settings): Array<{ key: ke
   list("tags", f.tags, (v) => v, "tags");
   list("audiences", f.audiences, (v) => AUDIENCES.find((a) => a.id === v)?.label ?? v, "audiences");
   if (f.targetOnly) out.push({ key: "targetOnly", label: "Target companies" });
+  if (f.inPipeline) out.push({ key: "inPipeline", label: "In your pipeline" });
   if (f.needsReview) out.push({ key: "needsReview", label: "Needs review" });
   if (f.hasEmail !== undefined) out.push({ key: "hasEmail", label: f.hasEmail ? "Has email" : "No email" });
   if (f.hasLinkedIn !== undefined) out.push({ key: "hasLinkedIn", label: f.hasLinkedIn ? "Has LinkedIn" : "No LinkedIn" });
@@ -471,7 +473,7 @@ export function broaden(f: Filters, settings: Settings): { filters: Filters; rem
   const order: Array<keyof Filters> = [
     "roles", "seniorities", "audiences", "statuses", "history", "followUp", "hasEmail", "hasLinkedIn",
     "tags", "needsReview", "dormant", "connectedWithinDays", "connectedAfter", "connectedBefore",
-    "targetOnly", "industries", "companies", "pastCompanies", "functions", "domains", "q",
+    "targetOnly", "inPipeline", "industries", "companies", "pastCompanies", "functions", "domains", "q",
   ];
   const described = describeFilters(f, settings);
   for (const key of order) {

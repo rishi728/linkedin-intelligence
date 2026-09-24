@@ -175,6 +175,8 @@ export interface Filters {
   tags?: string[];
   audiences?: AudienceId[];
   targetOnly?: boolean;
+  /** Anyone you have moved out of "not contacted", whatever stage they are at. */
+  inPipeline?: boolean;
   needsReview?: boolean;
   health?: HealthIssue;
   followUp?: "overdue" | "scheduled" | "none";
