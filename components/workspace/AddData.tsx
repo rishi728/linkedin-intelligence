@@ -194,7 +194,7 @@ export function AddData({ open, onClose }: { open: boolean; onClose: () => void 
             : "Pick messages.csv, Invitations.csv, Education.csv, Positions.csv and Profile.csv from your export folder to see who you have already spoken to."}
         </p>
         <p className="mt-1.5 text-[11.5px] text-muted">
-          Dates and counts only, message text is read to work out who wrote first, then discarded.
+          Your conversations are kept so you can read them on a person’s profile. They stay in this browser and are never uploaded.
         </p>
         <Button
           icon={FolderUp}

@@ -66,6 +66,7 @@ export function SessionView() {
     setStatus([live.id], "contacted");
     updateRecord(live.id, (rec) => ({
       draft: message,
+      messages: [...(rec.messages ?? []), { at: new Date().toISOString(), text: message, channel: rec.channel || "LinkedIn", sent: true }],
       channel: rec.channel || "LinkedIn",
       sequenceStep: 1,
       followUpAt: settings.cadence.enabled ? addDays(today, settings.cadence.steps[0] ?? 5) : rec.followUpAt,

@@ -84,7 +84,8 @@ files** takes them too:
 | `Education.csv` | Fills in your schools, so alumni are detected automatically |
 | `Positions.csv`, `Profile.csv` | Fills in your name and background for message templates |
 
-Only dates, directions and counts are stored. Message text is read to work out who sent what, then discarded.
+Dates, directions, counts and the conversations themselves are stored, so you can read a thread back on
+someone's profile. The last 40 messages per person are kept. All of it stays in this browser.
 Nothing is uploaded, and your own status edits are never overwritten by an import.
 
 ## Working through people quickly

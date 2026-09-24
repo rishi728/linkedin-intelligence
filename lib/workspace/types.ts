@@ -26,6 +26,17 @@ export interface Personalization {
   personal: string;
 }
 
+/** A message you wrote here. Kept in full, because you wrote it. */
+export interface SavedMessage {
+  at: string;
+  text: string;
+  channel: string;
+  /** Which preset it started from, when it started from one. */
+  intent?: string;
+  /** Set when you marked the person contacted off the back of it. */
+  sent?: boolean;
+}
+
 export interface Activity {
   at: string;
   kind: "status" | "note" | "followup" | "contacted" | "classification" | "message" | "priority";
@@ -47,6 +58,8 @@ export interface PersonRecord {
   notes?: string;
   personalization?: Partial<Personalization>;
   draft?: string;
+  /** Every message drafted for this person, oldest first. */
+  messages?: SavedMessage[];
   sequenceStep?: number;
   userTags?: string[];
   activity?: Activity[];
@@ -215,6 +228,7 @@ export interface Person {
   notes: string;
   personalization: Personalization;
   draft: string;
+  messages: SavedMessage[];
   activity: Activity[];
 
   pastCompanies: string[];

@@ -37,11 +37,19 @@ export function Composer() {
   const message = edited ?? preset;
   const overLimit = channel === "LinkedIn" && message.length > LINKEDIN_NOTE_LIMIT;
 
-  const persist = () => {
-    updateRecord(person.id, {
-      draft: message,
-      channel,
-      ...(intent ? { opportunityType: person.opportunityType, response: person.response } : {}),
+  /** Keep the draft, and log it once so the profile shows what was written. */
+  const persist = (sent = false) => {
+    updateRecord(person.id, (rec) => {
+      const log = rec.messages ?? [];
+      const last = log[log.length - 1];
+      const same = last && last.text.trim() === message.trim();
+      return {
+        draft: message,
+        channel,
+        messages: same
+          ? log.map((m, i) => (i === log.length - 1 ? { ...m, sent: m.sent || sent } : m))
+          : [...log, { at: new Date().toISOString(), text: message, channel, intent: intent?.id, sent }],
+      };
     });
   };
 
@@ -119,7 +127,7 @@ export function Composer() {
           <Button
             icon={Send}
             onClick={() => {
-              persist();
+              persist(person.status !== "not_contacted");
               setStatus([person.id], person.status === "not_contacted" ? "to_contact" : "contacted");
               toast(person.status === "not_contacted" ? "Added to outreach as “To contact”." : "Marked as contacted.");
               openComposer(null);

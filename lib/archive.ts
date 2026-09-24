@@ -3,12 +3,22 @@
 // whom, your own schools and roles.
 //
 // Only metadata is kept, dates, directions and counts. Message text is read to
-// work out direction and then discarded; it is never stored or exported.
+// read a conversation back on a person's profile. It stays in this browser's
+// local database and is never uploaded; the last 40 messages per person are kept.
 
 import Papa from "papaparse";
 import { toISODate } from "./workspace/dates";
 
 export type ArchiveFileKind = "connections" | "messages" | "invitations" | "notes" | "education" | "positions" | "profile" | "unknown";
+
+/** One message from the export, as it was written. */
+export interface ArchivedMessage {
+  at: string;
+  /** "out" = you wrote it. */
+  dir: "out" | "in";
+  subject: string;
+  text: string;
+}
 
 export interface ContactHistory {
   /** Messages exchanged, in both directions. */
@@ -21,6 +31,8 @@ export interface ContactHistory {
   /** You have sent them at least one message. */
   youMessaged: boolean;
   invited: "you" | "them" | null;
+  /** The thread, oldest first, capped so one long conversation cannot dominate storage. */
+  messages: ArchivedMessage[];
   invitedAt: string;
   note: string;
 }
@@ -86,8 +98,11 @@ function parseDate(raw: string): string {
 }
 
 function blank(): ContactHistory {
-  return { messageCount: 0, lastMessageAt: "", lastOutgoingAt: "", lastIncomingAt: "", theyReplied: false, youMessaged: false, invited: null, invitedAt: "", note: "" };
+  return { messageCount: 0, lastMessageAt: "", lastOutgoingAt: "", lastIncomingAt: "", theyReplied: false, youMessaged: false, invited: null, invitedAt: "", note: "", messages: [] };
 }
+
+/** Enough to read a real conversation without one thread bloating the database. */
+const MAX_STORED_MESSAGES = 40;
 
 const later = (a: string, b: string) => (a > b ? a : b);
 
@@ -117,7 +132,7 @@ export function parseArchive(files: Array<{ name: string; text: string }>): Arch
     skipped: [],
   };
 
-  const messageRows: Array<{ sender: string; recipients: string[]; date: string }> = [];
+  const messageRows: Array<{ sender: string; recipients: string[]; date: string; subject: string; text: string }> = [];
   const invitationRows: Array<{ inviter: string; invitee: string; direction: string; sentAt: string }> = [];
   const appearances = new Map<string, number>();
   const bump = (url: string) => url && appearances.set(url, (appearances.get(url) ?? 0) + 1);
@@ -132,7 +147,13 @@ export function parseArchive(files: Array<{ name: string; text: string }>): Arch
           const recipients = (r["recipient profile urls"] ?? "").split(/[\s,;]+/).map(profileKey).filter(Boolean);
           const date = parseDate(r["date"] ?? "");
           if (!sender && !recipients.length) continue;
-          messageRows.push({ sender, recipients, date });
+          messageRows.push({
+            sender,
+            recipients,
+            date,
+            subject: (r["subject"] ?? "").trim(),
+            text: (r["content"] ?? "").trim(),
+          });
           bump(sender);
           for (const x of recipients) bump(x);
         }
@@ -213,6 +234,9 @@ export function parseArchive(files: Array<{ name: string; text: string }>): Arch
         h.theyReplied = true;
         h.lastIncomingAt = later(h.lastIncomingAt, m.date);
       }
+      if (m.text || m.subject) {
+        h.messages.push({ at: m.date, dir: outgoing ? "out" : "in", subject: m.subject, text: m.text });
+      }
     }
   }
 
@@ -223,6 +247,12 @@ export function parseArchive(files: Array<{ name: string; text: string }>): Arch
     const theyInvited = inv.direction === "INCOMING" || (!!self && inv.invitee === self);
     h.invited = theyInvited ? "them" : "you";
     h.invitedAt = later(h.invitedAt, inv.sentAt);
+  }
+
+  // Oldest first, and keep the most recent exchanges when a thread is very long.
+  for (const h of Object.values(result.history)) {
+    h.messages.sort((a, b) => a.at.localeCompare(b.at));
+    if (h.messages.length > MAX_STORED_MESSAGES) h.messages = h.messages.slice(-MAX_STORED_MESSAGES);
   }
 
   result.counts.people = Object.keys(result.history).length;

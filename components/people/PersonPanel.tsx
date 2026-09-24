@@ -129,6 +129,7 @@ export function PersonPanel() {
   const { personId, openPerson, openComposer, toast, setPeopleFilters } = useUI();
   const [editing, setEditing] = useState(false);
   const [openFor, setOpenFor] = useState<string | null>(null);
+  const [allMessages, setAllMessages] = useState(false);
   const pathname = usePathname();
   const person = personId ? byId.get(personId) : null;
 
@@ -145,6 +146,19 @@ export function PersonPanel() {
 
   // Same person, different question depending on where you opened them from: mid
   // conversation the history matters most, while researching you want the match.
+  /**
+   * One thread from two sources: messages LinkedIn exported, and drafts written
+   * here. Drafts are labelled, so one is never mistaken for something sent.
+   */
+  const conversation = [
+    ...(person.history?.messages ?? []).map((m) => ({
+      at: m.at, kind: m.dir as "in" | "out", subject: m.subject, text: m.text, draft: false,
+    })),
+    ...person.messages.map((m) => ({
+      at: m.at, kind: "out" as const, subject: "", text: m.text, draft: !m.sent,
+    })),
+  ].sort((a, b) => (a.at || "").localeCompare(b.at || ""));
+
   const relationshipFirst = pathname === "/outreach" || pathname === "/follow-ups" || pathname === "/session";
 
   return (
@@ -211,6 +225,41 @@ export function PersonPanel() {
             ) : null}
           </ul>
         </Section>
+
+        {conversation.length ? (
+          <Section
+            title="Conversation"
+            className={relationshipFirst ? "order-first border-t-0" : undefined}
+            action={
+              conversation.length > 4 ? (
+                <button type="button" onClick={() => setAllMessages((v) => !v)} className="text-[11.5px] text-muted transition hover:text-accent">
+                  {allMessages ? "Show recent" : `Show all ${conversation.length}`}
+                </button>
+              ) : null
+            }
+          >
+            <ol className="space-y-2.5">
+              {(allMessages ? conversation : conversation.slice(-4)).map((m, i) => (
+                <li key={`${m.at}-${i}`} className={cx("flex flex-col", m.kind === "out" ? "items-end" : "items-start")}>
+                  <span className="mb-0.5 flex items-center gap-1.5 text-[11px] text-faint">
+                    {m.kind === "out" ? "You" : person.firstName || person.name}
+                    <span>· {m.at ? formatDate(m.at) : "date unknown"}</span>
+                    {m.draft ? <Pill tone="gray">Draft</Pill> : null}
+                  </span>
+                  <span
+                    className={cx(
+                      "max-w-[88%] whitespace-pre-wrap rounded-xl px-3 py-2 text-[12.5px] leading-relaxed",
+                      m.kind === "out" ? "bg-accent-soft text-ink" : "bg-subtle text-ink-2",
+                    )}
+                  >
+                    {m.subject ? <span className="mb-0.5 block font-medium">{m.subject}</span> : null}
+                    {m.text}
+                  </span>
+                </li>
+              ))}
+            </ol>
+          </Section>
+        ) : null}
 
         {person.history || person.pastCompanies.length ? (
           <Section title="Relationship" className={relationshipFirst ? "order-first border-t-0" : undefined}>
