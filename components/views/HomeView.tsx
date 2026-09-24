@@ -14,7 +14,6 @@ import { Avatar, Button, EmptyState, cx } from "@/components/ui";
 import { StatusMenu } from "@/components/people/StatusMenu";
 import { ArchiveImport } from "@/components/workspace/ArchiveImport";
 import { PeopleCarousel } from "@/components/home/PeopleCarousel";
-import { NetworkDots } from "@/components/home/NetworkDots";
 import { Spark } from "@/components/shell/Spark";
 import { useUI, useWorkspace } from "@/components/workspace/store";
 
@@ -264,16 +263,6 @@ export function HomeView() {
           </section>
         ) : null}
 
-        {/* ---- the shape of it, as people rather than bars ------------------ */}
-        <section className="mt-10">
-          <SectionLabel action={<button type="button" onClick={() => router.push("/analytics")} className="text-[12px] text-muted transition hover:text-accent">Explore the network →</button>}>
-            Where your people are
-          </SectionLabel>
-          <NetworkDots people={people} onOpenPerson={openPerson} onOpenGroup={goTo} />
-          <p className="mt-4 text-[11.5px] text-faint">
-            One dot is one person. Solid means they are in your pipeline; faded means you have spoken before.
-          </p>
-        </section>
 
         {/* ---- what you last did -------------------------------------------- */}
         {activity.length ? (

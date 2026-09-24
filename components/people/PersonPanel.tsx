@@ -226,6 +226,16 @@ export function PersonPanel() {
           </ul>
         </Section>
 
+        {!conversation.length && person.history?.messageCount ? (
+          <Section title="Conversation" className={relationshipFirst ? "order-first border-t-0" : undefined}>
+            <p className="text-[12.5px] leading-relaxed text-muted">
+              {person.history.messageCount} {person.history.messageCount === 1 ? "message" : "messages"} exchanged, but
+              this archive was imported before conversations were kept. Import your export again from{" "}
+              <strong className="text-ink">Add data</strong> to read the thread here.
+            </p>
+          </Section>
+        ) : null}
+
         {conversation.length ? (
           <Section
             title="Conversation"

@@ -28,6 +28,9 @@ export function AddData({ open, onClose }: { open: boolean; onClose: () => void 
       : [];
 
   const withHistory = people.filter((p) => p.history?.messageCount).length;
+  /** Imports made before conversations were kept have counts but no text. */
+  const storedConversations = people.filter((p) => p.history?.messages?.length).length;
+  const missingConversations = !!archive && withHistory > 0 && storedConversations === 0;
 
   const takeCsv = async (file: File | undefined) => {
     if (!file) return;
@@ -196,6 +199,12 @@ export function AddData({ open, onClose }: { open: boolean; onClose: () => void 
         <p className="mt-1.5 text-[11.5px] text-muted">
           Your conversations are kept so you can read them on a person’s profile. They stay in this browser and are never uploaded.
         </p>
+        {missingConversations ? (
+          <p className="mt-2 rounded-lg border border-[var(--t-amber)]/40 bg-[var(--t-amber-bg)] px-3 py-2 text-[12px] leading-relaxed text-ink-2">
+            Your last import was made before conversations were kept, so it has the dates but not what was said.
+            Import the same files again and the full threads will show on each person&apos;s profile.
+          </p>
+        ) : null}
         <Button
           icon={FolderUp}
           className="mt-2.5"
