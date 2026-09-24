@@ -11,10 +11,12 @@ import { GuidedSearch } from "@/components/find/GuidedSearch";
 import { Button, Card, CardTitle, Input, Pill, Segmented } from "@/components/ui";
 import { useUI, useWorkspace } from "@/components/workspace/store";
 
+/** Every one of these is understood by parseQuery - nothing here is aspirational. */
 const EXAMPLES = [
   "senior people in supply chain",
   "product managers at google I haven't contacted",
   "founders I've spoken to",
+  "people who could refer me",
   "alumni in finance",
 ];
 
@@ -45,18 +47,21 @@ export function FindView() {
   return (
     <PageBody className="px-6 py-10">
       <div className="mx-auto w-full max-w-3xl">
-        <h1 className="text-center text-[26px] font-semibold tracking-tight">Who do you want to talk to?</h1>
-        <p className="mt-1.5 text-center text-[13px] text-muted">
-          Answer a few questions, or just describe it. Either way, all {people.length.toLocaleString()} of your connections are searched.
-        </p>
+        <header>
+          <h1 className="text-[30px] font-semibold leading-tight tracking-tight">Who do you want to talk to?</h1>
+          <p className="mt-1.5 max-w-[50ch] text-[14px] leading-relaxed text-muted">
+            You already have {people.length.toLocaleString()} connections. Answer a few questions, or just describe who
+            you need.
+          </p>
+        </header>
 
-        <div className="mt-5 flex justify-center">
+        <div className="mt-5 flex">
           <Segmented
             value={mode}
             onChange={setMode}
             options={[
-              { value: "guided", label: "Guided search" },
-              { value: "natural", label: "Search naturally" },
+              { value: "guided", label: "Guided" },
+              { value: "natural", label: "Describe it" },
             ]}
           />
         </div>
@@ -87,7 +92,7 @@ export function FindView() {
 
             {preview ? (
               <div className="mt-3 rounded-xl border border-line bg-panel px-3 py-2.5">
-                <p className="text-[11px] font-medium uppercase tracking-wide text-muted">You&apos;re looking for</p>
+                <p className="text-[10.5px] font-medium uppercase tracking-[0.12em] text-muted">You&apos;re looking for</p>
                 <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[12.5px]">
                   {preview.understood.length ? (
                     preview.understood.map((u) => <Pill key={u} tone="teal">{u}</Pill>)
@@ -99,7 +104,7 @@ export function FindView() {
                 </div>
               </div>
             ) : (
-              <div className="mt-3 flex flex-wrap justify-center gap-1.5">
+              <div className="mt-3 flex flex-wrap gap-1.5">
                 {EXAMPLES.map((e) => (
                   <button
                     key={e}
@@ -113,7 +118,7 @@ export function FindView() {
               </div>
             )}
 
-            <p className="mb-2 mt-8 text-[11px] font-medium uppercase tracking-wide text-muted">Or jump straight to an area</p>
+            <p className="mb-3 mt-9 text-[10.5px] font-medium uppercase tracking-[0.12em] text-muted">Or jump straight to an area</p>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
               {intents.map((intent) => (
                 <button

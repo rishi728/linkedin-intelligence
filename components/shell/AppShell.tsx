@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import {
   BarChart3, Bell, Building2, Cloud, Compass, Home, ListChecks, Plus, Search, Send,
-  Settings as SettingsIcon, Stethoscope, Users, X,
+  Menu as MenuIcon, Settings as SettingsIcon, Stethoscope, Users, X,
 } from "lucide-react";
 import { followUpBuckets } from "@/lib/workspace/insights";
 import { CommandPalette } from "@/components/shell/CommandPalette";
@@ -37,10 +37,19 @@ export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [addOpen, setAddOpen] = useState(false);
+  const [navOpen, setNavOpen] = useState(false);
 
   useEffect(() => {
     if (ready && !dataset) router.replace("/");
   }, [ready, dataset, router]);
+
+  // Close the drawer when the route changes, without an effect: the compiler
+  // rejects setState inside one, and this is the pattern used elsewhere here.
+  const [navPath, setNavPath] = useState(pathname);
+  if (navPath !== pathname) {
+    setNavPath(pathname);
+    if (navOpen) setNavOpen(false);
+  }
 
   if (!ready || !dataset) {
     return (
@@ -64,7 +73,16 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex h-full">
-      <aside className="flex w-[228px] shrink-0 flex-col border-r border-line bg-sidebar">
+      {navOpen ? (
+        <button
+          type="button"
+          aria-label="Close navigation"
+          onClick={() => setNavOpen(false)}
+          className="fixed inset-0 z-40 bg-black/25 md:hidden"
+        />
+      ) : null}
+
+      <aside data-open={navOpen} className="nav-drawer flex w-[228px] shrink-0 flex-col border-r border-line bg-sidebar">
         <div className="flex h-12 items-center gap-2 px-4">
           <span aria-hidden className="grid size-6 shrink-0 place-items-center rounded-md bg-accent text-[11px] font-bold tracking-tight text-accent-ink">Li</span>
           <span className="truncate text-[13.5px] font-semibold tracking-tight">LinkedIn Intelligence</span>
@@ -169,7 +187,21 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </aside>
 
-      <main className="flex min-w-0 flex-1 flex-col overflow-hidden bg-canvas">{children}</main>
+      <main className="flex min-w-0 flex-1 flex-col overflow-hidden bg-canvas">
+        <div className="flex h-11 shrink-0 items-center gap-2 border-b border-line px-3 md:hidden">
+          <button
+            type="button"
+            aria-label="Open navigation"
+            aria-expanded={navOpen}
+            onClick={() => setNavOpen(true)}
+            className="grid size-8 place-items-center rounded-lg text-ink-2 transition hover:bg-hover"
+          >
+            <MenuIcon size={17} />
+          </button>
+          <span className="text-[13px] font-semibold tracking-tight">LinkedIn Intelligence</span>
+        </div>
+        {children}
+      </main>
 
       <CommandPalette />
       <PersonPanel />

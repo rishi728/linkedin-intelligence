@@ -57,8 +57,10 @@ function Option({ label, hint, n, active, onClick }: { label: string; hint?: str
       type="button"
       onClick={onClick}
       className={cx(
-        "rounded-xl border px-3 py-2.5 text-left transition",
-        active ? "border-accent bg-accent-soft/40" : "border-line bg-panel hover:border-line-strong hover:shadow-pop",
+        "group rounded-xl border px-3 py-2.5 text-left transition",
+        active
+          ? "border-accent bg-accent-soft/50"
+          : "border-line bg-panel hover:-translate-y-px hover:border-line-strong hover:shadow-pop",
       )}
     >
       <span className="flex items-center justify-between gap-2">
@@ -76,9 +78,9 @@ function Option({ label, hint, n, active, onClick }: { label: string; hint?: str
 
 function StepHeading({ title, soFar }: { title: string; soFar: number }) {
   return (
-    <div className="mb-2 mt-5 flex items-baseline justify-between gap-3">
-      <p className="text-[13px] font-semibold">{title}</p>
-      <span className="tabular text-[12px] text-muted">{soFar.toLocaleString()} people so far</span>
+    <div className="mb-2.5 mt-7 flex items-baseline justify-between gap-3 border-b border-line pb-1.5">
+      <p className="text-[13.5px] font-semibold tracking-tight">{title}</p>
+      <span className="tabular text-[12px] text-muted">{soFar.toLocaleString()} left</span>
     </div>
   );
 }
@@ -185,7 +187,7 @@ export function GuidedSearch({
         </div>
       ) : null}
 
-      <StepHeading title="Who do you want to reach?" soFar={view.soFar.who} />
+      <div className="anim-rise"><StepHeading title="Who do you want to reach?" soFar={view.soFar.who} /></div>
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
         {WHO_OPTIONS.map((o) => (
           <Option key={o.id} label={o.label} hint={o.hint} active={who === o.id} n={view.whoCounts[o.id]} onClick={() => setWho(o.id)} />
@@ -194,7 +196,7 @@ export function GuidedSearch({
 
       {who ? (
         <>
-          <StepHeading title="Which companies?" soFar={view.soFar.where} />
+          <div className="anim-rise"><StepHeading title="Which companies?" soFar={view.soFar.where} /></div>
           <div className="grid grid-cols-2 gap-2">
             <Option label="All companies" active={where === "all"} n={view.whereCounts.all} onClick={() => setWhere("all")} />
             <Option
@@ -210,7 +212,7 @@ export function GuidedSearch({
 
       {who && where ? (
         <>
-          <StepHeading title="What's your relationship?" soFar={view.soFar.rel} />
+          <div className="anim-rise"><StepHeading title="What's your relationship?" soFar={view.soFar.rel} /></div>
           <div className="grid grid-cols-2 gap-2">
             {REL_OPTIONS.map((o) => (
               <Option key={o.id} label={o.label} hint={o.hint} active={rel === o.id} n={view.relCounts[o.id]} onClick={() => setRel(o.id)} />
@@ -220,7 +222,7 @@ export function GuidedSearch({
       ) : null}
 
       {ready ? (
-        <div className="mt-5 flex flex-wrap items-center gap-2 rounded-xl border border-line bg-subtle px-3 py-2.5">
+        <div className="anim-rise mt-6 flex flex-wrap items-center gap-2 border-t border-line pt-4">
           <span className="text-[13px]">
             <strong className="tabular">{view.finalCount.toLocaleString()}</strong>{" "}
             {view.finalCount === 1 ? "person matches" : "people match"} what you&apos;re looking for.

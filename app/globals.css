@@ -193,6 +193,25 @@ body {
 .anim-stagger > *:nth-child(4) { animation-delay: 120ms; }
 .anim-stagger > *:nth-child(n+5) { animation-delay: 150ms; }
 
+/* The sidebar is a column on desktop and a drawer below md. Written out rather
+   than composed from variants so the two states are unambiguous. */
+@media (max-width: 767px) {
+  .nav-drawer {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 50;
+    translate: -100% 0;
+    transition: translate 0.2s ease-out;
+  }
+  .nav-drawer[data-open="true"] { translate: 0 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-drawer { transition: none; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .anim-sheet, .anim-pop, .anim-rise, .anim-fade, .anim-next, .anim-prev, .anim-bar,
   .anim-stagger > * {
