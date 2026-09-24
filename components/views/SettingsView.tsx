@@ -591,6 +591,14 @@ export function SettingsView() {
                 </p>
                 <div className="flex flex-wrap gap-2 p-4 pt-3">
                   <Button
+                    onClick={() => {
+                      updateSettings((st) => ({ ...st, toursSeen: [] }));
+                      toast("Pip will introduce each page again.");
+                    }}
+                  >
+                    Show the guide again
+                  </Button>
+                  <Button
                     icon={Download}
                     onClick={() => {
                       const blob = new Blob([exportBackup()], { type: "application/json" });

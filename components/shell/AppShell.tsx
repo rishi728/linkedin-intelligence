@@ -15,6 +15,7 @@ import { OpportunityWizard } from "@/components/find/OpportunityWizard";
 import { PersonPanel } from "@/components/people/PersonPanel";
 import { AddData } from "@/components/workspace/AddData";
 import { Logo } from "@/components/shell/Logo";
+import { Guide } from "@/components/shell/Guide";
 import { Button, Spinner, cx } from "@/components/ui";
 import { useUI, useWorkspace } from "@/components/workspace/store";
 
@@ -210,6 +211,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <ExportDialog />
       <OpportunityWizard />
       <AddData open={addOpen} onClose={() => setAddOpen(false)} />
+      <Guide />
 
       <div className="pointer-events-none fixed bottom-4 left-1/2 z-[60] flex -translate-x-1/2 flex-col items-center gap-2">
         {toasts.map((t) => (

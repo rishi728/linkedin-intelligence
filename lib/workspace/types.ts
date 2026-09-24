@@ -129,6 +129,8 @@ export interface Settings {
   rules: CustomRule[];
   /** ISO date of the last downloaded backup, so the app can nudge when it goes stale. */
   lastBackupAt?: string;
+  /** Routes whose guide has been read, so Pip only introduces a page once. */
+  toursSeen?: string[];
 }
 
 export interface DatasetFile {

@@ -208,8 +208,20 @@ body {
   .nav-drawer[data-open="true"] { translate: 0 0; }
 }
 
+/* Pip blinks now and then. Nothing else about the mascot moves. */
+@keyframes mascot-blink {
+  0%, 92%, 100% { transform: scaleY(1); }
+  95% { transform: scaleY(0.12); }
+}
+.mascot-eye {
+  animation: mascot-blink 6s ease-in-out infinite;
+  transform-origin: center;
+  transform-box: fill-box;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .nav-drawer { transition: none; }
+  .mascot-eye { animation: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
