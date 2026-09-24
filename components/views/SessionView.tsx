@@ -2,14 +2,14 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Copy, ExternalLink, Send, SkipForward, ThumbsDown, Users } from "lucide-react";
-import { functionLabel } from "@/lib/intelligence";
+import { Check, ChevronLeft, ChevronRight, Copy, ExternalLink, Send, SkipForward, ThumbsDown } from "lucide-react";
 import { addDays, todayISO } from "@/lib/workspace/dates";
 import { applyFilters } from "@/lib/workspace/filters";
 import { LINKEDIN_NOTE_LIMIT, renderTemplate, templateVars } from "@/lib/workspace/outreach";
 import type { Person } from "@/lib/workspace/types";
 import { PageBody, PageHeader } from "@/components/shell/AppShell";
-import { Avatar, Button, Card, EmptyState, Field, Meter, Pill, Select, Textarea, cx } from "@/components/ui";
+import { Avatar, Button, Card, EmptyState, Field, Pill, Select, Textarea, cx } from "@/components/ui";
+import { Spark } from "@/components/shell/Spark";
 import { useUI, useWorkspace } from "@/components/workspace/store";
 
 /**
@@ -29,6 +29,7 @@ export function SessionView() {
   const [sent, setSent] = useState(0);
   const [skipped, setSkipped] = useState(0);
   const [copied, setCopied] = useState(false);
+  const [dir, setDir] = useState<"next" | "prev">("next");
 
   const candidates = useMemo(() => {
     const closed = new Set(settings.statuses.filter((s) => s.kind === "closed").map((s) => s.id));
@@ -49,7 +50,16 @@ export function SessionView() {
   const next = () => {
     setEdited(null);
     setCopied(false);
+    setDir("next");
     setPos((p) => p + 1);
+  };
+
+  const prev = () => {
+    if (pos === 0) return;
+    setEdited(null);
+    setCopied(false);
+    setDir("prev");
+    setPos((p) => p - 1);
   };
 
   const markSent = () => {
@@ -92,6 +102,8 @@ export function SessionView() {
       else if (k === "s") { e.preventDefault(); markSent(); }
       else if (k === "k") { e.preventDefault(); setSkipped((n) => n + 1); next(); }
       else if (k === "n") { e.preventDefault(); notAFit(); }
+      else if (e.key === "ArrowRight") { e.preventDefault(); next(); }
+      else if (e.key === "ArrowLeft") { e.preventDefault(); prev(); }
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
@@ -168,70 +180,120 @@ export function SessionView() {
   return (
     <>
       <PageHeader
-        title="Outreach session"
-        subtitle={`${pos + 1} of ${queue.length} · ${sent} contacted`}
+        title="Conversations"
+        subtitle={`${sent} contacted${skipped ? ` · ${skipped} skipped` : ""}`}
         actions={<Button onClick={() => setQueue(null)}>End session</Button>}
       />
-      <PageBody>
-        <div className="mx-auto max-w-3xl">
-          <Meter value={((pos) / queue.length) * 100} />
+      <PageBody className="px-6 py-8">
+        <div className="mx-auto w-full max-w-2xl">
+          {/* A principle before the person: a moment to think, not a banner. */}
+          <Spark categories={["conversation", "outreach", "coldOutreach", "confidence"]} seed={`session-${pos}`} compact className="mb-6 text-center" />
 
-          <Card className="mt-4 p-5">
-            <div className="flex items-start gap-3">
-              <Avatar name={live.name} size={42} />
-              <div className="min-w-0 flex-1">
-                <button type="button" onClick={() => openPerson(live.id)} className="truncate text-[17px] font-semibold tracking-tight hover:text-accent">
-                  {live.name}
-                </button>
-                <p className="truncate text-[13px] text-ink-2">{live.position || live.role}</p>
-                <p className="truncate text-[12.5px] text-muted">{live.company}</p>
-              </div>
-              <div className="flex flex-wrap justify-end gap-1.5">
-                {live.isTarget ? <Pill tone="teal">Target</Pill> : null}
-                {live.isAlumni ? <Pill tone="violet">Alumni</Pill> : null}
-                {live.history?.theyReplied ? <Pill tone="green">Replied before</Pill> : null}
-                <Pill tone="gray">{functionLabel(live.fn)}</Pill>
-              </div>
+          {/* ---- carousel ------------------------------------------------- */}
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              aria-label="Previous person"
+              disabled={pos === 0}
+              onClick={prev}
+              className="grid size-9 shrink-0 place-items-center rounded-full border border-line text-muted transition hover:border-line-strong hover:text-ink disabled:opacity-30 disabled:hover:border-line"
+            >
+              <ChevronLeft size={16} />
+            </button>
+
+            <div className="min-w-0 flex-1">
+              <p className="tabular mb-2 text-center text-[11.5px] tracking-wide text-faint">
+                {String(pos + 1).padStart(2, "0")} / {String(queue.length).padStart(2, "0")}
+              </p>
+
+              <article key={live.id} className={cx("rounded-2xl border border-line bg-panel p-6", dir === "next" ? "anim-next" : "anim-prev")}>
+                <div className="text-center">
+                  <Avatar name={live.name} size={44} />
+                  <button
+                    type="button"
+                    onClick={() => openPerson(live.id)}
+                    className="mt-3 block w-full truncate text-[20px] font-semibold tracking-tight transition hover:text-accent"
+                  >
+                    {live.name}
+                  </button>
+                  <p className="mt-0.5 truncate text-[13.5px] text-ink-2">{live.position || live.role}</p>
+                  {live.company ? <p className="truncate text-[12.5px] text-muted">{live.company}</p> : null}
+
+                  {(live.isTarget || live.isAlumni || live.history?.theyReplied) && (
+                    <div className="mt-3 flex flex-wrap justify-center gap-1.5">
+                      {live.isTarget ? <Pill tone="teal">Target company</Pill> : null}
+                      {live.isAlumni ? <Pill tone="violet">Alumni</Pill> : null}
+                      {live.history?.theyReplied ? <Pill tone="green">Replied before</Pill> : null}
+                    </div>
+                  )}
+                </div>
+
+                {live.priorityReasons.length ? (
+                  <div className="mt-5 border-t border-line pt-4">
+                    <p className="mb-1.5 text-[10.5px] font-medium uppercase tracking-[0.12em] text-muted">Why this person</p>
+                    <ul className="space-y-0.5">
+                      {live.priorityReasons.slice(0, 3).map((r) => (
+                        <li key={r} className="text-[12.5px] leading-relaxed text-ink-2">{r}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
+
+                <div className="mt-5 border-t border-line pt-4">
+                  <div className="mb-1.5 flex items-center justify-between">
+                    <span className="text-[10.5px] font-medium uppercase tracking-[0.12em] text-muted">Message</span>
+                    <span className={cx("tabular text-[11.5px]", overLimit ? "font-medium text-[var(--t-red)]" : "text-faint")}>
+                      {message.length} / {LINKEDIN_NOTE_LIMIT}
+                    </span>
+                  </div>
+                  <Textarea value={message} onChange={(e) => setEdited(e.target.value)} rows={6} className="text-[13px] leading-relaxed" />
+                </div>
+
+                <div className="mt-4 flex flex-wrap items-center gap-2">
+                  <Button variant="primary" icon={copied ? Check : Copy} onClick={copy}>{copied ? "Copied" : "Copy message"}</Button>
+                  {live.url ? (
+                    <Button icon={ExternalLink} onClick={() => window.open(live.url, "_blank", "noopener,noreferrer")}>Open LinkedIn</Button>
+                  ) : null}
+                  <Button icon={Send} onClick={markSent}>Mark sent</Button>
+                  <span className="ml-auto flex gap-1">
+                    <Button variant="ghost" icon={SkipForward} onClick={() => { setSkipped((n) => n + 1); next(); }}>Skip</Button>
+                    <Button variant="ghost" icon={ThumbsDown} onClick={notAFit}>Not a fit</Button>
+                  </span>
+                </div>
+              </article>
             </div>
 
-            {live.priorityReasons.length ? (
-              <ul className="mt-3 space-y-0.5">
-                {live.priorityReasons.slice(0, 3).map((r) => (
-                  <li key={r} className="text-[12px] text-ink-2">• {r}</li>
-                ))}
-              </ul>
-            ) : null}
+            <button
+              type="button"
+              aria-label="Next person"
+              onClick={next}
+              className="grid size-9 shrink-0 place-items-center rounded-full border border-line text-muted transition hover:border-line-strong hover:text-ink"
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
 
-            <div className="mt-4">
-              <div className="mb-1 flex items-center justify-between">
-                <span className="text-[11px] font-medium uppercase tracking-wide text-muted">Message</span>
-                <span className={cx("tabular text-[11.5px]", overLimit ? "font-medium text-[var(--t-red)]" : "text-muted")}>
-                  {message.length} / {LINKEDIN_NOTE_LIMIT} for a connection note
-                </span>
-              </div>
-              <Textarea value={message} onChange={(e) => setEdited(e.target.value)} rows={6} className="text-[13px] leading-relaxed" />
-            </div>
+          {/* ---- progress, as dots you can jump with ----------------------- */}
+          <div className="mt-5 flex flex-wrap justify-center gap-1.5">
+            {queue.map((p, i) => (
+              <button
+                key={p.id}
+                type="button"
+                aria-label={`Go to ${p.name}`}
+                aria-current={i === pos ? "true" : undefined}
+                onClick={() => { setDir(i > pos ? "next" : "prev"); setEdited(null); setPos(i); }}
+                className={cx(
+                  "h-1.5 rounded-full transition-all",
+                  i === pos ? "w-6 bg-accent" : i < pos ? "w-1.5 bg-line-strong" : "w-1.5 bg-line hover:bg-line-strong",
+                )}
+              />
+            ))}
+          </div>
 
-            <div className="mt-4 flex flex-wrap gap-2">
-              <Button variant="primary" icon={copied ? Check : Copy} onClick={copy}>{copied ? "Copied" : "Copy message"}</Button>
-              {live.url ? (
-                <Button icon={ExternalLink} onClick={() => window.open(live.url, "_blank", "noopener,noreferrer")}>Open LinkedIn</Button>
-              ) : null}
-              <Button icon={Send} onClick={markSent}>Mark sent</Button>
-              <Button icon={SkipForward} onClick={() => { setSkipped((n) => n + 1); next(); }}>Skip</Button>
-              <Button variant="danger" icon={ThumbsDown} onClick={notAFit}>Not a fit</Button>
-            </div>
-
-            <p className="mt-3 text-[11.5px] text-muted">
-              Shortcuts: <kbd className="rounded border border-line px-1">C</kbd> copy · <kbd className="rounded border border-line px-1">O</kbd> open ·{" "}
-              <kbd className="rounded border border-line px-1">S</kbd> sent · <kbd className="rounded border border-line px-1">K</kbd> skip ·{" "}
-              <kbd className="rounded border border-line px-1">N</kbd> not a fit
-            </p>
-          </Card>
-
-          <p className="mt-3 flex items-center gap-1.5 text-[12px] text-muted">
-            <Users size={12} />
-            Up next: {queue.slice(pos + 1, pos + 4).map((p) => p.name).join(", ") || "nobody — this is the last one"}
+          <p className="mt-5 text-center text-[11.5px] text-muted">
+            <kbd className="rounded border border-line px-1">←</kbd> <kbd className="rounded border border-line px-1">→</kbd> move ·{" "}
+            <kbd className="rounded border border-line px-1">C</kbd> copy · <kbd className="rounded border border-line px-1">O</kbd> open ·{" "}
+            <kbd className="rounded border border-line px-1">S</kbd> sent · <kbd className="rounded border border-line px-1">N</kbd> not a fit
           </p>
         </div>
       </PageBody>
