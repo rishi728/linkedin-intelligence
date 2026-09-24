@@ -20,7 +20,7 @@ const NAV = [
   { href: "/find", label: "Find people", icon: Search },
   { href: "/people", label: "People", icon: Users },
   { href: "/outreach", label: "Outreach", icon: Send },
-  { href: "/analytics", label: "Intelligence", icon: BarChart3 },
+  { href: "/analytics", label: "Network", icon: BarChart3 },
 ] as const;
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -55,8 +55,20 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="flex h-full">
       <aside className="flex w-[228px] shrink-0 flex-col border-r border-line bg-sidebar">
         <div className="flex h-12 items-center gap-2 px-4">
-          <span className="grid size-6 place-items-center rounded-md bg-accent text-[12px] font-bold text-accent-ink">N</span>
-          <span className="text-[13.5px] font-semibold tracking-tight">NetLens</span>
+          <span aria-hidden className="grid size-6 shrink-0 place-items-center rounded-md bg-accent text-[11px] font-bold tracking-tight text-accent-ink">Li</span>
+          <span className="truncate text-[13.5px] font-semibold tracking-tight">LinkedIn Intelligence</span>
+        </div>
+
+        <div className="px-2 pb-2">
+          <button
+            type="button"
+            onClick={() => document.dispatchEvent(new CustomEvent("li:open-search"))}
+            className="flex h-8 w-full items-center gap-2 rounded-lg border border-line bg-panel px-2 text-[12.5px] text-muted transition hover:border-line-strong hover:text-ink"
+          >
+            <Search size={14} />
+            <span className="flex-1 text-left">Search everything</span>
+            <kbd className="rounded border border-line px-1 text-[10.5px] text-faint">⌘K</kbd>
+          </button>
         </div>
 
         <nav className="flex-1 overflow-auto px-2 pb-3 scroll-thin">

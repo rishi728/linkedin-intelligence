@@ -19,10 +19,10 @@ export function buildFollowUpCalendar(people: Person[], settings: Settings, toda
   const lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//NetLens//Follow-ups//EN",
+    "PRODID:-//LinkedIn Intelligence//Follow-ups//EN",
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
-    "X-WR-CALNAME:NetLens follow-ups",
+    "X-WR-CALNAME:LinkedIn Intelligence follow-ups",
   ];
 
   for (const p of due) {

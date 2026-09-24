@@ -66,6 +66,7 @@ export function AnalyticsView() {
   const students = people.filter((p) => p.domain === "students").length;
   const senior = applyFilters(people, { seniorities: ["Senior", "Manager / Lead", "Director / Head", "VP", "C-Level", "Founder"] }, settings).length;
   const talkedTo = people.filter((p) => p.history?.messageCount).length;
+  const needsReview = people.filter((p) => p.needsReview).length;
 
   return (
     <>
@@ -146,6 +147,26 @@ export function AnalyticsView() {
               </div>
             </Card>
           ) : null}
+
+          {/* Everything that explains or improves the numbers above lives here, so
+              these pages stay reachable without a sixth item in the sidebar. */}
+          <div className="mt-3 grid gap-2 sm:grid-cols-3">
+            {[
+              { href: "/companies", title: "Companies", body: "Who you know at each employer, and the best way in." },
+              { href: "/review", title: "Review & improve", body: `${needsReview.toLocaleString()} job titles were hard to place. Fix them once and it sticks.` },
+              { href: "/health", title: "Data health", body: "Duplicates, missing emails and everything else worth cleaning up." },
+            ].map((x) => (
+              <button
+                key={x.href}
+                type="button"
+                onClick={() => router.push(x.href)}
+                className="rounded-xl border border-line bg-panel p-3.5 text-left transition hover:border-line-strong hover:shadow-pop"
+              >
+                <span className="block text-[13px] font-medium">{x.title}</span>
+                <span className="mt-0.5 block text-[11.5px] leading-relaxed text-muted">{x.body}</span>
+              </button>
+            ))}
+          </div>
         </div>
       </PageBody>
     </>

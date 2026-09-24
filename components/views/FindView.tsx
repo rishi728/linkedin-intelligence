@@ -47,7 +47,7 @@ export function FindView() {
       <div className="mx-auto w-full max-w-3xl">
         <h1 className="text-center text-[26px] font-semibold tracking-tight">Who do you want to talk to?</h1>
         <p className="mt-1.5 text-center text-[13px] text-muted">
-          Answer a few questions, or just describe it. Either way NetLens searches all {people.length.toLocaleString()} of your connections.
+          Answer a few questions, or just describe it. Either way, all {people.length.toLocaleString()} of your connections are searched.
         </p>
 
         <div className="mt-5 flex justify-center">

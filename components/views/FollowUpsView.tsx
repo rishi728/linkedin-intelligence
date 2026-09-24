@@ -75,7 +75,7 @@ export function FollowUpsView() {
           <EmptyState
             icon={Bell}
             title="No follow-ups scheduled"
-            body="When you mark someone as contacted, NetLens schedules a reminder automatically. You can also set a date on any profile."
+            body="When you mark someone as contacted, a reminder is scheduled automatically. You can also set a date on any profile."
             action={<Button variant="primary" onClick={() => router.push("/people")}>Go to people</Button>}
           />
         ) : (

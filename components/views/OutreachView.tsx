@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Download, ExternalLink, Search, UserPlus } from "lucide-react";
+import { Bell, Download, ExternalLink, Search, Send, UserPlus } from "lucide-react";
 import { todayISO } from "@/lib/workspace/dates";
 import type { Person } from "@/lib/workspace/types";
 import { PageBody, PageHeader } from "@/components/shell/AppShell";
@@ -51,6 +51,12 @@ export function OutreachView() {
               <Search size={14} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted" />
               <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Find someone" className="pl-8" />
             </div>
+            <Button icon={Bell} onClick={() => router.push("/follow-ups")}>
+              Follow-ups{due ? ` · ${due}` : ""}
+            </Button>
+            <Button icon={Send} onClick={() => router.push("/session")}>
+              Start a session
+            </Button>
             <Button
               icon={Download}
               onClick={() => openExport({ filters: {}, ids: rows.map((p) => p.id), title: "My outreach" })}

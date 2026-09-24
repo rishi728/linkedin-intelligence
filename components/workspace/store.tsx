@@ -381,7 +381,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       updateSettings((s) => ({ ...s, rules: [...s.rules.filter((r) => !data.rules!.some((n) => n.id === r.id)), ...data.rules!] }));
       return;
     }
-    if (data.app !== "netlens") throw new Error("Not a NetLens backup file.");
+    if (data.app !== "netlens") throw new Error("Not a LinkedIn Intelligence backup file.");
     if (data.settings) updateSettings(() => mergeSettings(data.settings));
     if (data.records) commitRecords((prev) => ({ ...prev, ...data.records }));
     if (data.archive) {

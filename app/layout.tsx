@@ -14,7 +14,7 @@ const mono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "NetLens — Network Intelligence & Outreach",
+  title: { default: "LinkedIn Intelligence", template: "%s · LinkedIn Intelligence" },
   description:
     "Understand your LinkedIn network, find the right people, prepare personalised outreach and never miss a follow-up. Local-first: your data stays in your browser.",
 };

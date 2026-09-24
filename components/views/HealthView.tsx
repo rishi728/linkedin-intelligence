@@ -80,13 +80,13 @@ export function HealthView() {
         </div>
 
         <Card className="mt-4">
-          <CardTitle hint="Rules you taught NetLens by correcting a classification" action={<Button size="sm" onClick={() => router.push("/settings")}>Manage rules</Button>}>
+          <CardTitle hint="Rules you taught it by correcting a classification" action={<Button size="sm" onClick={() => router.push("/settings")}>Manage rules</Button>}>
             Learned rules ({settings.rules.length})
           </CardTitle>
           <div className="p-4 pt-2 text-[12.5px] text-muted">
             {settings.rules.length
               ? `Applied automatically to every connection with a matching title, including after you import a new file.`
-              : "When you correct someone's role, NetLens offers to remember it for everyone with the same job title."}
+              : "When you correct someone's role, you are offered to remember it for everyone with the same job title."}
           </div>
         </Card>
       </PageBody>

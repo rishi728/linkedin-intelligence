@@ -39,8 +39,17 @@ export function CommandPalette() {
         setOpen(false);
       }
     };
+    const onOpen = () => {
+      setOpen(true);
+      setQ("");
+      setActive(0);
+    };
     document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
+    document.addEventListener("li:open-search", onOpen);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("li:open-search", onOpen);
+    };
   }, []);
 
   const go = (path: string, filters?: Filters) => {

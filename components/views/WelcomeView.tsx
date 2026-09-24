@@ -78,7 +78,7 @@ export function WelcomeView() {
       <div className="mx-auto w-full max-w-5xl px-6 py-12">
         <div className="flex items-center gap-2">
           <span className="grid size-6 place-items-center rounded-md bg-accent text-[12px] font-bold text-accent-ink">N</span>
-          <span className="text-[13.5px] font-semibold tracking-tight">NetLens</span>
+          <span className="text-[13.5px] font-semibold tracking-tight">LinkedIn Intelligence</span>
         </div>
 
         <div className="mt-10 grid gap-10 lg:grid-cols-[minmax(0,1fr)_380px]">
@@ -87,7 +87,7 @@ export function WelcomeView() {
               You already know thousands of people. Start using that.
             </h1>
             <p className="mt-3 max-w-xl text-[14px] leading-relaxed text-ink-2">
-              NetLens turns your LinkedIn connections export into a working outreach system: who they are, who matters for
+              LinkedIn Intelligence turns your connections export into a working outreach system: who they are, who matters for
               what you need right now, and what to do next — all in your browser, with nothing uploaded anywhere.
             </p>
 
@@ -165,7 +165,7 @@ export function WelcomeView() {
             ) : null}
 
             <p className="mt-3 rounded-lg border border-line bg-subtle px-3 py-2 text-[12px] text-muted">
-              Drop the whole <strong className="text-ink">.zip</strong> and NetLens also reads your messages, invitations and
+              Drop the whole <strong className="text-ink">.zip</strong> and it also reads your messages, invitations and
               education from it — so it knows who you have already spoken to. Nothing is uploaded; it is all read here.
             </p>
 

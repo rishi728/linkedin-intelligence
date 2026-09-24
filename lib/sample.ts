@@ -1,5 +1,5 @@
 // Generates a fictional Connections.csv in LinkedIn's exact export format so
-// people can try NetLens before requesting their own archive.
+// people can try the app before requesting their own archive.
 
 const FIRST = ["Aarav", "Priya", "Liam", "Sofia", "Noah", "Ananya", "Mateo", "Emma", "Kabir", "Olivia", "Rohan",
   "Isabella", "Arjun", "Mia", "Lucas", "Diya", "Ethan", "Zara", "Vihaan", "Chloe", "Aditya", "Maya", "Leo",

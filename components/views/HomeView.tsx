@@ -236,7 +236,7 @@ export function HomeView() {
                   </>
                 ) : (
                   <>
-                    <p className="text-[12.5px] text-muted">Tell NetLens what you’re after — an internship in supply chain, referrals at specific companies — and it will rank your network for you.</p>
+                    <p className="text-[12.5px] text-muted">Tell it what you’re after — an internship in supply chain, referrals at specific companies — and it will rank your network for you.</p>
                     <Button variant="primary" size="sm" icon={Sparkles} onClick={() => openWizard(true)}>Set goals</Button>
                   </>
                 )}

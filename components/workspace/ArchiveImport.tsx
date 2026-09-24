@@ -74,7 +74,7 @@ export function ArchiveImport({ compact = false }: { compact?: boolean }) {
           <p className="mt-0.5 text-[12.5px] text-muted">
             {archive
               ? `${withHistory.toLocaleString()} connections have message history · ${replied.toLocaleString()} have replied to you. Import again after a fresh export to update.`
-              : "Your export folder also holds messages.csv, Invitations.csv, Education.csv, Positions.csv and Profile.csv. Select them and NetLens will fill in who you've already spoken to, who replied, who invited whom, and your own schools."}
+              : "Your export folder also holds messages.csv, Invitations.csv, Education.csv, Positions.csv and Profile.csv. Select them and it will fill in who you've already spoken to, who replied, who invited whom, and your own schools."}
           </p>
           <p className="mt-1.5 text-[11.5px] text-muted">
             Dates and counts only — message text is read to work out direction, then discarded. Nothing leaves this browser.

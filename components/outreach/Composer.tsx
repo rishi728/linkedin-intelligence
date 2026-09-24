@@ -63,7 +63,7 @@ export function Composer() {
       open
       onClose={() => openComposer(null)}
       title={`Message ${person.name}`}
-      subtitle={`${person.position || "No title shared"}${person.company ? ` · ${person.company}` : ""} — NetLens never sends anything; you copy and send it yourself.`}
+      subtitle={`${person.position || "No title shared"}${person.company ? ` · ${person.company}` : ""} — Nothing is ever sent for you; you copy and send it yourself.`}
       width={860}
       footer={
         <>
