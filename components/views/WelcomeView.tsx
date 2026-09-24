@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Logo } from "@/components/shell/Logo";
 import { ArrowRight, Bell, FileSpreadsheet, KanbanSquare, Lock, Search, Upload, Users } from "lucide-react";
 import { CsvFormatError } from "@/lib/analyzer";
 import { isZip, readZipCsvs, splitExport, ZipError } from "@/lib/zip";
@@ -77,7 +78,7 @@ export function WelcomeView() {
     <div className="scroll-thin h-full overflow-auto">
       <div className="mx-auto w-full max-w-5xl px-6 py-12">
         <div className="flex items-center gap-2">
-          <span className="grid size-6 place-items-center rounded-md bg-accent text-[12px] font-bold text-accent-ink">N</span>
+          <Logo size={24} className="text-accent" />
           <span className="text-[13.5px] font-semibold tracking-tight">LinkedIn Intelligence</span>
         </div>
 

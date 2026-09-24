@@ -2,17 +2,20 @@
 
 import { useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Search, Send } from "lucide-react";
+import { ArrowRight, Bell, ListChecks, Search, Send, Sparkles } from "lucide-react";
 import { domainLabel } from "@/lib/intelligence";
 import { applyFilters } from "@/lib/workspace/filters";
 import { followUpBuckets } from "@/lib/workspace/insights";
 import { hasGoals } from "@/lib/workspace/priority";
-import { relativeDue, todayISO } from "@/lib/workspace/dates";
+import { formatDate, relativeDue, todayISO } from "@/lib/workspace/dates";
 import type { Filters, Person } from "@/lib/workspace/types";
 import { PageBody } from "@/components/shell/AppShell";
 import { Avatar, Button, EmptyState, cx } from "@/components/ui";
 import { StatusMenu } from "@/components/people/StatusMenu";
 import { ArchiveImport } from "@/components/workspace/ArchiveImport";
+import { PeopleCarousel } from "@/components/home/PeopleCarousel";
+import { NetworkDots } from "@/components/home/NetworkDots";
+import { Spark } from "@/components/shell/Spark";
 import { useUI, useWorkspace } from "@/components/workspace/store";
 
 const SENIOR = ["Senior", "Manager / Lead", "Director / Head", "VP", "C-Level", "Founder"];
@@ -60,7 +63,7 @@ function PersonRow({ person, onOpen, right }: { person: Person; onOpen: () => vo
 
 export function HomeView() {
   const { people, settings, archive, completeFollowUp } = useWorkspace();
-  const { setPeopleFilters, openPerson, toast } = useUI();
+  const { setPeopleFilters, openPerson, openComposer, toast } = useUI();
   const router = useRouter();
   const today = todayISO();
 
@@ -100,6 +103,18 @@ export function HomeView() {
     return top ? { domain: top[0], count: top[1] } : null;
   }, [people]);
 
+  const needsReview = useMemo(() => people.filter((p) => p.needsReview && p.classSource === "auto").length, [people]);
+
+  /** The last things you actually did, newest first, straight off each record. */
+  const activity = useMemo(
+    () =>
+      people
+        .flatMap((p) => p.activity.map((a) => ({ ...a, person: p })))
+        .sort((a, b) => b.at.localeCompare(a.at))
+        .slice(0, 6),
+    [people],
+  );
+
   const goTo = (f: Filters) => {
     setPeopleFilters(f);
     router.push("/people");
@@ -132,6 +147,27 @@ export function HomeView() {
             ) : null}
           </div>
         </header>
+
+        {/* ---- today: three things, each one a link ------------------------ */}
+        <div className="mt-7 flex flex-wrap items-center gap-x-7 gap-y-3 border-y border-line py-3">
+          <p className="text-[10.5px] font-medium uppercase tracking-[0.12em] text-muted">Today</p>
+          {[
+            { n: due.length, label: due.length === 1 ? "follow-up due" : "follow-ups due", icon: Bell, go: () => router.push("/follow-ups") },
+            { n: suggestions.length, label: "worth reaching out to", icon: Sparkles, go: () => goTo({ ...goalFilters, statuses: ["not_contacted"] }) },
+            { n: needsReview, label: "profiles need review", icon: ListChecks, go: () => router.push("/review") },
+          ]
+            .filter((x) => x.n > 0)
+            .map((x) => (
+              <button key={x.label} type="button" onClick={x.go} className="group flex items-center gap-2 text-[13px]">
+                <x.icon size={14} className="text-muted" />
+                <span className="tabular font-semibold">{x.n.toLocaleString()}</span>
+                <span className="text-muted transition group-hover:text-accent">{x.label}</span>
+              </button>
+            ))}
+          {due.length + suggestions.length + needsReview === 0 ? (
+            <span className="text-[13px] text-muted">Nothing needs you right now.</span>
+          ) : null}
+        </div>
 
 
         {/* ---- the shape of the network ------------------------------------ */}
@@ -203,23 +239,11 @@ export function HomeView() {
               action={<Button onClick={() => router.push(goalsSet ? "/find" : "/settings")}>{goalsSet ? "Find more people" : "Set your goals"}</Button>}
             />
           ) : (
-            <div>
-              {suggestions.map((p) => (
-                <PersonRow
-                  key={p.id}
-                  person={p}
-                  onOpen={() => openPerson(p.id)}
-                  right={
-                    <span className="flex shrink-0 items-center gap-2">
-                      <span className="hidden max-w-[28ch] truncate text-[12px] text-muted lg:block" title={p.priorityReasons.join(" · ")}>
-                        {p.priorityReasons[0] ?? ""}
-                      </span>
-                      <StatusMenu person={p} size="sm" align="right" />
-                    </span>
-                  }
-                />
-              ))}
-            </div>
+            <PeopleCarousel
+              people={suggestions}
+              onOpen={openPerson}
+              onStart={(id) => openComposer(id)}
+            />
           )}
         </section>
 
@@ -239,6 +263,40 @@ export function HomeView() {
             </p>
           </section>
         ) : null}
+
+        {/* ---- the shape of it, as people rather than bars ------------------ */}
+        <section className="mt-10">
+          <SectionLabel action={<button type="button" onClick={() => router.push("/analytics")} className="text-[12px] text-muted transition hover:text-accent">Explore the network →</button>}>
+            Where your people are
+          </SectionLabel>
+          <NetworkDots people={people} onOpenPerson={openPerson} onOpenGroup={goTo} />
+          <p className="mt-4 text-[11.5px] text-faint">
+            One dot is one person. Solid means they are in your pipeline, faded means you have spoken before.
+          </p>
+        </section>
+
+        {/* ---- what you last did -------------------------------------------- */}
+        {activity.length ? (
+          <section className="mt-10">
+            <SectionLabel>Recent activity</SectionLabel>
+            <ol>
+              {activity.map((a, i) => (
+                <li key={`${a.person.id}-${a.at}-${i}`} className="flex items-baseline gap-3 border-b border-line/50 py-2 last:border-0">
+                  <span aria-hidden className={cx("mt-1.5 size-1.5 shrink-0 rounded-full", a.kind === "status" ? "bg-accent" : a.kind === "followup" ? "dot-green" : "bg-line-strong")} />
+                  <span className="min-w-0 flex-1 text-[13px]">
+                    <button type="button" onClick={() => openPerson(a.person.id)} className="font-medium transition hover:text-accent">
+                      {a.person.name}
+                    </button>
+                    <span className="text-muted"> — {a.text}</span>
+                  </span>
+                  <span className="shrink-0 text-[11.5px] text-faint">{formatDate(new Date(a.at), true)}</span>
+                </li>
+              ))}
+            </ol>
+          </section>
+        ) : null}
+
+        <Spark categories={["networking", "outreach", "relationships", "conversation"]} className="mt-10" />
 
         {/* ---- one closing observation, computed, not invented -------------- */}
         {biggestArea ? (

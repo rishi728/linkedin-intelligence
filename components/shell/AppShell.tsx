@@ -14,6 +14,7 @@ import { ExportDialog } from "@/components/outreach/ExportDialog";
 import { OpportunityWizard } from "@/components/find/OpportunityWizard";
 import { PersonPanel } from "@/components/people/PersonPanel";
 import { AddData } from "@/components/workspace/AddData";
+import { Logo } from "@/components/shell/Logo";
 import { Button, Spinner, cx } from "@/components/ui";
 import { useUI, useWorkspace } from "@/components/workspace/store";
 
@@ -84,7 +85,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <aside data-open={navOpen} className="nav-drawer flex w-[228px] shrink-0 flex-col border-r border-line bg-sidebar">
         <div className="flex h-12 items-center gap-2 px-4">
-          <span aria-hidden className="grid size-6 shrink-0 place-items-center rounded-md bg-accent text-[11px] font-bold tracking-tight text-accent-ink">Li</span>
+          <Logo size={22} className="shrink-0 text-accent" />
           <span className="truncate text-[13.5px] font-semibold tracking-tight">LinkedIn Intelligence</span>
         </div>
 
