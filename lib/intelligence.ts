@@ -32,7 +32,7 @@ export interface PersonClassification extends Hierarchy {
   campusOrg: boolean;
   /** For campus roles: what the person actually does there ("Marketing"). */
   campusActivity: string;
-  /** Founder / co-founder of the company itself — not "founder's office" or "founding engineer". */
+  /** Founder / co-founder of the company itself, not "founder's office" or "founding engineer". */
   isFounder: boolean;
   /** Employers named as past roles in the title ("Ex-Google", "formerly at Bain"). */
   pastCompanies: string[];
@@ -164,8 +164,8 @@ const FOUNDER_BLOCK = /\bfounder'?s?\s+office\b|\bfounding\s+engineer\b|\b(aspir
 
 /**
  * Words that describe a *level*, not a job. ESCO's rule: modifiers about seniority
- * play no part in deciding the occupation. A title made only of these — "Assistant
- * Manager", "Senior Associate", "Team Lead" — says how senior someone is and
+ * play no part in deciding the occupation. A title made only of these, "Assistant
+ * Manager", "Senior Associate", "Team Lead", says how senior someone is and
  * nothing whatsoever about what they do, so we must not invent an area for them.
  */
 const LEVEL_ONLY = new Set(
@@ -184,7 +184,7 @@ function contentWords(title: string): string[] {
 
 /**
  * "VP of Engineering" names an area rather than a job title, so area names have to
- * be matchable too — otherwise the level word is the only thing left to go on.
+ * be matchable too, otherwise the level word is the only thing left to go on.
  */
 let areaIndex: PhraseIndex<{ domain: string; fn: string }> | null = null;
 function getAreaIndex() {

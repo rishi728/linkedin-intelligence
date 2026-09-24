@@ -187,7 +187,7 @@ export function ReviewView() {
                       setCustom(d ? { domain: d.id, fn: d.functions[0].id } : null);
                     }}
                   >
-                    <option value="">—</option>
+                    <option value="">-</option>
                     {DOMAINS.filter((d) => d.id !== "unclassified").map((d) => (
                       <option key={d.id} value={d.id}>{d.label}</option>
                     ))}

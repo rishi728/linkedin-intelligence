@@ -11,7 +11,7 @@ import { useUI, useWorkspace } from "@/components/workspace/store";
 /**
  * Add more data whenever you like: another connections export, or the rest of the
  * LinkedIn archive. Everything is re-read and re-analysed on the spot, and nothing
- * you have written — statuses, notes, follow-ups, corrections — is touched.
+ * you have written, statuses, notes, follow-ups, corrections, is touched.
  */
 export function AddData({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { dataset, people, archive, importCsv, importArchive, removeDatasetFile } = useWorkspace();
@@ -194,7 +194,7 @@ export function AddData({ open, onClose }: { open: boolean; onClose: () => void 
             : "Pick messages.csv, Invitations.csv, Education.csv, Positions.csv and Profile.csv from your export folder to see who you have already spoken to."}
         </p>
         <p className="mt-1.5 text-[11.5px] text-muted">
-          Dates and counts only — message text is read to work out who wrote first, then discarded.
+          Dates and counts only, message text is read to work out who wrote first, then discarded.
         </p>
         <Button
           icon={FolderUp}

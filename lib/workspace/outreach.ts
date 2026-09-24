@@ -1,6 +1,7 @@
 // Research links and message templates. Nothing here sends anything:
 // research opens a search the user asked for; messages are copied by the user.
 
+import { functionLabel } from "../intelligence";
 import type { Person, Settings } from "./types";
 
 const google = (q: string) => `https://www.google.com/search?q=${encodeURIComponent(q)}`;
@@ -41,11 +42,23 @@ export const TEMPLATE_VARIABLES = [
   { key: "common_context", label: "Common context" },
   { key: "my_name", label: "Your name" },
   { key: "my_background", label: "Your background" },
+  { key: "area", label: "Their area of work" },
+  { key: "opportunity", label: "Job or internship" },
 ] as const;
 
 export type TemplateVars = Record<(typeof TEMPLATE_VARIABLES)[number]["key"], string>;
 
 /** LinkedIn "positions" are often whole headlines; keep the readable part. */
+/**
+ * A LinkedIn headline is often a whole CV separated by pipes. Only the first claim
+ * belongs in a message, so the rest is dropped rather than pasted at the reader.
+ */
+export function shortenHeadline(raw: string, max = 70): string {
+  const first = (raw ?? "").split(/\s*[|•·;]\s*/)[0].trim();
+  if (!first) return "";
+  return first.length <= max ? first : first.slice(0, max).replace(/[\s,;:-]+\S*$/, "");
+}
+
 export function readableRole(p: Pick<Person, "position" | "role">): string {
   const raw = (p.position ?? "").trim();
   if (!raw) return p.role;
@@ -65,7 +78,14 @@ export function templateVars(p: Person, settings: Settings, overrides: Partial<T
     ask: p.personalization.ask,
     common_context: p.personalization.common,
     my_name: settings.profile.name,
-    my_background: settings.profile.background,
+    my_background: shortenHeadline(settings.profile.background),
+    // Only from the classifier; when it does not know, the placeholder stays visible.
+    area: p.fn === "unspecified" || p.domain === "unclassified" ? "" : functionLabel(p.fn),
+    opportunity: settings.goals.opportunityTypes.includes("Internship")
+      ? "internship"
+      : settings.goals.opportunityTypes.includes("Full-time")
+        ? "job"
+        : "",
     ...overrides,
   };
 }

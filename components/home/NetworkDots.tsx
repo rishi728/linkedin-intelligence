@@ -10,7 +10,7 @@ const MAX_DOTS = 48;
 
 /**
  * The shape of the network, as clusters rather than bars. Hovering a dot names the
- * person; clicking opens them. Nothing is simulated — a dot exists because a
+ * person; clicking opens them. Nothing is simulated, a dot exists because a
  * person does, and the overflow count says exactly how many are not drawn.
  */
 export function NetworkDots({
@@ -63,7 +63,7 @@ export function NetworkDots({
                 <button
                   key={p.id}
                   type="button"
-                  title={`${p.name} — ${p.role}${p.company ? ` · ${p.company}` : ""}`}
+                  title={`${p.name}, ${p.role}${p.company ? ` · ${p.company}` : ""}`}
                   aria-label={`${p.name}, ${p.role}`}
                   onClick={() => onOpenPerson(p.id)}
                   className={cx(

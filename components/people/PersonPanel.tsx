@@ -197,7 +197,7 @@ export function PersonPanel() {
             ))}
           </div>
           <ul className="space-y-1">
-            {(person.priorityReasons.length ? person.priorityReasons : ["No goals set yet — add target areas or companies in Settings to rank people."]).map((r) => (
+            {(person.priorityReasons.length ? person.priorityReasons : ["No goals set yet. Add target areas or companies in Settings to rank people."]).map((r) => (
               <li key={r} className="flex gap-2 text-[12.5px] text-ink-2">
                 <span className="text-faint">•</span>
                 {r}
@@ -322,7 +322,7 @@ export function PersonPanel() {
             </Field>
             <Field label="Channel">
               <Select value={person.channel} onChange={(e) => patch({ channel: e.target.value })}>
-                <option value="">—</option>
+                <option value="">-</option>
                 {CHANNELS.map((c) => (
                   <option key={c} value={c}>{c}</option>
                 ))}
@@ -330,7 +330,7 @@ export function PersonPanel() {
             </Field>
             <Field label="Response">
               <Select value={person.response} onChange={(e) => patch({ response: e.target.value })}>
-                <option value="">—</option>
+                <option value="">-</option>
                 {RESPONSES.map((r) => (
                   <option key={r} value={r}>{r}</option>
                 ))}
@@ -338,7 +338,7 @@ export function PersonPanel() {
             </Field>
             <Field label="Opportunity type">
               <Select value={person.opportunityType} onChange={(e) => patch({ opportunityType: e.target.value })}>
-                <option value="">—</option>
+                <option value="">-</option>
                 {OPPORTUNITY_TYPES.map((o) => (
                   <option key={o} value={o}>{o}</option>
                 ))}
@@ -407,17 +407,17 @@ export function PersonPanel() {
                   {person.url.replace("https://www.linkedin.com/in/", "")}
                 </a>
               ) : (
-                <span className="text-muted">—</span>
+                <span className="text-muted">-</span>
               )}
             </Row>
             <Row label="Location">
               <Input
                 defaultValue={person.location}
-                placeholder="Not in LinkedIn's export — add it yourself"
+                placeholder="Not in LinkedIn's export. Add it yourself"
                 onBlur={(e) => e.target.value !== person.location && patch({ location: e.target.value })}
               />
             </Row>
-            <Row label="Connected">{person.connectedOn ? formatDate(person.connectedOn, true) : "—"}</Row>
+            <Row label="Connected">{person.connectedOn ? formatDate(person.connectedOn, true) : "-"}</Row>
             {person.duplicateOf ? <Row label="Duplicate">Same profile appears earlier in your export</Row> : null}
           </div>
         </Section>

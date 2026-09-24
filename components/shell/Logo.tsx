@@ -1,5 +1,5 @@
 /**
- * Three people and the paths between them: one node larger — you — with two
+ * Three people and the paths between them: one node larger, you, with two
  * connections branching away and a third hop implied. It reads at 16px in a
  * browser tab and at 64px as an app icon, and it is not a letter in a box.
  */

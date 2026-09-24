@@ -57,7 +57,7 @@ export function SettingsView() {
     <>
       <PageHeader
         title="Settings"
-        subtitle="Goals, targets, pipeline, templates and your data — all stored in this browser"
+        subtitle="Goals, targets, pipeline, templates and your data, all stored in this browser"
         actions={
           <Segmented
             value={tab}
@@ -124,7 +124,7 @@ export function SettingsView() {
               </Card>
 
               <Card>
-                <CardTitle hint="What you're looking for right now — this drives priority">Goals</CardTitle>
+                <CardTitle hint="What you're looking for right now, this drives priority">Goals</CardTitle>
                 <div className="space-y-4 p-4 pt-3">
                   <div>
                     <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-muted">Opportunity type</p>
@@ -212,7 +212,7 @@ export function SettingsView() {
                       <X size={11} />
                     </button>
                   ))}
-                  {!settings.targetCompanies.length ? <p className="text-[12.5px] text-muted">No targets yet — add a few below.</p> : null}
+                  {!settings.targetCompanies.length ? <p className="text-[12.5px] text-muted">No targets yet, add a few below.</p> : null}
                 </div>
                 <div className="mt-3 max-w-md">
                   <Input value={companyQuery} onChange={(e) => setCompanyQuery(e.target.value)} placeholder="Search your companies…" />
@@ -491,7 +491,7 @@ export function SettingsView() {
                 <CardTitle hint={`${people.length.toLocaleString()} connections from ${dataset?.fileName}`}>Import connections</CardTitle>
                 <div className="p-4 pt-3">
                   <p className="text-[12.5px] text-muted">
-                    Importing a newer export keeps all your notes, statuses, follow-ups and classifications — they’re matched by LinkedIn profile URL.
+                    Importing a newer export keeps all your notes, statuses, follow-ups and classifications, they’re matched by LinkedIn profile URL.
                   </p>
                   <input
                     ref={csvInput}
@@ -550,7 +550,7 @@ export function SettingsView() {
                 <p className="px-4 pt-3 text-[12.5px] text-muted">
                   Your pipeline lives here: statuses, notes, follow-ups and classifications save the moment you change them
                   {savedAt ? ` (last saved ${formatDate(new Date(savedAt), true)})` : ""}. The Excel export is for sharing a list
-                  with someone else — you never need it to keep your work safe.
+                  with someone else, you never need it to keep your work safe.
                 </p>
                 <div className="flex flex-wrap gap-2 p-4 pt-3">
                   <Button

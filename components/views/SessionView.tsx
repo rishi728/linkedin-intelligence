@@ -88,7 +88,7 @@ export function SessionView() {
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch {
-      toast("Couldn't copy automatically — select the text and copy it.");
+      toast("Couldn't copy automatically, select the text and copy it.");
     }
   };
 
@@ -146,7 +146,7 @@ export function SessionView() {
                 <Button onClick={() => router.push("/people")}>Change the shortlist</Button>
               </div>
               {!candidates.length ? (
-                <p className="mt-3 text-[12px] text-[var(--t-orange)]">Nothing matches right now — pick a segment or filter in People first.</p>
+                <p className="mt-3 text-[12px] text-[var(--t-orange)]">Nothing matches right now, pick a segment or filter in People first.</p>
               ) : null}
             </Card>
           </div>

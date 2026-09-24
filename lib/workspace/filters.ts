@@ -33,7 +33,7 @@ const NOT_STUDENTS = ["Entry-level", "Mid-level", "Senior", "Manager / Lead", "D
 
 /**
  * Goals that mean the same thing in anyone's network. Areas of work are not in here
- * — those are read from the data itself, because every network is different.
+ *, those are read from the data itself, because every network is different.
  */
 export const GOAL_INTENTS: Intent[] = [
   { id: "founders", label: "Founders", hint: "Founders & co-founders", filters: { audiences: ["founders"] } },
@@ -369,7 +369,7 @@ export function parseQuery(
     break;
   }
 
-  // "people" is filler in "supply chain people" — but real in "People Operations".
+  // "people" is filler in "supply chain people", but real in "People Operations".
   if (!/people (operations|ops|partner|partners|team|analytics)/.test(text.toLowerCase())) {
     rest = rest.replace(/\s(people|person|persons|folks|someone|anyone|connections)\s/g, " ");
   }

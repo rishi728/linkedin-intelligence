@@ -7,7 +7,7 @@ import { useUI, useWorkspace } from "@/components/workspace/store";
 
 /**
  * Pulls the rest of the LinkedIn export (messages, invitations, education…) into
- * the workspace. Only dates, directions and counts are kept — never message text.
+ * the workspace. Only dates, directions and counts are kept, never message text.
  */
 export function ArchiveImport({ compact = false }: { compact?: boolean }) {
   const { archive, importArchive, people } = useWorkspace();
@@ -77,7 +77,7 @@ export function ArchiveImport({ compact = false }: { compact?: boolean }) {
               : "Your export folder also holds messages.csv, Invitations.csv, Education.csv, Positions.csv and Profile.csv. Select them and it will fill in who you've already spoken to, who replied, who invited whom, and your own schools."}
           </p>
           <p className="mt-1.5 text-[11.5px] text-muted">
-            Dates and counts only — message text is read to work out direction, then discarded. Nothing leaves this browser.
+            Dates and counts only, message text is read to work out direction, then discarded. Nothing leaves this browser.
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             {picker}

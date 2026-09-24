@@ -84,7 +84,7 @@ export function parseConnectionsCsv(text: string): Connection[] {
   const headerIdx = lines.findIndex(headerLooksLikeContacts);
   if (headerIdx === -1) {
     throw new CsvFormatError(
-      "We couldn't find a header row with names in this file. Use Connections.csv from your LinkedIn data export — it has First Name, Last Name, Company and Position columns.",
+      "We couldn't find a header row with names in this file. Use Connections.csv from your LinkedIn data export, it has First Name, Last Name, Company and Position columns.",
     );
   }
 

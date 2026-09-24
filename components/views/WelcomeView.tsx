@@ -17,7 +17,7 @@ const STEPS = [
 ];
 
 const FEATURES = [
-  { icon: Users, title: "Understand who you know", body: "Every connection sorted into domain, function, role and seniority — with a confidence score you can correct." },
+  { icon: Users, title: "Understand who you know", body: "Every connection sorted into domain, function, role and seniority, with a confidence score you can correct." },
   { icon: Search, title: "Find the right people", body: "Ask for “senior people in supply chain” or use guided search to build a shortlist in seconds." },
   { icon: KanbanSquare, title: "Run your outreach", body: "Track conversations on a board, prepare personalised messages, and never lose a thread." },
   { icon: Bell, title: "Never miss a follow-up", body: "Reminders are scheduled for you when you mark someone as contacted." },
@@ -89,7 +89,7 @@ export function WelcomeView() {
             </h1>
             <p className="mt-3 max-w-xl text-[14px] leading-relaxed text-ink-2">
               LinkedIn Intelligence turns your connections export into a working outreach system: who they are, who matters for
-              what you need right now, and what to do next — all in your browser, with nothing uploaded anywhere.
+              what you need right now, and what to do next, all in your browser, with nothing uploaded anywhere.
             </p>
 
             <div className="mt-8 grid gap-3 sm:grid-cols-2">
@@ -108,7 +108,7 @@ export function WelcomeView() {
                 {STEPS.map(([strong, rest], i) => (
                   <li key={strong} className="flex gap-2.5 text-[12.5px] text-ink-2">
                     <span className="tabular text-muted">{i + 1}.</span>
-                    <span><strong className="font-medium text-ink">{strong}</strong> — {rest}</span>
+                    <span><strong className="font-medium text-ink">{strong}</strong>, {rest}</span>
                   </li>
                 ))}
               </ol>
@@ -167,7 +167,7 @@ export function WelcomeView() {
 
             <p className="mt-3 rounded-lg border border-line bg-subtle px-3 py-2 text-[12px] text-muted">
               Drop the whole <strong className="text-ink">.zip</strong> and it also reads your messages, invitations and
-              education from it — so it knows who you have already spoken to. Nothing is uploaded; it is all read here.
+              education from it, so it knows who you have already spoken to. Nothing is uploaded; it is all read here.
             </p>
 
             <div className="mt-3 flex items-center justify-between gap-3">

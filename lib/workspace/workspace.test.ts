@@ -8,7 +8,8 @@ import { addDays, dueBucket } from "./dates";
 import { defaultSettings } from "./defaults";
 import { applyFilters, broaden, INTENTS, parseQuery } from "./filters";
 import { followUpBuckets, groupCompanies, healthCounts } from "./insights";
-import { readableRole, renderTemplate, researchUrl } from "./outreach";
+import { readableRole, renderTemplate, researchUrl, shortenHeadline, templateVars } from "./outreach";
+import { INTENT_MAP, OUTREACH_INTENTS } from "./intents";
 
 const rows = parseConnectionsCsv(generateSampleCsv(640));
 const cache = autoClassifyAll(rows);
@@ -198,6 +199,39 @@ describe("message variables", () => {
     expect(readableRole({ position: "Product Manager @ Acme | Ex-Google | Angel investor", role: "Product Manager" })).toBe("Product Manager @ Acme");
     expect(readableRole({ position: "Client Acquisition & Partnership Director at a very long headline that keeps going and going for ages", role: "Business Development Manager" })).toBe("Business Development Manager");
     expect(readableRole({ position: "", role: "Software Engineer" })).toBe("Software Engineer");
+  });
+});
+
+describe("outreach presets", () => {
+  const HEADLINE =
+    "Intern @Closefuture | President @180DC NITW | Formula Student | Research - IIM Calcutta | HPAIR 25 | Ex- Care Netram";
+
+  it("never pastes a whole LinkedIn headline into a message", () => {
+    // This was the bug: the user's own headline went in verbatim and blew the limit.
+    expect(shortenHeadline(HEADLINE)).toBe("Intern @Closefuture");
+    expect(shortenHeadline(HEADLINE).length).toBeLessThan(71);
+    expect(shortenHeadline("")).toBe("");
+    expect(shortenHeadline("a final-year student at NIT Warangal")).toBe("a final-year student at NIT Warangal");
+  });
+
+  it("offers exactly three reasons to reach out", () => {
+    expect(OUTREACH_INTENTS.map((i) => i.id)).toEqual(["explore_connect", "referral", "job_internship"]);
+  });
+
+  it("fills what it knows and leaves a visible blank for what it does not", () => {
+    const settings = defaultSettings();
+    settings.profile.name = "Rishi";
+    settings.profile.background = HEADLINE;
+    const people = buildPeople(rows, cache, {}, settings);
+    const person = people.find((p) => p.company && p.fn !== "unspecified")!;
+
+    const text = renderTemplate(INTENT_MAP.referral.body, templateVars(person, settings));
+    expect(text).toContain(`Hi ${person.firstName},`);
+    expect(text).toContain(person.company);
+    expect(text).toContain("Intern @Closefuture");
+    expect(text).not.toContain("180DC NITW");
+    // Nothing is invented: the unknown role stays an editable blank.
+    expect(text).toContain("[role]");
   });
 });
 

@@ -12,11 +12,11 @@ import { Button, Card, CardTitle, Meter, Pill } from "@/components/ui";
 import { useUI, useWorkspace } from "@/components/workspace/store";
 
 const DESCRIPTIONS: Record<HealthIssue, string> = {
-  unclassified: "No job title and no recognisable employer — nothing to classify. Open them to set a role yourself.",
+  unclassified: "No job title and no recognisable employer, so there is nothing to classify. Open them to set a role yourself.",
   "low-confidence": "Classified from weak evidence, like a generic title or the employer alone.",
   "missing-position": "LinkedIn's export has no job title for these people.",
   "missing-company": "No employer in the export, so industry and target matching can't work.",
-  "missing-email": "LinkedIn only shares emails for people who allow it — reach these people on LinkedIn.",
+  "missing-email": "LinkedIn only shares emails for people who allow it, reach these people on LinkedIn.",
   "missing-linkedin": "No profile URL in the export.",
   duplicates: "The same profile appears more than once in your file.",
   manual: "Classified by you or by one of your rules.",

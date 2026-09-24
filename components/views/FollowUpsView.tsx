@@ -39,7 +39,7 @@ export function FollowUpsView() {
     if (p.status === "to_contact") setStatus([p.id], "contacted");
     const nextStep = settings.cadence.enabled ? settings.cadence.steps[p.sequenceStep + 1] : undefined;
     toast(
-      nextStep === undefined ? `${p.name}: follow-up done.` : `${p.name}: done — next nudge in ${nextStep} days.`,
+      nextStep === undefined ? `${p.name}: follow-up done.` : `${p.name}: done, next nudge in ${nextStep} days.`,
       { label: "Undo", run: () => updateRecord(p.id, previous) },
     );
   };
@@ -61,7 +61,7 @@ export function FollowUpsView() {
               disabled={!total}
               onClick={() => {
                 downloadFollowUpCalendar(people, settings);
-                toast("Calendar file downloaded — open it to add the reminders.");
+                toast("Calendar file downloaded. Open it to add the reminders.");
               }}
             >
               Add to calendar

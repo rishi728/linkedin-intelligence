@@ -117,7 +117,7 @@ export interface TitleSegment {
 // "Founder @ Acme | Ex-Google | Angel Investor" into weighted segments.
 export function splitSegments(position: string): TitleSegment[] {
   const parts = position
-    .split(/\s*[|•·▪►◆‖;]\s*|\s+[-–—]\s+|\s*\/\/\s*/)
+    .split(/\s*[|•·▪►◆‖;]\s*|\s+[-–-]\s+|\s*\/\/\s*/)
     .map((p) => p.trim())
     .filter(Boolean);
 

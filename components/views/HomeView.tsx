@@ -214,7 +214,7 @@ export function HomeView() {
                         size="sm"
                         onClick={() => {
                           completeFollowUp(p.id);
-                          toast(`${p.name} — follow-up done.`);
+                          toast(`${p.name}, follow-up done.`);
                         }}
                       >
                         Done
@@ -271,7 +271,7 @@ export function HomeView() {
           </SectionLabel>
           <NetworkDots people={people} onOpenPerson={openPerson} onOpenGroup={goTo} />
           <p className="mt-4 text-[11.5px] text-faint">
-            One dot is one person. Solid means they are in your pipeline, faded means you have spoken before.
+            One dot is one person. Solid means they are in your pipeline; faded means you have spoken before.
           </p>
         </section>
 
@@ -287,7 +287,7 @@ export function HomeView() {
                     <button type="button" onClick={() => openPerson(a.person.id)} className="font-medium transition hover:text-accent">
                       {a.person.name}
                     </button>
-                    <span className="text-muted"> — {a.text}</span>
+                    <span className="text-muted">, {a.text}</span>
                   </span>
                   <span className="shrink-0 text-[11.5px] text-faint">{formatDate(new Date(a.at), true)}</span>
                 </li>
@@ -304,7 +304,7 @@ export function HomeView() {
             <SectionLabel>Worth noticing</SectionLabel>
             <p className="max-w-[58ch] text-[15px] leading-relaxed">
               <strong className="font-semibold">{domainLabel(biggestArea.domain)}</strong> is the largest area in your
-              network — <span className="tabular">{biggestArea.count.toLocaleString()}</span> people.
+              network, <span className="tabular">{biggestArea.count.toLocaleString()}</span> people.
               {foundersUncontacted > 0 ? (
                 <>
                   {" "}You also know <span className="tabular">{founders.length.toLocaleString()}</span> founders, and

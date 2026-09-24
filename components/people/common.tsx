@@ -41,7 +41,7 @@ export function ConfidenceBadge({ person, showPercent = true }: { person: Person
   // "Needs review" read as a judgement about the person. It is only ever about how
   // well their job title could be read, so the label and tooltip now say so.
   const title = person.needsReview
-    ? `Their job title was hard to place — ${person.confidence}% sure. Matched: ${person.reasons.join(" · ")}. Open them to correct it.`
+    ? `Their job title was hard to place, ${person.confidence}% sure. Matched: ${person.reasons.join(" · ")}. Open them to correct it.`
     : `${person.confidence}% sure. Matched: ${person.reasons.join(" · ")}`;
   return (
     <Pill tone={tone} title={title}>

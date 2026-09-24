@@ -1,5 +1,5 @@
 // Transparent, rule-based priority. It scores how well someone matches what the
-// user said they're looking for — never how likely they are to help.
+// user said they're looking for, never how likely they are to help.
 
 import { domainLabel, functionLabel } from "../intelligence";
 import type { Seniority } from "../taxonomy";
@@ -27,10 +27,10 @@ export function scorePriority(p: Scorable, settings: Settings): PriorityResult {
 
   if (goals.functions.includes(p.fn)) {
     score += w.functionMatch;
-    reasons.push(`Works in ${functionLabel(p.fn)} — one of your target areas`);
+    reasons.push(`Works in ${functionLabel(p.fn)}, one of your target areas`);
   } else if (goals.domains.includes(p.domain)) {
     score += w.domainMatch;
-    reasons.push(`Works in ${domainLabel(p.domain)} — one of your target areas`);
+    reasons.push(`Works in ${domainLabel(p.domain)}, one of your target areas`);
   }
 
   if (p.isTarget) {
@@ -41,17 +41,17 @@ export function scorePriority(p: Scorable, settings: Settings): PriorityResult {
   if (goals.seniorities.length) {
     if (goals.seniorities.includes(p.seniority)) {
       score += w.seniorityMatch;
-      reasons.push(`${p.seniority} — the seniority you're targeting`);
+      reasons.push(`${p.seniority}, the seniority you're targeting`);
     }
   } else if (SENIOR_WEIGHT[p.seniority]) {
     score += SENIOR_WEIGHT[p.seniority]!;
-    if (SENIOR_WEIGHT[p.seniority]! >= 8) reasons.push(`${p.seniority} — experienced enough to advise or refer`);
+    if (SENIOR_WEIGHT[p.seniority]! >= 8) reasons.push(`${p.seniority}, experienced enough to advise or refer`);
   }
 
   const wantsJobs = goals.opportunityTypes.some((t) => ["Internship", "Full-time", "Referral"].includes(t));
   if (wantsJobs && p.fn === "talent-acquisition") {
     score += w.recruiter;
-    reasons.push("Recruiter — relevant for internships, jobs and referrals");
+    reasons.push("Recruiter, relevant for internships, jobs and referrals");
   }
   if (p.systemTags.includes("hiring")) {
     score += w.hiring;
@@ -63,7 +63,7 @@ export function scorePriority(p: Scorable, settings: Settings): PriorityResult {
   }
   if (p.history?.theyReplied) {
     score += w.replied;
-    reasons.push("You have talked before — they replied to you");
+    reasons.push("You have talked before, they replied to you");
   } else if (p.history?.invited === "them") {
     score += w.theyInvited;
     reasons.push("They invited you to connect");
@@ -74,7 +74,7 @@ export function scorePriority(p: Scorable, settings: Settings): PriorityResult {
   }
   if (p.confidence < 60) {
     score -= 5;
-    reasons.push("Role is uncertain — review before reaching out");
+    reasons.push("Role is uncertain, review before reaching out");
   }
 
   score = Math.max(0, Math.min(100, score));

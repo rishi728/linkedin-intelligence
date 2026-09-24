@@ -26,7 +26,7 @@ function FollowUpCell({ person }: { person: Person }) {
   }
   if (person.nextAction) return <span className="truncate text-[12px] text-ink-2">{person.nextAction}</span>;
   if (person.lastContactedAt) return <span className="text-[12px] text-muted">Contacted {formatDate(person.lastContactedAt)}</span>;
-  return <span className="text-[12px] text-faint">—</span>;
+  return <span className="text-[12px] text-faint">-</span>;
 }
 
 export function PeopleList({
@@ -100,7 +100,7 @@ export function PeopleList({
                         <span className="min-w-0">
                           <span className="block truncate text-[13px] font-medium">{person.name}</span>
                           <span className="block truncate text-[12px] text-muted">{person.position || "No title shared"}</span>
-                          <span className="block truncate text-[12px] text-ink-2">{person.company || "—"}</span>
+                          <span className="block truncate text-[12px] text-ink-2">{person.company || "-"}</span>
                         </span>
                       </button>
                       {person.url ? (
@@ -165,7 +165,7 @@ export function PeopleList({
                   </span>
                 </button>
                 <span className="truncate text-[12.5px] text-ink-2" title={person.company}>
-                  {person.company || "—"}
+                  {person.company || "-"}
                   {person.isTarget ? <span className="ml-1 text-[11px] text-accent" title="Target company">★</span> : null}
                 </span>
                 <span className="min-w-0 truncate text-[12px] text-muted" title={`${domainLabel(person.domain)} · ${functionLabel(person.fn)}`}>

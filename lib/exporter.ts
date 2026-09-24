@@ -194,7 +194,7 @@ function fillSummary(s: Worksheet, tracker: Worksheet, people: Person[], setting
   table("B", 6, "Status", count((p) => settings.statuses.find((x) => x.id === p.status)?.label ?? p.status));
   table("E", 6, "Priority", count((p) => p.priority[0].toUpperCase() + p.priority.slice(1)));
   table("B", 24, "Domain", count((p) => domainLabel(p.domain)));
-  table("E", 24, "Top companies", count((p) => p.company || "—").slice(0, 15));
+  table("E", 24, "Top companies", count((p) => p.company || "-").slice(0, 15));
 }
 
 export async function downloadWorkbook(buffer: ArrayBuffer, fileName: string) {

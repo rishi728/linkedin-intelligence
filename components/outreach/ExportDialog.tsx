@@ -88,11 +88,11 @@ export function ExportDialog() {
                 people={people}
                 settings={settings}
                 companies={companies}
-                placeholder="Narrow the export — e.g. “consulting managers not contacted”"
+                placeholder="Narrow the export, e.g. “consulting managers not contacted”"
               />
               <p className="px-4 py-2 text-[12.5px] text-muted">
                 {rows.length.toLocaleString()} people
-                {describeFilters(filters, settings).length ? "" : " (everyone — add filters to narrow it down)"}
+                {describeFilters(filters, settings).length ? "" : " (everyone; add filters to narrow it down)"}
               </p>
             </div>
           )}

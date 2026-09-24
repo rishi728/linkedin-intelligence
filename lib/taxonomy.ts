@@ -911,7 +911,7 @@ export const CATEGORIES: CategoryDef[] = [
     label: "Role Not Shared",
     short: "Not Shared",
     emoji: "🔒",
-    description: "Connections who left both job title and company blank on LinkedIn (or used a placeholder like “—”). There is nothing to classify.",
+    description: "Connections who left both job title and company blank on LinkedIn (or used a placeholder like “-”). There is nothing to classify.",
   },
 ];
 

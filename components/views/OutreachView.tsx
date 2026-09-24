@@ -11,7 +11,7 @@ import { Avatar, Button, EmptyState, Input, Menu, MenuItem, cx } from "@/compone
 import { useUI, useWorkspace } from "@/components/workspace/store";
 
 /**
- * The people you picked, as a plain editable table — the same shape you'd keep in
+ * The people you picked, as a plain editable table, the same shape you'd keep in
  * a spreadsheet, except the status is a real dropdown and nothing has to be saved.
  */
 export function OutreachView() {
@@ -138,7 +138,7 @@ function Row({
       </button>
 
       <span className="truncate text-[12.5px] text-ink-2" title={person.company}>
-        {person.company || "—"}
+        {person.company || "-"}
       </span>
 
       <span className="min-w-0"><StatusMenu person={person} /></span>

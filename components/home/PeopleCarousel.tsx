@@ -8,7 +8,7 @@ import { Avatar, Button, Pill, cx } from "@/components/ui";
 /**
  * The person in focus is large; their neighbours sit alongside, dimmed and narrow,
  * so it is obvious there are more and which way they run. Everything shown is from
- * the person's own record — the reason line is the priority rule that fired.
+ * the person's own record, the reason line is the priority rule that fired.
  */
 export function PeopleCarousel({
   people,

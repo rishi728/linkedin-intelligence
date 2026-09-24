@@ -136,7 +136,7 @@ it.skipIf(!existsSync(CSV))("walks the off-campus workflow on the real dataset",
   const founders = applyFilters(people, parseQuery("founders i haven't contacted", companies).filters, settings);
   expect(founders.every((p) => p.isFounder)).toBe(true);
   expect(founders.every((p) => p.status === "not_contacted")).toBe(true);
-  L.push("", `Founders, never contacted: ${founders.length} — all isFounder: true`);
+  L.push("", `Founders, never contacted: ${founders.length}, all isFounder: true`);
 
   // Conversation history really is used.
   const spoken = applyFilters(people, parseQuery("people i've spoken to in operations", companies).filters, settings);

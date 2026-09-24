@@ -2,7 +2,7 @@
 // relationship history: who you've actually talked to, who replied, who invited
 // whom, your own schools and roles.
 //
-// Only metadata is kept — dates, directions and counts. Message text is read to
+// Only metadata is kept, dates, directions and counts. Message text is read to
 // work out direction and then discarded; it is never stored or exported.
 
 import Papa from "papaparse";

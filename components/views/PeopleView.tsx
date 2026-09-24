@@ -74,7 +74,7 @@ export function PeopleView() {
                 const name = window.prompt("Name this segment", "My segment");
                 if (!name) return;
                 saveSegment(name, peopleFilters);
-                toast(`Saved “${name}” — it's in the sidebar.`);
+                toast(`Saved “${name}”, it's in the sidebar.`);
               }}
             >
               Save segment

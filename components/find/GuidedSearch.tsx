@@ -8,7 +8,7 @@ import type { AudienceId, Filters, Person, Settings } from "@/lib/workspace/type
 import { Button, cx } from "@/components/ui";
 
 /**
- * Four questions — area, who, where, relationship — each showing how many people
+ * Four questions, area, who, where, relationship, each showing how many people
  * are left. Everything it produces is an ordinary Filters object, so the results,
  * the chips and a saved list behave exactly as if the search had been typed.
  */
@@ -30,7 +30,7 @@ const WHO_OPTIONS: Array<{ id: Who; label: string; hint: string }> = [
 const REL_OPTIONS: Array<{ id: Rel; label: string; hint: string }> = [
   { id: "any", label: "Anyone", hint: "However we're connected" },
   { id: "spoken", label: "I've spoken to them", hint: "There's a conversation already" },
-  { id: "replied", label: "Warm — they replied", hint: "They wrote back before" },
+  { id: "replied", label: "Warm, they replied", hint: "They wrote back before" },
   { id: "never", label: "Never contacted", hint: "Fresh outreach" },
 ];
 

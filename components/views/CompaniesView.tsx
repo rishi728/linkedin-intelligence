@@ -156,7 +156,7 @@ export function CompaniesView() {
                 if (!paths.length) return null;
                 return (
                   <Card className="mt-3">
-                    <CardTitle hint="Ranked on the history in your own data — replies, shared campus, seniority">Best ways in</CardTitle>
+                    <CardTitle hint="Ranked on the history in your own data: replies, shared campus, seniority">Best ways in</CardTitle>
                     <div className="p-2">
                       {paths.map(({ p, why }) => (
                         <div key={p.id} className="flex items-center gap-3 rounded-lg px-2 py-1.5 hover:bg-hover">
@@ -195,7 +195,7 @@ export function CompaniesView() {
                     </button>
                   ))}
                   {active.people.length > 60 ? (
-                    <p className="px-2 py-2 text-[12px] text-muted">+{active.people.length - 60} more — open in People to see them all.</p>
+                    <p className="px-2 py-2 text-[12px] text-muted">+{active.people.length - 60} more, open in People to see them all.</p>
                   ) : null}
                 </div>
               </Card>

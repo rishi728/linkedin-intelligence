@@ -7,7 +7,7 @@ import { cx } from "@/components/ui";
 
 /**
  * One principle, set like a margin note. It holds no data about the user and makes
- * no claim about anyone — it is craft, not output. Which one you get is random per
+ * no claim about anyone, it is craft, not output. Which one you get is random per
  * mount, and the shuffle button never gives you the same line twice in a row.
  */
 export function Spark({

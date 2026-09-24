@@ -84,7 +84,7 @@ export function FilterBar({
 
   /**
    * Counts shown next to each option reflect the *other* filters already applied,
-   * so the numbers tell you what you'd actually get — one pass per facet, memoised.
+   * so the numbers tell you what you'd actually get, one pass per facet, memoised.
    */
   const counts = useMemo(() => {
     const tally = <K extends keyof Filters>(key: K, get: (p: Person) => string | string[]) => {
@@ -263,7 +263,7 @@ export function FilterBar({
                 <Checkbox
                   checked={!!filters.dormant}
                   onChange={(v) => onChange({ ...filters, dormant: v || undefined })}
-                  label="Dormant — connected over a year ago, never contacted"
+                  label="Dormant: connected over a year ago, never contacted"
                 />
               </div>
             </>
