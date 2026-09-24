@@ -2,42 +2,66 @@
 
 import { useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Bell, CheckCircle2, Compass, Search, Sparkles, Target, Users } from "lucide-react";
-import { domainLabel, functionLabel } from "@/lib/intelligence";
+import { ArrowRight, Search, Send } from "lucide-react";
+import { domainLabel } from "@/lib/intelligence";
 import { applyFilters } from "@/lib/workspace/filters";
 import { followUpBuckets } from "@/lib/workspace/insights";
 import { hasGoals } from "@/lib/workspace/priority";
-import { formatDate, relativeDue, todayISO } from "@/lib/workspace/dates";
+import { relativeDue, todayISO } from "@/lib/workspace/dates";
 import type { Filters, Person } from "@/lib/workspace/types";
-import { PageBody, PageHeader } from "@/components/shell/AppShell";
-import { Avatar, Button, Card, CardTitle, EmptyState, Pill, cx } from "@/components/ui";
-import { StatusBadge } from "@/components/people/common";
+import { PageBody } from "@/components/shell/AppShell";
+import { Spark } from "@/components/shell/Spark";
+import { Avatar, Button, EmptyState, cx } from "@/components/ui";
+import { StatusMenu } from "@/components/people/StatusMenu";
 import { ArchiveImport } from "@/components/workspace/ArchiveImport";
 import { useUI, useWorkspace } from "@/components/workspace/store";
 
-function ActionCard({ label, value, hint, icon: Icon, tone = "gray", onClick }: { label: string; value: string; hint: string; icon: React.ComponentType<{ size?: number; className?: string }>; tone?: string; onClick: () => void }) {
+const SENIOR = ["Senior", "Manager / Lead", "Director / Head", "VP", "C-Level", "Founder"];
+
+/** A number you can act on. The arrow is the point: every figure goes somewhere. */
+function Stat({ n, label, hint, onClick }: { n: number; label: string; hint?: string; onClick: () => void }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="group flex flex-col rounded-xl border border-line bg-panel p-4 text-left transition hover:border-line-strong hover:shadow-pop"
-    >
-      <span className="flex items-center justify-between">
-        <span className={cx("grid size-7 place-items-center rounded-lg", `tone-${tone}`)}>
-          <Icon size={14} />
-        </span>
-        <ArrowRight size={14} className="text-faint transition group-hover:translate-x-0.5 group-hover:text-accent" />
+    <button type="button" onClick={onClick} className="group block text-left">
+      <span className="tabular flex items-baseline gap-1.5 text-[28px] font-semibold leading-none tracking-tight">
+        {n.toLocaleString()}
+        <ArrowRight size={14} className="mb-1 text-faint opacity-0 transition group-hover:translate-x-0.5 group-hover:text-accent group-hover:opacity-100" />
       </span>
-      <span className="tabular mt-3 text-[26px] font-semibold leading-none tracking-tight">{value}</span>
-      <span className="mt-1.5 text-[13px] font-medium">{label}</span>
-      <span className="mt-0.5 text-[12px] text-muted">{hint}</span>
+      <span className="mt-1.5 block text-[13px] font-medium text-ink group-hover:text-accent">{label}</span>
+      {hint ? <span className="mt-0.5 block text-[12px] text-muted">{hint}</span> : null}
     </button>
   );
 }
 
+function SectionLabel({ children, action }: { children: React.ReactNode; action?: React.ReactNode }) {
+  return (
+    <div className="mb-3 flex items-baseline justify-between gap-4">
+      <h2 className="text-[10.5px] font-medium uppercase tracking-[0.12em] text-muted">{children}</h2>
+      {action}
+    </div>
+  );
+}
+
+function PersonRow({ person, onOpen, right }: { person: Person; onOpen: () => void; right?: React.ReactNode }) {
+  return (
+    <div className="group flex items-center gap-3 border-b border-line/50 py-2 last:border-0">
+      <button type="button" onClick={onOpen} className="flex min-w-0 flex-1 items-center gap-2.5 text-left">
+        <Avatar name={person.name} size={28} />
+        <span className="min-w-0">
+          <span className="block truncate text-[13px] font-medium group-hover:text-accent">{person.name}</span>
+          <span className="block truncate text-[12px] text-muted">
+            {person.role}
+            {person.company ? <span className="text-faint"> · {person.company}</span> : null}
+          </span>
+        </span>
+      </button>
+      {right}
+    </div>
+  );
+}
+
 export function HomeView() {
-  const { people, settings, dataset, archive, setStatus, updateRecord } = useWorkspace();
-  const { setPeopleFilters, openPerson, openWizard, toast } = useUI();
+  const { people, settings, archive, completeFollowUp } = useWorkspace();
+  const { setPeopleFilters, openPerson, toast } = useUI();
   const router = useRouter();
   const today = todayISO();
 
@@ -45,242 +69,208 @@ export function HomeView() {
   const due = [...buckets.overdue, ...buckets.today];
   const goalsSet = hasGoals(settings);
 
-  const relevant = useMemo(() => {
-    const f: Filters = goalsSet
-      ? { domains: settings.goals.domains.length ? settings.goals.domains : undefined, functions: settings.goals.functions.length ? settings.goals.functions : undefined, targetOnly: settings.goals.domains.length || settings.goals.functions.length ? undefined : true }
-      : { seniorities: ["Senior", "Manager / Lead", "Director / Head", "VP", "C-Level", "Founder"] };
-    return applyFilters(people, f, settings);
-  }, [people, settings, goalsSet]);
+  const goalFilters: Filters = useMemo(
+    () =>
+      goalsSet
+        ? {
+            domains: settings.goals.domains.length ? settings.goals.domains : undefined,
+            functions: settings.goals.functions.length ? settings.goals.functions : undefined,
+          }
+        : { seniorities: SENIOR },
+    [goalsSet, settings.goals.domains, settings.goals.functions],
+  );
 
+  const relevant = useMemo(() => applyFilters(people, goalFilters, settings), [people, goalFilters, settings]);
   const suggestions = useMemo(
-    () => relevant.filter((p) => p.status === "not_contacted").sort((a, b) => b.priorityScore - a.priorityScore).slice(0, 6),
+    () => relevant.filter((p) => p.status === "not_contacted").sort((a, b) => b.priorityScore - a.priorityScore).slice(0, 5),
     [relevant],
   );
-  const notContacted = relevant.filter((p) => p.status === "not_contacted").length;
+
+  const companies = useMemo(() => new Set(people.map((p) => p.companyKey).filter(Boolean)).size, [people]);
+  const founders = useMemo(() => people.filter((p) => p.isFounder), [people]);
+  const foundersUncontacted = founders.filter((p) => p.status === "not_contacted").length;
   const inPipeline = people.filter((p) => p.status !== "not_contacted").length;
+  const awaiting = people.filter((p) => p.status === "contacted" || p.status === "awaiting").length;
+  const replied = people.filter((p) => p.history?.theyReplied).length;
+
+  /** The largest area, used for the one closing insight. Real counts only. */
+  const biggestArea = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const p of people) if (p.domain !== "unclassified" && p.domain !== "students") m.set(p.domain, (m.get(p.domain) ?? 0) + 1);
+    const top = [...m.entries()].sort((a, b) => b[1] - a[1])[0];
+    return top ? { domain: top[0], count: top[1] } : null;
+  }, [people]);
 
   const goTo = (f: Filters) => {
     setPeopleFilters(f);
     router.push("/people");
   };
 
-  const greeting = new Date().getHours() < 12 ? "Good morning" : new Date().getHours() < 18 ? "Good afternoon" : "Good evening";
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+  const firstName = settings.profile.name ? settings.profile.name.split(" ")[0] : "";
 
   return (
-    <>
-      <PageHeader
-        title={`${greeting}${settings.profile.name ? `, ${settings.profile.name.split(" ")[0]}` : ""}`}
-        subtitle={`${people.length.toLocaleString()} connections · imported ${formatDate(new Date(dataset!.importedAt), true)}`}
-        actions={
-          <>
-            <Button icon={Sparkles} onClick={() => openWizard(true)}>Guided search</Button>
-            <Button variant="primary" icon={Search} onClick={() => router.push("/find")}>Find people</Button>
-          </>
-        }
-      />
-      <PageBody>
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <ActionCard
-            label="Your network"
-            value={people.length.toLocaleString()}
-            hint={`${new Set(people.map((p) => p.companyKey).filter(Boolean)).size.toLocaleString()} companies`}
-            icon={Users}
-            tone="blue"
-            onClick={() => goTo({})}
-          />
-          <ActionCard
-            label="People worth exploring"
-            value={relevant.length.toLocaleString()}
-            hint={goalsSet ? "In your target areas" : "Senior people — set goals to focus this"}
-            icon={Target}
-            tone="teal"
-            onClick={() => goTo(goalsSet ? { domains: settings.goals.domains, functions: settings.goals.functions } : { seniorities: ["Senior", "Manager / Lead", "Director / Head", "VP", "C-Level", "Founder"] })}
-          />
-          <ActionCard
-            label="Follow-ups due"
-            value={due.length.toLocaleString()}
-            hint={buckets.overdue.length ? `${buckets.overdue.length} overdue` : "Nothing overdue"}
-            icon={Bell}
-            tone={due.length ? "orange" : "gray"}
-            onClick={() => router.push("/follow-ups")}
-          />
-          <ActionCard
-            label="Not contacted yet"
-            value={notContacted.toLocaleString()}
-            hint={`${inPipeline.toLocaleString()} already in your pipeline`}
-            icon={Compass}
-            tone="violet"
-            onClick={() => goTo({ statuses: ["not_contacted"], ...(goalsSet ? { domains: settings.goals.domains, functions: settings.goals.functions } : {}) })}
-          />
-        </div>
+    <PageBody className="px-6 py-8 sm:px-10">
+      <div className="anim-stagger mx-auto w-full max-w-5xl">
+        {/* ---- the briefing ------------------------------------------------ */}
+        <header>
+          <h1 className="text-[30px] font-semibold leading-tight tracking-tight">
+            {greeting}{firstName ? `, ${firstName}` : ""}.
+          </h1>
+          <p className="mt-1.5 max-w-[52ch] text-[14px] leading-relaxed text-muted">
+            {people.length.toLocaleString()} people in your network.{" "}
+            {due.length > 0
+              ? `${due.length} ${due.length === 1 ? "conversation is" : "conversations are"} waiting on you today.`
+              : suggestions.length > 0
+                ? `${suggestions.length} worth starting a conversation with.`
+                : "Everything is up to date."}
+          </p>
+          <div className="mt-5 flex flex-wrap gap-2">
+            <Button variant="primary" icon={Search} onClick={() => router.push("/find")}>Find someone</Button>
+            {inPipeline > 0 ? (
+              <Button icon={Send} onClick={() => router.push("/outreach")}>Continue outreach</Button>
+            ) : null}
+          </div>
+        </header>
 
-        <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-          {[
-            { label: "They replied to you", n: people.filter((p) => p.history?.theyReplied).length, f: { history: "replied" } as Filters, hint: "Warmest people in your network" },
-            { label: "Messaged, no reply", n: people.filter((p) => p.history?.messageCount && !p.history.theyReplied).length, f: { history: "no-reply" } as Filters, hint: "Worth one more nudge" },
-            { label: "Connected in 30 days", n: applyFilters(people, { connectedWithinDays: 30 }, settings).length, f: { connectedWithinDays: 30 } as Filters, hint: "Best time to say hello" },
-            { label: "Dormant ties", n: applyFilters(people, { dormant: true }, settings).length, f: { dormant: true } as Filters, hint: "Old connections, never contacted" },
-          ].map((x) => (
-            <button
-              key={x.label}
-              type="button"
-              onClick={() => goTo(x.f)}
-              className="rounded-xl border border-line bg-panel px-3.5 py-2.5 text-left transition hover:border-line-strong"
-            >
-              <span className="flex items-baseline justify-between gap-2">
-                <span className="text-[12.5px] font-medium">{x.label}</span>
-                <span className="tabular text-[14px] font-semibold">{x.n.toLocaleString()}</span>
-              </span>
-              <span className="mt-0.5 block text-[11.5px] text-muted">{x.hint}</span>
-            </button>
-          ))}
-        </div>
+        <Spark categories={["networking", "outreach", "relationships"]} seed="home" title="Daily spark" className="mt-9" />
 
-        {!archive ? <div className="mt-4"><ArchiveImport /></div> : null}
+        {/* ---- the shape of the network ------------------------------------ */}
+        <section className="mt-10">
+          <SectionLabel action={<button type="button" onClick={() => router.push("/analytics")} className="text-[12px] text-muted transition hover:text-accent">See the whole network →</button>}>
+            Your network
+          </SectionLabel>
+          <div className="grid grid-cols-2 gap-x-6 gap-y-6 sm:grid-cols-4">
+            <Stat n={people.length} label="People" hint={`${companies.toLocaleString()} companies`} onClick={() => goTo({})} />
+            <Stat
+              n={relevant.length}
+              label="Worth exploring"
+              hint={goalsSet ? "In your target areas" : "Senior and above"}
+              onClick={() => goTo(goalFilters)}
+            />
+            <Stat n={founders.length} label="Founders" hint={foundersUncontacted ? `${foundersUncontacted} not contacted` : "All contacted"} onClick={() => goTo({ audiences: ["founders"] })} />
+            <Stat
+              n={replied}
+              label="Have replied to you"
+              hint={archive ? "From your message history" : "Add your archive to fill this in"}
+              onClick={() => goTo({ history: "replied" })}
+            />
+          </div>
+        </section>
 
-        <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
-          <div className="space-y-4">
-            <Card>
-              <CardTitle hint={due.length ? "Reply or nudge these people today" : "You're all caught up"} action={<Button size="sm" onClick={() => router.push("/follow-ups")}>Open follow-ups</Button>}>
-                Due today
-              </CardTitle>
-              <div className="p-2">
-                {due.length === 0 ? (
-                  <p className="px-2 py-6 text-center text-[12.5px] text-muted">No follow-ups due. Anyone you mark as contacted gets a reminder automatically.</p>
-                ) : (
-                  due.slice(0, 6).map((p) => (
-                    <div key={p.id} className="flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-hover">
-                      <button type="button" onClick={() => openPerson(p.id)} className="flex min-w-0 flex-1 items-center gap-2.5 text-left">
-                        <Avatar name={p.name} size={28} />
-                        <span className="min-w-0">
-                          <span className="block truncate text-[13px] font-medium">{p.name}</span>
-                          <span className="block truncate text-[12px] text-muted">{p.role}{p.company ? ` · ${p.company}` : ""}</span>
-                        </span>
-                      </button>
-                      <Pill tone={p.followUpAt < today ? "orange" : "blue"}>{relativeDue(p.followUpAt, today)}</Pill>
+        {/* ---- today -------------------------------------------------------- */}
+        {due.length > 0 ? (
+          <section className="mt-10">
+            <SectionLabel action={<button type="button" onClick={() => router.push("/follow-ups")} className="text-[12px] text-muted transition hover:text-accent">All follow-ups →</button>}>
+              Waiting on you
+            </SectionLabel>
+            <div>
+              {due.slice(0, 4).map((p) => (
+                <PersonRow
+                  key={p.id}
+                  person={p}
+                  onOpen={() => openPerson(p.id)}
+                  right={
+                    <span className="flex shrink-0 items-center gap-2">
+                      <span className={cx("text-[12px]", buckets.overdue.includes(p) ? "text-[var(--t-orange)]" : "text-muted")}>
+                        {relativeDue(p.followUpAt, today)}
+                      </span>
                       <Button
                         size="sm"
-                        icon={CheckCircle2}
                         onClick={() => {
-                          updateRecord(p.id, { followUpAt: "", lastContactedAt: today }, { kind: "followup", text: "Follow-up completed" });
-                          toast(`Marked ${p.name} as followed up.`);
+                          completeFollowUp(p.id);
+                          toast(`${p.name} — follow-up done.`);
                         }}
                       >
                         Done
                       </Button>
-                    </div>
-                  ))
-                )}
-              </div>
-            </Card>
+                    </span>
+                  }
+                />
+              ))}
+            </div>
+          </section>
+        ) : null}
 
-            <Card>
-              <CardTitle
-                hint={goalsSet ? "Highest-priority people you haven't contacted" : "Set your goals to make these suggestions specific"}
-                action={<Button size="sm" onClick={() => goTo({ statuses: ["not_contacted"], priorities: ["high"] })}>See all</Button>}
-              >
-                Suggested next conversations
-              </CardTitle>
-              <div className="p-2">
-                {suggestions.length === 0 ? (
-                  <EmptyState title="Nothing queued" body="Everyone in your target areas has been contacted — or you haven't set goals yet." action={<Button icon={Sparkles} onClick={() => openWizard(true)}>Run guided search</Button>} />
-                ) : (
-                  suggestions.map((p: Person) => (
-                    <div key={p.id} className="flex items-start gap-3 rounded-lg px-2 py-2 hover:bg-hover">
-                      <button type="button" onClick={() => openPerson(p.id)} className="flex min-w-0 flex-1 items-start gap-2.5 text-left">
-                        <Avatar name={p.name} size={28} />
-                        <span className="min-w-0">
-                          <span className="block truncate text-[13px] font-medium">{p.name}</span>
-                          <span className="block truncate text-[12px] text-muted">
-                            {p.role}{p.company ? ` · ${p.company}` : ""}
-                          </span>
-                          <span className="mt-0.5 block truncate text-[11.5px] text-ink-2">{p.priorityReasons[0] ?? `${domainLabel(p.domain)} · ${functionLabel(p.fn)}`}</span>
-                        </span>
-                      </button>
-                      <Button size="sm" onClick={() => { setStatus([p.id], "to_contact"); toast(`${p.name} added to outreach.`); }}>
-                        Add
-                      </Button>
-                    </div>
-                  ))
-                )}
-              </div>
-            </Card>
-          </div>
+        {/* ---- who to talk to ---------------------------------------------- */}
+        <section className="mt-10">
+          <SectionLabel action={<button type="button" onClick={() => goTo({ ...goalFilters, statuses: ["not_contacted"] })} className="text-[12px] text-muted transition hover:text-accent">See all →</button>}>
+            People worth talking to
+          </SectionLabel>
+          {suggestions.length === 0 ? (
+            <EmptyState
+              title="Nobody queued up"
+              body={goalsSet ? "Everyone in your target areas is already in your pipeline." : "Set what you're looking for in Settings and this fills with the people who match."}
+              action={<Button onClick={() => router.push(goalsSet ? "/find" : "/settings")}>{goalsSet ? "Find more people" : "Set your goals"}</Button>}
+            />
+          ) : (
+            <div>
+              {suggestions.map((p) => (
+                <PersonRow
+                  key={p.id}
+                  person={p}
+                  onOpen={() => openPerson(p.id)}
+                  right={
+                    <span className="flex shrink-0 items-center gap-2">
+                      <span className="hidden max-w-[28ch] truncate text-[12px] text-muted lg:block" title={p.priorityReasons.join(" · ")}>
+                        {p.priorityReasons[0] ?? ""}
+                      </span>
+                      <StatusMenu person={p} size="sm" align="right" />
+                    </span>
+                  }
+                />
+              ))}
+            </div>
+          )}
+        </section>
 
-          <div className="space-y-4">
-            <Card>
-              <CardTitle hint="Drives priority and suggestions" action={<Button size="sm" onClick={() => router.push("/settings")}>Edit</Button>}>
-                Your goals
-              </CardTitle>
-              <div className="space-y-2.5 p-4 pt-3">
-                {goalsSet ? (
-                  <>
-                    {settings.goals.opportunityTypes.length ? (
-                      <div className="flex flex-wrap gap-1.5">
-                        {settings.goals.opportunityTypes.map((t) => <Pill key={t} tone="violet">{t}</Pill>)}
-                      </div>
-                    ) : null}
-                    <div className="flex flex-wrap gap-1.5">
-                      {settings.goals.domains.map((d) => <Pill key={d} tone="teal">{domainLabel(d)}</Pill>)}
-                      {settings.goals.functions.map((f) => <Pill key={f} tone="teal">{functionLabel(f)}</Pill>)}
-                    </div>
-                    {settings.targetCompanies.length ? (
-                      <div>
-                        <p className="mb-1 text-[11px] uppercase tracking-wide text-muted">Target companies</p>
-                        <div className="flex flex-wrap gap-1.5">
-                          {settings.targetCompanies.slice(0, 8).map((c) => <Pill key={c} tone="gray">{c}</Pill>)}
-                          {settings.targetCompanies.length > 8 ? <Pill tone="gray">+{settings.targetCompanies.length - 8}</Pill> : null}
-                        </div>
-                      </div>
-                    ) : null}
-                  </>
-                ) : (
-                  <>
-                    <p className="text-[12.5px] text-muted">Tell it what you’re after — an internship in supply chain, referrals at specific companies — and it will rank your network for you.</p>
-                    <Button variant="primary" size="sm" icon={Sparkles} onClick={() => openWizard(true)}>Set goals</Button>
-                  </>
-                )}
-              </div>
-            </Card>
+        {/* ---- outreach, as a state of play, not four more boxes ----------- */}
+        {inPipeline > 0 ? (
+          <section className="mt-10">
+            <SectionLabel action={<button type="button" onClick={() => router.push("/outreach")} className="text-[12px] text-muted transition hover:text-accent">Open outreach →</button>}>
+              Your conversations
+            </SectionLabel>
+            <p className="max-w-[60ch] text-[14px] leading-relaxed">
+              <button type="button" onClick={() => router.push("/outreach")} className="font-semibold tracking-tight transition hover:text-accent">
+                {inPipeline.toLocaleString()} people
+              </button>{" "}
+              <span className="text-muted">are in your pipeline.</span>{" "}
+              {awaiting > 0 ? <span className="text-muted">{awaiting.toLocaleString()} are waiting on a reply. </span> : null}
+              {replied > 0 ? <span className="text-muted">{replied.toLocaleString()} have written back.</span> : null}
+            </p>
+          </section>
+        ) : null}
 
-            <Card>
-              <CardTitle hint="Where your conversations stand" action={<Button size="sm" onClick={() => router.push("/outreach")}>Open board</Button>}>
-                Pipeline
-              </CardTitle>
-              <div className="p-2">
-                {settings.statuses.filter((s) => s.onBoard).map((s) => {
-                  const n = people.filter((p) => p.status === s.id).length;
-                  return (
-                    <button
-                      key={s.id}
-                      type="button"
-                      onClick={() => goTo({ statuses: [s.id] })}
-                      className="flex w-full items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-left transition hover:bg-hover"
-                    >
-                      <StatusBadge status={s.id} settings={settings} />
-                      <span className="tabular text-[12.5px] text-ink-2">{n.toLocaleString()}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </Card>
+        {/* ---- one closing observation, computed, not invented -------------- */}
+        {biggestArea ? (
+          <section className="mt-10 border-t border-line pt-6">
+            <SectionLabel>Worth noticing</SectionLabel>
+            <p className="max-w-[58ch] text-[15px] leading-relaxed">
+              <strong className="font-semibold">{domainLabel(biggestArea.domain)}</strong> is the largest area in your
+              network — <span className="tabular">{biggestArea.count.toLocaleString()}</span> people.
+              {foundersUncontacted > 0 ? (
+                <>
+                  {" "}You also know <span className="tabular">{founders.length.toLocaleString()}</span> founders, and
+                  haven&apos;t spoken to <span className="tabular">{foundersUncontacted.toLocaleString()}</span> of them.
+                </>
+              ) : null}
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Button onClick={() => goTo({ domains: [biggestArea.domain] })}>
+                Explore {domainLabel(biggestArea.domain).toLowerCase()}
+              </Button>
+              {foundersUncontacted > 0 ? (
+                <Button variant="ghost" onClick={() => goTo({ audiences: ["founders"], statuses: ["not_contacted"] })}>
+                  Explore founders
+                </Button>
+              ) : null}
+            </div>
+          </section>
+        ) : null}
 
-            {settings.segments.length ? (
-              <Card>
-                <CardTitle hint="Saved views, always live">Segments</CardTitle>
-                <div className="p-2">
-                  {settings.segments.map((seg) => (
-                    <button key={seg.id} type="button" onClick={() => goTo(seg.filters)} className="flex w-full items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-left transition hover:bg-hover">
-                      <span className="truncate text-[12.5px]">{seg.name}</span>
-                      <span className="tabular text-[12px] text-muted">{applyFilters(people, seg.filters, settings).length.toLocaleString()}</span>
-                    </button>
-                  ))}
-                </div>
-              </Card>
-            ) : null}
-          </div>
-        </div>
-      </PageBody>
-    </>
+        {!archive ? <div className="mt-10"><ArchiveImport /></div> : null}
+      </div>
+    </PageBody>
   );
 }

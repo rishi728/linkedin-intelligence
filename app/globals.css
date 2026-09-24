@@ -155,9 +155,47 @@ body {
   from { transform: translateY(4px) scale(0.99); opacity: 0; }
   to { transform: none; opacity: 1; }
 }
+@keyframes rise-in {
+  from { transform: translateY(8px); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+/* Carousel: the outgoing card leaves the way the incoming one arrives. */
+@keyframes slide-from-right {
+  from { transform: translateX(28px); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+@keyframes slide-from-left {
+  from { transform: translateX(-28px); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+@keyframes bar-grow {
+  from { transform: scaleX(0); }
+  to { transform: none; }
+}
+
 .anim-sheet { animation: sheet-in 0.18s ease-out both; }
 .anim-pop { animation: pop-in 0.14s ease-out both; }
+.anim-rise { animation: rise-in 0.26s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.anim-fade { animation: fade-in 0.2s ease-out both; }
+.anim-next { animation: slide-from-right 0.24s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.anim-prev { animation: slide-from-left 0.24s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.anim-bar { animation: bar-grow 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; transform-origin: left; }
+
+/* Sections arrive in order rather than all at once, but never slowly. */
+.anim-stagger > * { animation: rise-in 0.26s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.anim-stagger > *:nth-child(1) { animation-delay: 0ms; }
+.anim-stagger > *:nth-child(2) { animation-delay: 40ms; }
+.anim-stagger > *:nth-child(3) { animation-delay: 80ms; }
+.anim-stagger > *:nth-child(4) { animation-delay: 120ms; }
+.anim-stagger > *:nth-child(n+5) { animation-delay: 150ms; }
 
 @media (prefers-reduced-motion: reduce) {
-  .anim-sheet, .anim-pop { animation: none; }
+  .anim-sheet, .anim-pop, .anim-rise, .anim-fade, .anim-next, .anim-prev, .anim-bar,
+  .anim-stagger > * {
+    animation: none;
+  }
 }

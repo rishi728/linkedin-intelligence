@@ -3,7 +3,10 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
-import { BarChart3, Cloud, Compass, Home, Plus, Search, Send, Settings as SettingsIcon, Users, X } from "lucide-react";
+import {
+  BarChart3, Bell, Building2, Cloud, Compass, Home, ListChecks, Plus, Search, Send,
+  Settings as SettingsIcon, Stethoscope, Users, X,
+} from "lucide-react";
 import { followUpBuckets } from "@/lib/workspace/insights";
 import { CommandPalette } from "@/components/shell/CommandPalette";
 import { Composer } from "@/components/outreach/Composer";
@@ -14,14 +17,19 @@ import { AddData } from "@/components/workspace/AddData";
 import { Button, Spinner, cx } from "@/components/ui";
 import { useUI, useWorkspace } from "@/components/workspace/store";
 
-// Five places, in the order you use them. Everything else lives inside a page.
-const NAV = [
+// Grouped so the shape of the product is visible at a glance: find someone,
+// talk to them, understand the whole, keep it clean.
+const NAV: Array<{ section?: string; href: string; label: string; icon: typeof Home }> = [
   { href: "/home", label: "Home", icon: Home },
-  { href: "/find", label: "Find people", icon: Search },
+  { section: "Discover", href: "/find", label: "Find people", icon: Search },
   { href: "/people", label: "People", icon: Users },
-  { href: "/outreach", label: "Outreach", icon: Send },
-  { href: "/analytics", label: "Network", icon: BarChart3 },
-] as const;
+  { section: "Conversations", href: "/outreach", label: "Outreach", icon: Send },
+  { href: "/follow-ups", label: "Follow-ups", icon: Bell },
+  { section: "Understand", href: "/analytics", label: "Network", icon: BarChart3 },
+  { href: "/companies", label: "Companies", icon: Building2 },
+  { section: "Keep it clean", href: "/review", label: "Review & improve", icon: ListChecks },
+  { href: "/health", label: "Data health", icon: Stethoscope },
+];
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { ready, dataset, people, settings, savedAt } = useWorkspace();
@@ -45,10 +53,13 @@ export function AppShell({ children }: { children: ReactNode }) {
   const buckets = followUpBuckets(people, settings);
   const due = buckets.overdue.length + buckets.today.length;
   const inPipeline = people.filter((p) => p.status !== "not_contacted").length;
+  const toReview = people.filter((p) => p.needsReview && p.classSource === "auto").length;
 
   const counts: Record<string, number | undefined> = {
     "/people": people.length,
     "/outreach": inPipeline || undefined,
+    "/follow-ups": due || undefined,
+    "/review": toReview || undefined,
   };
 
   return (
@@ -74,31 +85,41 @@ export function AppShell({ children }: { children: ReactNode }) {
         <nav className="flex-1 overflow-auto px-2 pb-3 scroll-thin">
           {NAV.map((item) => {
             const active = pathname === item.href;
+            const count = counts[item.href];
             return (
               <div key={item.href}>
-              <Link
-                href={item.href}
-                prefetch={false}
-                className={cx(
-                  "mb-0.5 flex h-8 items-center gap-2.5 rounded-lg px-2 text-[13px] transition",
-                  active ? "bg-panel font-medium text-ink shadow-pop" : "text-ink-2 hover:bg-hover hover:text-ink",
-                )}
-              >
-                <item.icon size={15} className={active ? "text-accent" : "text-muted"} />
-                <span className="flex-1 truncate">{item.label}</span>
-                {counts[item.href] !== undefined ? (
-                  <span className={cx("tabular rounded px-1 text-[11px]", item.href === "/outreach" && due ? "tone-orange" : "text-muted")}>
-                    {counts[item.href]!.toLocaleString()}
-                  </span>
+                {item.section ? (
+                  <p className="px-2 pb-1 pt-4 text-[10.5px] font-medium uppercase tracking-[0.1em] text-faint">
+                    {item.section}
+                  </p>
                 ) : null}
-              </Link>
+                <Link
+                  href={item.href}
+                  prefetch={false}
+                  aria-current={active ? "page" : undefined}
+                  className={cx(
+                    "relative mb-0.5 flex h-8 items-center gap-2.5 rounded-lg pl-2.5 pr-2 text-[13px] transition",
+                    active ? "bg-accent-soft/60 font-medium text-ink" : "text-ink-2 hover:bg-hover hover:text-ink",
+                  )}
+                >
+                  {active ? (
+                    <span aria-hidden className="absolute left-0 top-1/2 h-4 w-[2.5px] -translate-y-1/2 rounded-r bg-accent" />
+                  ) : null}
+                  <item.icon size={15} className={active ? "text-accent" : "text-muted"} />
+                  <span className="flex-1 truncate">{item.label}</span>
+                  {count !== undefined ? (
+                    <span className={cx("tabular rounded px-1 text-[11px]", item.href === "/follow-ups" && due ? "tone-orange" : "text-muted")}>
+                      {count.toLocaleString()}
+                    </span>
+                  ) : null}
+                </Link>
               </div>
             );
           })}
 
           {settings.segments.length > 0 ? (
             <>
-              <p className="px-2 pb-1 pt-4 text-[11px] font-medium uppercase tracking-wide text-muted">Segments</p>
+              <p className="mt-4 border-t border-line px-2 pb-1 pt-3 text-[10.5px] font-medium uppercase tracking-[0.1em] text-faint">Saved lists</p>
               {settings.segments.map((seg) => (
                 <button
                   key={seg.id}
