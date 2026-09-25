@@ -12,8 +12,16 @@ import { useWorkspace } from "@/components/workspace/store";
 const STEPS = [
   ["Settings & Privacy", "on LinkedIn, open Settings & Privacy"],
   ["Data Privacy", "go to Data Privacy → Get a copy of your data"],
-  ["Connections", "tick Connections and request the archive"],
-  ["Connections.csv", "unzip the email attachment and drop the file here"],
+  ["The larger archive", "choose the full download rather than ticking single files, so your messages come with it"],
+  ["The .zip itself", "drop the email attachment here without unzipping it"],
+];
+
+/** What each part of the export actually turns on, so the bigger download is worth the wait. */
+const UNLOCKS = [
+  ["Connections", "who you know, sorted by what they do and how senior they are"],
+  ["Messages", "your real conversations, readable on each person's profile"],
+  ["Invitations", "who reached out to whom, and when"],
+  ["Education", "your schools, so alumni are spotted automatically"],
 ];
 
 const FEATURES = [
@@ -112,7 +120,20 @@ export function WelcomeView() {
                   </li>
                 ))}
               </ol>
-              <p className="mt-2 text-[12px] text-muted">LinkedIn emails the archive in 10 minutes to an hour.</p>
+              <p className="mt-2 text-[12px] text-muted">
+                LinkedIn emails it in 10 minutes to an hour. The smaller Connections-only file works too, you just get
+                less.
+              </p>
+
+              <p className="mt-6 text-[11px] font-medium uppercase tracking-wide text-muted">What the full export adds</p>
+              <ul className="mt-2 space-y-1.5">
+                {UNLOCKS.map(([file, what]) => (
+                  <li key={file} className="flex gap-2.5 text-[12.5px] text-ink-2">
+                    <span className="text-muted">·</span>
+                    <span><strong className="font-medium text-ink">{file}</strong>, {what}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
 

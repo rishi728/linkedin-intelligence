@@ -13,6 +13,7 @@ import { PageBody } from "@/components/shell/AppShell";
 import { Avatar, Button, EmptyState, cx } from "@/components/ui";
 import { ArchiveImport } from "@/components/workspace/ArchiveImport";
 import { PeopleCarousel } from "@/components/home/PeopleCarousel";
+import { FirstLook } from "@/components/home/FirstLook";
 import { Spark } from "@/components/shell/Spark";
 import { useUI, useWorkspace } from "@/components/workspace/store";
 
@@ -118,6 +119,9 @@ export function HomeView() {
     router.push("/people");
   };
 
+  /** Nothing has happened in this workspace yet, so show what was found instead. */
+  const firstRun = !goalsSet && inPipeline === 0 && due.length === 0;
+
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
   const firstName = settings.profile.name ? settings.profile.name.split(" ")[0] : "";
@@ -128,27 +132,46 @@ export function HomeView() {
         {/* ---- the briefing ------------------------------------------------ */}
         <header>
           <h1 className="text-[30px] font-semibold leading-tight tracking-tight">
-            {greeting}{firstName ? `, ${firstName}` : ""}.
+            {firstRun ? `Welcome${firstName ? `, ${firstName}` : ""}.` : `${greeting}${firstName ? `, ${firstName}` : ""}.`}
           </h1>
-          <p className="mt-1.5 max-w-[52ch] text-[14px] leading-relaxed text-muted">
-            {people.length.toLocaleString()} people in your network.{" "}
-            {due.length > 0
-              ? `${due.length} ${due.length === 1 ? "conversation is" : "conversations are"} waiting on you today.`
-              : suggestions.length > 0
-                ? `${suggestions.length} worth starting a conversation with.`
-                : "Everything is up to date."}
+          <p className="mt-1.5 max-w-[56ch] text-[14px] leading-relaxed text-muted">
+            {firstRun
+              ? `Your export is in. ${people.length.toLocaleString()} people, read and sorted, none of it sent anywhere.`
+              : `${people.length.toLocaleString()} people in your network. ${
+                  due.length > 0
+                    ? `${due.length} ${due.length === 1 ? "conversation is" : "conversations are"} waiting on you today.`
+                    : suggestions.length > 0
+                      ? `${suggestions.length} worth starting a conversation with.`
+                      : "Everything is up to date."
+                }`}
           </p>
-          <div className="mt-5 flex flex-wrap gap-2">
-            <Button variant="primary" icon={Search} onClick={() => router.push("/find")}>Find someone</Button>
-            {inPipeline > 0 ? (
-              <Button icon={Send} onClick={() => router.push("/outreach")}>Continue outreach</Button>
-            ) : null}
-          </div>
+          {!firstRun ? (
+            <div className="mt-5 flex flex-wrap gap-2">
+              <Button variant="primary" icon={Search} onClick={() => router.push("/find")}>Find someone</Button>
+              {inPipeline > 0 ? (
+                <Button icon={Send} onClick={() => router.push("/outreach")}>Continue outreach</Button>
+              ) : null}
+            </div>
+          ) : null}
         </header>
+
+        {firstRun ? (
+          <div className="mt-7">
+            <FirstLook
+              people={people}
+              settings={settings}
+              onExplore={goTo}
+              onSetGoals={() => router.push("/settings")}
+              onFind={() => router.push("/find")}
+            />
+          </div>
+        ) : null}
 
 
 
         {/* ---- the shape of the network ------------------------------------ */}
+        {!firstRun ? (
+          <>
         <section className="mt-10">
           <SectionLabel action={<button type="button" onClick={() => router.push("/analytics")} className="text-[12px] text-muted transition hover:text-accent">See the whole network →</button>}>
             Your network
@@ -308,6 +331,9 @@ export function HomeView() {
               ) : null}
             </div>
           </section>
+        ) : null}
+
+          </>
         ) : null}
 
         {!archive ? <div className="mt-10"><ArchiveImport /></div> : null}
