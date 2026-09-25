@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Bell, ListChecks, Search, Send, Sparkles } from "lucide-react";
+import { ArrowRight, Search, Send } from "lucide-react";
 import { domainLabel } from "@/lib/intelligence";
 import { applyFilters } from "@/lib/workspace/filters";
 import { followUpBuckets } from "@/lib/workspace/insights";
@@ -11,13 +11,10 @@ import { formatDate, relativeDue, todayISO } from "@/lib/workspace/dates";
 import type { Filters, Person } from "@/lib/workspace/types";
 import { PageBody } from "@/components/shell/AppShell";
 import { Avatar, Button, EmptyState, cx } from "@/components/ui";
-import { StatusMenu } from "@/components/people/StatusMenu";
 import { ArchiveImport } from "@/components/workspace/ArchiveImport";
 import { PeopleCarousel } from "@/components/home/PeopleCarousel";
 import { Spark } from "@/components/shell/Spark";
 import { useUI, useWorkspace } from "@/components/workspace/store";
-
-const SENIOR = ["Senior", "Manager / Lead", "Director / Head", "VP", "C-Level", "Founder"];
 
 /** A number you can act on. The arrow is the point: every figure goes somewhere. */
 function Stat({ n, label, hint, onClick }: { n: number; label: string; hint?: string; onClick: () => void }) {
@@ -70,18 +67,21 @@ export function HomeView() {
   const due = [...buckets.overdue, ...buckets.today];
   const goalsSet = hasGoals(settings);
 
+  /** Only what the user actually asked for. No fallback, or the list looks arbitrary. */
   const goalFilters: Filters = useMemo(
-    () =>
-      goalsSet
-        ? {
-            domains: settings.goals.domains.length ? settings.goals.domains : undefined,
-            functions: settings.goals.functions.length ? settings.goals.functions : undefined,
-          }
-        : { seniorities: SENIOR },
-    [goalsSet, settings.goals.domains, settings.goals.functions],
+    () => ({
+      domains: settings.goals.domains.length ? settings.goals.domains : undefined,
+      functions: settings.goals.functions.length ? settings.goals.functions : undefined,
+      seniorities: settings.goals.seniorities.length ? settings.goals.seniorities : undefined,
+      audiences: settings.goals.audiences.length ? settings.goals.audiences : undefined,
+    }),
+    [settings.goals.domains, settings.goals.functions, settings.goals.seniorities, settings.goals.audiences],
   );
 
-  const relevant = useMemo(() => applyFilters(people, goalFilters, settings), [people, goalFilters, settings]);
+  const relevant = useMemo(
+    () => (goalsSet ? applyFilters(people, goalFilters, settings) : []),
+    [people, goalFilters, settings, goalsSet],
+  );
   const suggestions = useMemo(
     () => relevant.filter((p) => p.status === "not_contacted").sort((a, b) => b.priorityScore - a.priorityScore).slice(0, 5),
     [relevant],
@@ -102,7 +102,6 @@ export function HomeView() {
     return top ? { domain: top[0], count: top[1] } : null;
   }, [people]);
 
-  const needsReview = useMemo(() => people.filter((p) => p.needsReview && p.classSource === "auto").length, [people]);
 
   /** The last things you actually did, newest first, straight off each record. */
   const activity = useMemo(
@@ -147,26 +146,6 @@ export function HomeView() {
           </div>
         </header>
 
-        {/* ---- today: three things, each one a link ------------------------ */}
-        <div className="mt-7 flex flex-wrap items-center gap-x-7 gap-y-3 border-y border-line py-3">
-          <p className="text-[10.5px] font-medium uppercase tracking-[0.12em] text-muted">Today</p>
-          {[
-            { n: due.length, label: due.length === 1 ? "follow-up due" : "follow-ups due", icon: Bell, go: () => router.push("/follow-ups") },
-            { n: suggestions.length, label: "worth reaching out to", icon: Sparkles, go: () => goTo({ ...goalFilters, statuses: ["not_contacted"] }) },
-            { n: needsReview, label: "profiles need review", icon: ListChecks, go: () => router.push("/review") },
-          ]
-            .filter((x) => x.n > 0)
-            .map((x) => (
-              <button key={x.label} type="button" onClick={x.go} className="group flex items-center gap-2 text-[13px]">
-                <x.icon size={14} className="text-muted" />
-                <span className="tabular font-semibold">{x.n.toLocaleString()}</span>
-                <span className="text-muted transition group-hover:text-accent">{x.label}</span>
-              </button>
-            ))}
-          {due.length + suggestions.length + needsReview === 0 ? (
-            <span className="text-[13px] text-muted">Nothing needs you right now.</span>
-          ) : null}
-        </div>
 
 
         {/* ---- the shape of the network ------------------------------------ */}
@@ -226,23 +205,40 @@ export function HomeView() {
           </section>
         ) : null}
 
-        {/* ---- who to talk to ---------------------------------------------- */}
+        {/* ---- who to talk to, strictly by what you said you want --------- */}
         <section className="mt-10">
-          <SectionLabel action={<button type="button" onClick={() => goTo({ ...goalFilters, statuses: ["not_contacted"] })} className="text-[12px] text-muted transition hover:text-accent">See all →</button>}>
+          <SectionLabel
+            action={
+              goalsSet ? (
+                <button type="button" onClick={() => goTo({ ...goalFilters, statuses: ["not_contacted"] })} className="text-[12px] text-muted transition hover:text-accent">
+                  See all →
+                </button>
+              ) : null
+            }
+          >
             People worth talking to
           </SectionLabel>
-          {suggestions.length === 0 ? (
+
+          {!goalsSet ? (
+            <div className="max-w-[58ch]">
+              <p className="text-[14px] leading-relaxed">
+                Tell it what you are after and this fills with the people in your network who match, ranked and with the
+                reason shown.
+              </p>
+              <p className="mt-1.5 text-[12.5px] text-muted">
+                Target areas, roles, seniority and companies all feed it. Without them, any list here would just be a
+                guess.
+              </p>
+              <Button variant="primary" className="mt-3" onClick={() => router.push("/settings")}>Set what you are looking for</Button>
+            </div>
+          ) : suggestions.length === 0 ? (
             <EmptyState
-              title="Nobody queued up"
-              body={goalsSet ? "Everyone in your target areas is already in your pipeline." : "Set what you're looking for in Settings and this fills with the people who match."}
-              action={<Button onClick={() => router.push(goalsSet ? "/find" : "/settings")}>{goalsSet ? "Find more people" : "Set your goals"}</Button>}
+              title="Everyone matching is already in your pipeline"
+              body="Widen your goals in Settings, or go looking for more people."
+              action={<Button onClick={() => router.push("/find")}>Find more people</Button>}
             />
           ) : (
-            <PeopleCarousel
-              people={suggestions}
-              onOpen={openPerson}
-              onStart={(id) => openComposer(id)}
-            />
+            <PeopleCarousel people={suggestions} onOpen={openPerson} onStart={(id) => openComposer(id)} />
           )}
         </section>
 

@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { parseConnectionsCsv } from "../analyzer";
 import { titleKey } from "../intelligence";
+import { profileKey } from "../archive";
 import { generateSampleCsv } from "../sample";
-import { autoClassifyAll, buildPeople, companyMatches, statusChangePatch } from "./build";
+import { archiveSeedPatches, autoClassifyAll, buildPeople, companyMatches, statusChangePatch } from "./build";
 import { buildFollowUpCalendar } from "./calendar";
 import { addDays, dueBucket } from "./dates";
 import { defaultSettings } from "./defaults";
@@ -232,6 +233,39 @@ describe("outreach presets", () => {
     expect(text).not.toContain("180DC NITW");
     // Nothing is invented: the unknown role stays an editable blank.
     expect(text).toContain("[role]");
+  });
+});
+
+describe("archive activity", () => {
+  it("is dated by the conversation, not by when it was imported", () => {
+    // The bug: every imported thread showed today's date, so a list of activity
+    // read as one import event rather than as history.
+    const person = rows[0];
+    const { patches } = archiveSeedPatches(
+      rows,
+      {
+        [profileKey(person.url)]: {
+          messageCount: 3,
+          lastMessageAt: "2021-11-24",
+          lastOutgoingAt: "2021-11-24",
+          lastIncomingAt: "2021-11-20",
+          theyReplied: true,
+          youMessaged: true,
+          invited: null,
+          invitedAt: "",
+          note: "",
+          messages: [],
+        },
+      },
+      {},
+    );
+
+    const entry = patches[person.id]?.activity?.find((a) => a.kind === "message");
+    expect(entry).toBeDefined();
+    expect(entry!.at).toBe("2021-11-24");
+    expect(entry!.at.slice(0, 4)).not.toBe(String(new Date().getFullYear()));
+    // The date belongs in the timestamp, not repeated in the sentence.
+    expect(entry!.text).toBe("3 messages in your LinkedIn archive");
   });
 });
 

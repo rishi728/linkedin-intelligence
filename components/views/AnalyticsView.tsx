@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Search } from "lucide-react";
-import { domainLabel, functionLabel } from "@/lib/intelligence";
+import { domainLabel } from "@/lib/intelligence";
 import { SENIORITY_LEVELS } from "@/lib/taxonomy";
 import { applyFilters } from "@/lib/workspace/filters";
 import { groupCompanies } from "@/lib/workspace/insights";
