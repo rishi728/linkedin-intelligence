@@ -8,6 +8,7 @@ import { generateSampleCsv } from "@/lib/sample";
 import { archiveSeedPatches, autoClassifyAll, buildPeople, nextCadenceDate, statusChangePatch, type AutoCache } from "@/lib/workspace/build";
 import { todayISO } from "@/lib/workspace/dates";
 import { dbDelete, dbGet, dbSet, requestPersistence } from "@/lib/workspace/db";
+import { writeBackup } from "@/lib/workspace/autobackup";
 import { defaultSettings } from "@/lib/workspace/defaults";
 import type { Activity, ArchiveData, Dataset, DatasetFile, Filters, Person, PersonRecord, Settings } from "@/lib/workspace/types";
 
@@ -172,6 +173,35 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     }
   }, []);
   const askedToPersist = useRef(false);
+  /** The copy on disk trails the database by a minute, not every keystroke. */
+  const lastBackupWrite = useRef(0);
+  const backupTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /** Filled in once exportBackup exists, so the writer can stay above it. */
+  const backupJson = useRef<() => string>(() => "");
+
+  /**
+   * Keeps the user's own backup file current, if they picked one. Silent: a
+   * background write never prompts, it just reports failure and the app nudges.
+   */
+  const syncBackupFile = useCallback(() => {
+    if (backupTimer.current) clearTimeout(backupTimer.current);
+    backupTimer.current = setTimeout(() => {
+      const since = Date.now() - lastBackupWrite.current;
+      if (since < 60_000) return;
+      lastBackupWrite.current = Date.now();
+      void writeBackup(backupJson.current(), { silent: true }).then((ok) => {
+        if (ok) {
+          const at = now();
+          setSettings((prev) => {
+            const next = { ...prev, lastBackupAt: at };
+            void dbSet("settings", next);
+            return next;
+          });
+        }
+      });
+    }, 4000);
+  }, []);
+
 
   const schedule = useCallback((patch: { records?: Records; settings?: Settings }) => {
     if (!askedToPersist.current) {
@@ -181,7 +211,8 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     Object.assign(pending.current, patch);
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(flush, 350);
-  }, [flush]);
+    syncBackupFile();
+  }, [flush, syncBackupFile]);
   useEffect(() => {
     const onHide = () => flush();
     window.addEventListener("pagehide", onHide);
@@ -380,6 +411,10 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     () => JSON.stringify({ app: "netlens", version: 3, exportedAt: now(), settings, records, archive }, null, 2),
     [settings, records, archive],
   );
+  // Assigned in an effect: a ref must not be written during render.
+  useEffect(() => {
+    backupJson.current = exportBackup;
+  }, [exportBackup]);
 
   const importBackup = useCallback((json: string) => {
     const data = JSON.parse(json) as { app?: string; settings?: Settings; records?: Records; rules?: CustomRule[]; archive?: ArchiveData };

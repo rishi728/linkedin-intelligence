@@ -15,6 +15,7 @@ import { PageBody, PageHeader } from "@/components/shell/AppShell";
 import { Button, Card, CardTitle, Checkbox, Field, Input, Pill, Segmented, Select, Textarea, Toggle, cx } from "@/components/ui";
 import { ArchiveImport } from "@/components/workspace/ArchiveImport";
 import { storageStatus } from "@/lib/workspace/db";
+import { autoBackupSupported, backupFileName, chooseBackupFile, downloadBackup, forgetBackupFile, writeBackup } from "@/lib/workspace/autobackup";
 import { DEFAULT_WEIGHTS } from "@/lib/workspace/defaults";
 import { addDays, formatDate, todayISO } from "@/lib/workspace/dates";
 import { useUI, useWorkspace } from "@/components/workspace/store";
@@ -45,8 +46,11 @@ export function SettingsView() {
   const [tab, setTab] = useState<Tab>("goals");
   const [storage, setStorage] = useState<{ persisted: boolean; usedMb: number | null }>({ persisted: false, usedMb: null });
 
+  const [backupFile, setBackupFile] = useState<string | null>(null);
+
   useEffect(() => {
     void storageStatus().then(setStorage);
+    void backupFileName().then(setBackupFile);
   }, []);
 
   // Two weeks, compared as dates rather than with a clock read during render.
@@ -589,6 +593,69 @@ export function SettingsView() {
                   {savedAt ? ` (last saved ${formatDate(new Date(savedAt), true)})` : ""}. The Excel export is for sharing a list
                   with someone else, you never need it to keep your work safe.
                 </p>
+                {/* A copy the user owns, kept current without them thinking about it. */}
+                <div className="mx-4 mt-3 rounded-lg border border-line bg-subtle p-3">
+                  <p className="text-[12.5px] font-medium">Keep a copy on your own machine</p>
+                  {backupFile ? (
+                    <>
+                      <p className="mt-0.5 text-[12px] text-muted">
+                        Writing to <strong className="text-ink">{backupFile}</strong> as you work. Keep that file on a
+                        drive you back up and this workspace can always be restored.
+                      </p>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        <Button
+                          size="sm"
+                          onClick={async () => {
+                            const ok = await writeBackup(exportBackup());
+                            if (ok) updateSettings((st) => ({ ...st, lastBackupAt: new Date().toISOString() }));
+                            toast(ok ? "Backup file updated." : "Could not write. Choose the file again to re-grant access.");
+                          }}
+                        >
+                          Update it now
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={async () => {
+                            await forgetBackupFile();
+                            setBackupFile(null);
+                            toast("Stopped writing to that file.");
+                          }}
+                        >
+                          Stop
+                        </Button>
+                      </div>
+                    </>
+                  ) : autoBackupSupported() ? (
+                    <>
+                      <p className="mt-0.5 text-[12px] text-muted">
+                        Pick a file once and it is rewritten as you work, so clearing this browser or moving machine
+                        costs you nothing.
+                      </p>
+                      <Button
+                        size="sm"
+                        variant="primary"
+                        className="mt-2"
+                        onClick={async () => {
+                          const name = await chooseBackupFile();
+                          if (!name) return;
+                          setBackupFile(name);
+                          const ok = await writeBackup(exportBackup());
+                          if (ok) updateSettings((st) => ({ ...st, lastBackupAt: new Date().toISOString() }));
+                          toast(ok ? `Backing up to ${name}.` : "Chose the file, but could not write to it yet.");
+                        }}
+                      >
+                        Choose a backup file
+                      </Button>
+                    </>
+                  ) : (
+                    <p className="mt-0.5 text-[12px] text-muted">
+                      This browser cannot write to a file on its own. Chrome and Edge can. Otherwise, download a backup
+                      below now and then, and keep it somewhere safe.
+                    </p>
+                  )}
+                </div>
+
                 <div className="flex flex-wrap gap-2 p-4 pt-3">
                   <Button
                     onClick={() => {
@@ -601,12 +668,7 @@ export function SettingsView() {
                   <Button
                     icon={Download}
                     onClick={() => {
-                      const blob = new Blob([exportBackup()], { type: "application/json" });
-                      const a = document.createElement("a");
-                      a.href = URL.createObjectURL(blob);
-                      a.download = `netlens-backup-${new Date().toISOString().slice(0, 10)}.json`;
-                      a.click();
-                      URL.revokeObjectURL(a.href);
+                      downloadBackup(exportBackup());
                       updateSettings((st) => ({ ...st, lastBackupAt: new Date().toISOString() }));
                       toast("Backup downloaded.");
                     }}

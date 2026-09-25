@@ -16,6 +16,7 @@ import { PersonPanel } from "@/components/people/PersonPanel";
 import { AddData } from "@/components/workspace/AddData";
 import { Logo } from "@/components/shell/Logo";
 import { Guide } from "@/components/shell/Guide";
+import { BackupNudge } from "@/components/shell/BackupNudge";
 import { Button, Spinner, cx } from "@/components/ui";
 import { useUI, useWorkspace } from "@/components/workspace/store";
 
@@ -186,6 +187,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <Cloud size={11} className="text-[var(--t-green)]" />
             {savedAt ? `Saved locally · ${savedRelative(savedAt)}` : "Saved locally"}
           </p>
+          <BackupNudge />
         </div>
       </aside>
 
