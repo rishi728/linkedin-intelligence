@@ -97,6 +97,21 @@ function parseDate(raw: string): string {
   return Number.isNaN(parsed.getTime()) ? "" : toISODate(parsed);
 }
 
+/**
+ * The full timestamp, not just the day. Message order depends on it: LinkedIn
+ * exports newest first, so a thread where everything happened on one day would
+ * otherwise keep the file's order and read backwards.
+ */
+function parseDateTime(raw: string): string {
+  const v = (raw ?? "").trim();
+  if (!v) return "";
+  const m = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?/.exec(v);
+  if (m) return `${m[1]}-${m[2]}-${m[3]}T${m[4]}:${m[5]}:${m[6] ?? "00"}`;
+  const parsed = new Date(v);
+  if (!Number.isNaN(parsed.getTime())) return parsed.toISOString().slice(0, 19);
+  return parseDate(v);
+}
+
 function blank(): ContactHistory {
   return { messageCount: 0, lastMessageAt: "", lastOutgoingAt: "", lastIncomingAt: "", theyReplied: false, youMessaged: false, invited: null, invitedAt: "", note: "", messages: [] };
 }
@@ -132,7 +147,7 @@ export function parseArchive(files: Array<{ name: string; text: string }>): Arch
     skipped: [],
   };
 
-  const messageRows: Array<{ sender: string; recipients: string[]; date: string; subject: string; text: string }> = [];
+  const messageRows: Array<{ sender: string; recipients: string[]; date: string; at: string; subject: string; text: string }> = [];
   const invitationRows: Array<{ inviter: string; invitee: string; direction: string; sentAt: string }> = [];
   const appearances = new Map<string, number>();
   const bump = (url: string) => url && appearances.set(url, (appearances.get(url) ?? 0) + 1);
@@ -151,6 +166,7 @@ export function parseArchive(files: Array<{ name: string; text: string }>): Arch
             sender,
             recipients,
             date,
+            at: parseDateTime(r["date"] ?? ""),
             subject: (r["subject"] ?? "").trim(),
             text: (r["content"] ?? "").trim(),
           });
@@ -235,7 +251,7 @@ export function parseArchive(files: Array<{ name: string; text: string }>): Arch
         h.lastIncomingAt = later(h.lastIncomingAt, m.date);
       }
       if (m.text || m.subject) {
-        h.messages.push({ at: m.date, dir: outgoing ? "out" : "in", subject: m.subject, text: m.text });
+        h.messages.push({ at: m.at || m.date, dir: outgoing ? "out" : "in", subject: m.subject, text: m.text });
       }
     }
   }

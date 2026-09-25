@@ -103,3 +103,38 @@ describe("parseArchive", () => {
     expect(profileKey("https://WWW.LinkedIn.com/in/AshaRao/?trk=x")).toBe("linkedin.com/in/asharao");
   });
 });
+
+describe("message order", () => {
+  // LinkedIn exports newest first. A thread that all happened on one day used to
+  // keep that order and render backwards, which is what this guards against.
+  const HDR = '"CONVERSATION ID","CONVERSATION TITLE","FROM","SENDER PROFILE URL","TO","RECIPIENT PROFILE URLS","DATE","SUBJECT","CONTENT","FOLDER","ATTACHMENTS","IS MESSAGE DRAFT","IS CONVERSATION DRAFT"';
+  const me = "https://www.linkedin.com/in/rishi-self";
+  const them = "https://www.linkedin.com/in/piyush-other";
+
+  const line = (from: string, to: string, at: string, text: string) =>
+    `"c1","","N","${from}","N","${to}","${at}","","${text}","INBOX","","false","false"`;
+
+  it("reads oldest first even when every message is on the same day", () => {
+    const csv = [
+      HDR,
+      // as LinkedIn writes it: newest at the top
+      line(me, them, "2024-03-30 18:40:00 UTC", "Ok thanks for the advice"),
+      line(them, me, "2024-03-30 14:12:00 UTC", "I would suggest exploring blogs first."),
+      line(me, them, "2024-03-30 09:05:00 UTC", "Hi, I am Rishi from NIT Warangal."),
+      // a second person so self-detection has something to work with
+      line(me, "https://www.linkedin.com/in/someone-else", "2024-04-01 09:00:00 UTC", "Hello"),
+    ].join(String.fromCharCode(10));
+
+    const { history } = parseArchive([{ name: "messages.csv", text: csv }]);
+    const thread = history[profileKey(them)].messages;
+
+    expect(thread.map((m) => m.text)).toEqual([
+      "Hi, I am Rishi from NIT Warangal.",
+      "I would suggest exploring blogs first.",
+      "Ok thanks for the advice",
+    ]);
+    expect(thread.map((m) => m.dir)).toEqual(["out", "in", "out"]);
+    // The time is kept, not flattened to a date.
+    expect(thread[0].at).toBe("2024-03-30T09:05:00");
+  });
+});

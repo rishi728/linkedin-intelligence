@@ -16,6 +16,16 @@ import { Avatar, Button, Checkbox, Field, IconButton, Input, Meter, Pill, Select
 import { ConfidenceBadge, LinkedInLink, PRIORITY_LABEL, ResearchMenu } from "./common";
 import { StatusMenu } from "./StatusMenu";
 
+/** Date, plus the time when the export carried one. */
+function messageStamp(at: string): string {
+  if (!at) return "date unknown";
+  const date = formatDate(at);
+  if (!at.includes("T")) return date;
+  const d = new Date(at);
+  if (Number.isNaN(d.getTime())) return date;
+  return `${date}, ${d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}`;
+}
+
 function Section({ title, children, action, className }: { title: string; children: React.ReactNode; action?: React.ReactNode; className?: string }) {
   return (
     <section className={cx("border-t border-line px-5 py-4", className)}>
@@ -253,7 +263,7 @@ export function PersonPanel() {
                 <li key={`${m.at}-${i}`} className={cx("flex flex-col", m.kind === "out" ? "items-end" : "items-start")}>
                   <span className="mb-0.5 flex items-center gap-1.5 text-[11px] text-faint">
                     {m.kind === "out" ? "You" : person.firstName || person.name}
-                    <span>· {m.at ? formatDate(m.at) : "date unknown"}</span>
+                    <span>· {messageStamp(m.at)}</span>
                     {m.draft ? <Pill tone="gray">Draft</Pill> : null}
                   </span>
                   <span
