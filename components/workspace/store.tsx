@@ -596,7 +596,9 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     completeFollowUp, restoreSnapshot,
   }), [ready, dataset, people, byId, settings, records, archive, savedAt, snapshots, importCsv, importArchive, loadSample,
     updateRecord, setStatus, setClassification, resetClassification, updateSettings, deleteRule, toggleTarget, saveSegment,
-    deleteSegment, exportBackup, importBackup, resetWorkspace, removeDatasetFile, completeFollowUp, restoreSnapshot]);
+    deleteSegment, createList, updateList, deleteList, addToList, removeFromList,
+    aiClassifications, aiSettings, lastRun, intelligence, running, updateAiSettings, runIntelligence, clearIntelligence,
+    exportBackup, importBackup, resetWorkspace, removeDatasetFile, completeFollowUp, restoreSnapshot]);
 
   // ---- UI state -----------------------------------------------------------------
   const [personId, openPerson] = useState<string | null>(null);
