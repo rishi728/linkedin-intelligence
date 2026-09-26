@@ -168,7 +168,7 @@ export function SessionView() {
             action={
               <div className="flex gap-2">
                 <Button variant="primary" onClick={() => { setQueue(null); setPos(0); setSent(0); setSkipped(0); }}>Start another session</Button>
-                <Button onClick={() => router.push("/follow-ups")}>See follow-ups</Button>
+                <Button onClick={() => router.push("/outreach")}>Back to outreach</Button>
               </div>
             }
           />

@@ -28,7 +28,6 @@ const NAV: Array<{ section?: string; href: string; label: string; icon: typeof H
   { section: "Discover", href: "/find", label: "Find people", icon: Search },
   { href: "/people", label: "People", icon: Users },
   { section: "Conversations", href: "/outreach", label: "Outreach", icon: Send },
-  { href: "/follow-ups", label: "Follow-ups", icon: Bell },
   { section: "Understand", href: "/analytics", label: "Network", icon: BarChart3 },
   { href: "/companies", label: "Companies", icon: Building2 },
   { section: "Keep it clean", href: "/review", label: "Review & improve", icon: ListChecks },
@@ -75,7 +74,6 @@ export function AppShell({ children }: { children: ReactNode }) {
   const counts: Record<string, number | undefined> = {
     "/people": people.length,
     "/outreach": inPipeline || undefined,
-    "/follow-ups": due || undefined,
     "/review": toReview || undefined,
   };
 
@@ -134,7 +132,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   <item.icon size={15} className={active ? "text-accent" : "text-muted"} />
                   <span className="flex-1 truncate">{item.label}</span>
                   {count !== undefined ? (
-                    <span className={cx("tabular rounded px-1 text-[11px]", item.href === "/follow-ups" && due ? "tone-orange" : "text-muted")}>
+                    <span className={cx("tabular rounded px-1 text-[11px]", item.href === "/outreach" && due ? "tone-orange" : "text-muted")}>
                       {count.toLocaleString()}
                     </span>
                   ) : null}

@@ -85,16 +85,20 @@ export function focusFilters(settings: Settings): Filters {
   const chosen = (settings.focus?.goals ?? []).map((g) => FOCUS_MAP.get(g)).filter(Boolean) as FocusGoalDef[];
 
   const primaries = [...new Set(chosen.flatMap((g) => g.primaries))];
-  const audiences = [...new Set([...goals.audiences, ...chosen.flatMap((g) => g.audiences)])];
+  const implied = [...new Set(chosen.flatMap((g) => g.audiences))];
 
   const f: Filters = {};
   if (goals.domains.length) f.domains = goals.domains;
   if (goals.functions.length) f.functions = goals.functions;
   if (goals.seniorities.length) f.seniorities = goals.seniorities;
-  if (audiences.length) f.audiences = audiences;
-  // Only used when the user has named no areas of their own, so it widens rather
-  // than narrows: a goal should never exclude somebody they explicitly targeted.
-  if (!goals.domains.length && !goals.functions.length && primaries.length) f.primaries = primaries;
+  if (goals.audiences.length) f.audiences = goals.audiences;
+
+  // Goals only widen, and only along one axis. Filters are combined with AND, so
+  // asking for both the categories and the audiences a goal implies would return
+  // the people in both at once, which is far narrower than the goal means.
+  const named = goals.domains.length + goals.functions.length > 0;
+  if (!named && primaries.length) f.primaries = primaries;
+  else if (!named && !goals.audiences.length && implied.length) f.audiences = implied;
   return f;
 }
 

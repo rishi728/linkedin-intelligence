@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { BookmarkPlus, Download, ExternalLink, LayoutGrid, List, Rows3, Sparkles, UserPlus, X } from "lucide-react";
+import { BookmarkPlus, Download, ExternalLink, LayoutGrid, List, ListPlus, Plus, Rows3, Sparkles, UserPlus, X } from "lucide-react";
 import { applyFilters, broaden, PRIORITY_ORDER, SENIORITY_ORDER } from "@/lib/workspace/filters";
 import { groupCompanies } from "@/lib/workspace/insights";
 import type { Person } from "@/lib/workspace/types";
@@ -10,6 +10,7 @@ import { FilterBar } from "@/components/people/FilterBar";
 import { PeopleList, type ViewMode } from "@/components/people/PeopleList";
 import { openProfiles } from "@/components/people/common";
 import { Button, Menu, MenuItem, MenuLabel, Segmented, Select, cx } from "@/components/ui";
+import { NewList } from "@/components/outreach/NewList";
 import { useUI, useWorkspace } from "@/components/workspace/store";
 
 type SortKey = "relevance" | "name" | "company" | "recent" | "followup" | "seniority" | "confidence";
@@ -39,11 +40,12 @@ function sortPeople(people: Person[], key: SortKey): Person[] {
 }
 
 export function PeopleView() {
-  const { people, settings, setStatus, updateRecord, saveSegment } = useWorkspace();
+  const { people, settings, setStatus, updateRecord, saveSegment, createList, addToList } = useWorkspace();
   const { peopleFilters, setPeopleFilters, openPerson, personId, openExport, toast, openWizard } = useUI();
   const [mode, setMode] = useState<ViewMode>("table");
   const [sort, setSort] = useState<SortKey>("relevance");
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [creatingList, setCreatingList] = useState(false);
 
   const companies = useMemo(() => groupCompanies(people, settings).map((c) => ({ key: c.key, name: c.name, count: c.count })), [people, settings]);
   const filtered = useMemo(() => applyFilters(people, peopleFilters, settings), [people, peopleFilters, settings]);
@@ -147,6 +149,36 @@ export function PeopleView() {
               Add to outreach
             </Button>
             <Menu
+              width={230}
+              trigger={({ toggle: t }) => <Button size="sm" icon={ListPlus} onClick={t}>Add to list</Button>}
+            >
+              {(close) => (
+                <>
+                  {settings.lists.length ? <MenuLabel>Add to</MenuLabel> : null}
+                  {settings.lists.map((l) => (
+                    <MenuItem
+                      key={l.id}
+                      onClick={() => {
+                        const added = addToList(l.id, [...selected]);
+                        toast(
+                          added === selected.size
+                            ? `${added} added to ${l.name}.`
+                            : `${added} added to ${l.name}, the rest were already in it.`,
+                        );
+                        clearSelection();
+                        close();
+                      }}
+                    >
+                      {l.name}
+                    </MenuItem>
+                  ))}
+                  <MenuItem icon={Plus} onClick={() => { setCreatingList(true); close(); }}>
+                    New list…
+                  </MenuItem>
+                </>
+              )}
+            </Menu>
+            <Menu
               width={200}
               trigger={({ toggle: t }) => <Button size="sm" onClick={t}>Set status</Button>}
             >
@@ -196,6 +228,16 @@ export function PeopleView() {
           </div>
         </div>
       ) : null}
+
+      <NewList
+        open={creatingList}
+        onClose={() => setCreatingList(false)}
+        onCreate={(name, description) => {
+          createList(name, description, [...selected]);
+          toast(`${selected.size} added to ${name}.`);
+          clearSelection();
+        }}
+      />
     </>
   );
 }

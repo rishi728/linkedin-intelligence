@@ -66,7 +66,6 @@ export function CommandPalette() {
     { id: "people", label: "All people", icon: Users, run: () => go("/people", {}) },
     { id: "companies", label: "Companies", icon: Building2, run: () => go("/companies") },
     { id: "outreach", label: "Outreach board", icon: KanbanSquare, run: () => go("/outreach") },
-    { id: "followups", label: "Follow-ups", icon: Bell, run: () => go("/follow-ups") },
     { id: "review", label: "Review classifications", hint: `${people.filter((p) => p.needsReview || p.domain === "unclassified").length} to check`, icon: ListChecks, run: () => go("/review") },
     { id: "session", label: "Start an outreach session", icon: Send, run: () => go("/session") },
     { id: "analytics", label: "Analytics", icon: BarChart3, run: () => go("/analytics") },

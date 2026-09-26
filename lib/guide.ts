@@ -17,16 +17,12 @@ export const TOURS: Tour[] = [
     key: "/home",
     steps: [
       {
-        title: "This is your morning read",
-        body: "Today tells you what is waiting: follow-ups due, people worth reaching out to, profiles that need a quick check. Every number here is a link.",
+        title: "Three numbers, and they all go somewhere",
+        body: "Everyone you know, the people worth contacting given what you said you are after, and everyone who has written back. Click any of them.",
       },
       {
-        title: "People worth talking to",
-        body: "Ranked against the goals you set in Settings, with the reason shown underneath. Use the arrows to flick through them.",
-      },
-      {
-        title: "Worth noticing",
-        body: "One observation worked out from your own connections, like the largest area in your network or how many founders you have never spoken to.",
+        title: "Network overview",
+        body: "The whole shape of your network as plain facts, every one of which opens the people behind it.",
       },
     ],
   },
@@ -60,21 +56,12 @@ export const TOURS: Tour[] = [
     key: "/outreach",
     steps: [
       {
-        title: "Your pipeline, as a table",
-        body: "Everyone you have added, with status, next action and follow-up date editable straight in the row. It saves as you type.",
+        title: "Lists, then conversations",
+        body: "Group people into lists you name yourself, then work each one as a table: company, status, follow-up date and a link straight to their profile.",
       },
       {
-        title: "Work through them one at a time",
-        body: "Start a session deals with people one by one, with a message ready and a follow-up scheduled the moment you mark one sent.",
-      },
-    ],
-  },
-  {
-    key: "/follow-ups",
-    steps: [
-      {
-        title: "Only what is due",
-        body: "Grouped into overdue, today, this week and later. Done moves the person to the next step of your cadence automatically.",
+        title: "Follow-ups live on the row",
+        body: "Changing a status schedules the next follow-up three days out. When one goes past, the whole row turns red until you act on it.",
       },
     ],
   },

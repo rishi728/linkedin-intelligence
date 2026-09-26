@@ -2,341 +2,138 @@
 
 import { useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Search, Send } from "lucide-react";
-import { domainLabel } from "@/lib/intelligence";
+import { ArrowRight } from "lucide-react";
 import { applyFilters } from "@/lib/workspace/filters";
+import { focusFilters, focusIsUseful } from "@/lib/workspace/focus";
 import { followUpBuckets } from "@/lib/workspace/insights";
-import { hasGoals } from "@/lib/workspace/priority";
-import { formatDate, relativeDue, todayISO } from "@/lib/workspace/dates";
-import type { Filters, Person } from "@/lib/workspace/types";
+import { todayISO } from "@/lib/workspace/dates";
+import type { Filters } from "@/lib/workspace/types";
 import { PageBody } from "@/components/shell/AppShell";
-import { Avatar, Button, EmptyState, cx } from "@/components/ui";
+import { Button } from "@/components/ui";
 import { ArchiveImport } from "@/components/workspace/ArchiveImport";
-import { PeopleCarousel } from "@/components/home/PeopleCarousel";
-import { FirstLook } from "@/components/home/FirstLook";
-import { Spark } from "@/components/shell/Spark";
 import { useUI, useWorkspace } from "@/components/workspace/store";
 
-/** A number you can act on. The arrow is the point: every figure goes somewhere. */
-function Stat({ n, label, hint, onClick }: { n: number; label: string; hint?: string; onClick: () => void }) {
+/**
+ * One of the three numbers the whole product hangs off. It is a button, not a
+ * card: the figure itself is the way into the people behind it.
+ */
+function Figure({ n, label, hint, onClick }: { n: number; label: string; hint: string; onClick: () => void }) {
   return (
-    <button type="button" onClick={onClick} className="group block text-left">
-      <span className="tabular flex items-baseline gap-1.5 text-[28px] font-semibold leading-none tracking-tight">
+    <button
+      type="button"
+      onClick={onClick}
+      className="group block rounded-2xl px-4 py-5 text-left transition duration-200 hover:bg-hover focus-visible:bg-hover"
+    >
+      <span className="tabular block text-[52px] font-semibold leading-none tracking-tight transition duration-200 group-hover:text-accent">
         {n.toLocaleString()}
-        <ArrowRight size={14} className="mb-1 text-faint opacity-0 transition group-hover:translate-x-0.5 group-hover:text-accent group-hover:opacity-100" />
       </span>
-      <span className="mt-1.5 block text-[13px] font-medium text-ink group-hover:text-accent">{label}</span>
-      {hint ? <span className="mt-0.5 block text-[12px] text-muted">{hint}</span> : null}
+      <span className="mt-3 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-[0.12em] text-muted">
+        {label}
+        <ArrowRight
+          size={12}
+          className="opacity-0 transition duration-200 group-hover:translate-x-0.5 group-hover:text-accent group-hover:opacity-100"
+        />
+      </span>
+      <span className="mt-1 block text-[12.5px] leading-relaxed text-muted">{hint}</span>
     </button>
   );
 }
 
-function SectionLabel({ children, action }: { children: React.ReactNode; action?: React.ReactNode }) {
-  return (
-    <div className="mb-3 flex items-baseline justify-between gap-4">
-      <h2 className="text-[10.5px] font-medium uppercase tracking-[0.12em] text-muted">{children}</h2>
-      {action}
-    </div>
-  );
-}
-
-function PersonRow({ person, onOpen, right }: { person: Person; onOpen: () => void; right?: React.ReactNode }) {
-  return (
-    <div className="group flex items-center gap-3 border-b border-line/50 py-2 last:border-0">
-      <button type="button" onClick={onOpen} className="flex min-w-0 flex-1 items-center gap-2.5 text-left">
-        <Avatar name={person.name} size={28} />
-        <span className="min-w-0">
-          <span className="block truncate text-[13px] font-medium group-hover:text-accent">{person.name}</span>
-          <span className="block truncate text-[12px] text-muted">
-            {person.role}
-            {person.company ? <span className="text-faint"> · {person.company}</span> : null}
-          </span>
-        </span>
-      </button>
-      {right}
-    </div>
-  );
-}
-
 export function HomeView() {
-  const { people, settings, archive, completeFollowUp } = useWorkspace();
-  const { setPeopleFilters, openPerson, openComposer, toast } = useUI();
+  const { people, settings, archive } = useWorkspace();
+  const { setPeopleFilters } = useUI();
   const router = useRouter();
   const today = todayISO();
 
-  const buckets = useMemo(() => followUpBuckets(people, settings, today), [people, settings, today]);
-  const due = [...buckets.overdue, ...buckets.today];
-  const goalsSet = hasGoals(settings);
-
-  /** Only what the user actually asked for. No fallback, or the list looks arbitrary. */
-  const goalFilters: Filters = useMemo(
-    () => ({
-      domains: settings.goals.domains.length ? settings.goals.domains : undefined,
-      functions: settings.goals.functions.length ? settings.goals.functions : undefined,
-      seniorities: settings.goals.seniorities.length ? settings.goals.seniorities : undefined,
-      audiences: settings.goals.audiences.length ? settings.goals.audiences : undefined,
-    }),
-    [settings.goals.domains, settings.goals.functions, settings.goals.seniorities, settings.goals.audiences],
-  );
-
-  const relevant = useMemo(
-    () => (goalsSet ? applyFilters(people, goalFilters, settings) : []),
-    [people, goalFilters, settings, goalsSet],
-  );
-  const suggestions = useMemo(
-    () => relevant.filter((p) => p.status === "not_contacted").sort((a, b) => b.priorityScore - a.priorityScore).slice(0, 5),
-    [relevant],
-  );
-
-  const companies = useMemo(() => new Set(people.map((p) => p.companyKey).filter(Boolean)).size, [people]);
-  const founders = useMemo(() => people.filter((p) => p.isFounder), [people]);
-  const foundersUncontacted = founders.filter((p) => p.status === "not_contacted").length;
-  const inPipeline = people.filter((p) => p.status !== "not_contacted").length;
-  const awaiting = people.filter((p) => p.status === "contacted" || p.status === "awaiting").length;
-  const replied = people.filter((p) => p.history?.theyReplied).length;
-
-  /** The largest area, used for the one closing insight. Real counts only. */
-  const biggestArea = useMemo(() => {
-    const m = new Map<string, number>();
-    for (const p of people) if (p.domain !== "unclassified" && p.domain !== "students") m.set(p.domain, (m.get(p.domain) ?? 0) + 1);
-    const top = [...m.entries()].sort((a, b) => b[1] - a[1])[0];
-    return top ? { domain: top[0], count: top[1] } : null;
-  }, [people]);
-
-
-  /** The last things you actually did, newest first, straight off each record. */
-  const activity = useMemo(
-    () =>
-      people
-        .flatMap((p) => p.activity.map((a) => ({ ...a, person: p })))
-        .sort((a, b) => b.at.localeCompare(a.at))
-        .slice(0, 6),
-    [people],
-  );
-
-  const goTo = (f: Filters) => {
+  const goTo = (f: Filters, route = "/people") => {
     setPeopleFilters(f);
-    router.push("/people");
+    router.push(route);
   };
 
-  /** Nothing has happened in this workspace yet, so show what was found instead. */
-  const firstRun = !goalsSet && inPipeline === 0 && due.length === 0;
+  /** What the user said they are after, widened by the goals they picked. */
+  const focus = useMemo(() => focusFilters(settings), [settings]);
+  const focused = focusIsUseful(settings);
+
+  const toContact = useMemo(
+    () => applyFilters(people, { ...focus, statuses: ["not_contacted"] }, settings).length,
+    [people, focus, settings],
+  );
+  const replied = useMemo(() => people.filter((p) => p.history?.theyReplied).length, [people]);
+
+  const due = useMemo(() => {
+    const b = followUpBuckets(people, settings, today);
+    return b.overdue.length + b.today.length;
+  }, [people, settings, today]);
 
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
   const firstName = settings.profile.name ? settings.profile.name.split(" ")[0] : "";
 
+  const context = due
+    ? `${due} ${due === 1 ? "conversation is" : "conversations are"} waiting on you today.`
+    : settings.focus.direction
+      ? settings.focus.direction
+      : focused
+        ? `${toContact.toLocaleString()} people match what you are looking for and have not been contacted.`
+        : "Everything is up to date.";
+
   return (
-    <PageBody className="px-6 py-8 sm:px-10">
-      <div className="anim-stagger mx-auto w-full max-w-5xl">
-        {/* ---- the briefing ------------------------------------------------ */}
+    <PageBody className="px-6 py-14 sm:px-10">
+      <div className="anim-stagger mx-auto w-full max-w-4xl">
         <header>
-          <h1 className="text-[30px] font-semibold leading-tight tracking-tight">
-            {firstRun ? `Welcome${firstName ? `, ${firstName}` : ""}.` : `${greeting}${firstName ? `, ${firstName}` : ""}.`}
+          <h1 className="text-[32px] font-semibold leading-tight tracking-tight">
+            {greeting}
+            {firstName ? `, ${firstName}` : ""}.
           </h1>
-          <p className="mt-1.5 max-w-[56ch] text-[14px] leading-relaxed text-muted">
-            {firstRun
-              ? `Your export is in. ${people.length.toLocaleString()} people, read and sorted, none of it sent anywhere.`
-              : `${people.length.toLocaleString()} people in your network. ${
-                  due.length > 0
-                    ? `${due.length} ${due.length === 1 ? "conversation is" : "conversations are"} waiting on you today.`
-                    : suggestions.length > 0
-                      ? `${suggestions.length} worth starting a conversation with.`
-                      : "Everything is up to date."
-                }`}
-          </p>
-          {!firstRun ? (
-            <div className="mt-5 flex flex-wrap gap-2">
-              <Button variant="primary" icon={Search} onClick={() => router.push("/find")}>Find someone</Button>
-              {inPipeline > 0 ? (
-                <Button icon={Send} onClick={() => router.push("/outreach")}>Continue outreach</Button>
-              ) : null}
-            </div>
-          ) : null}
+          <p className="mt-2 max-w-[56ch] text-[14.5px] leading-relaxed text-muted">{context}</p>
         </header>
 
-        {firstRun ? (
-          <div className="mt-7">
-            <FirstLook
-              people={people}
-              settings={settings}
-              onExplore={goTo}
-              onSetGoals={() => router.push("/settings")}
-              onFind={() => router.push("/find")}
-            />
-          </div>
-        ) : null}
-
-
-
-        {/* ---- the shape of the network ------------------------------------ */}
-        {!firstRun ? (
-          <>
-        <section className="mt-10">
-          <SectionLabel action={<button type="button" onClick={() => router.push("/analytics")} className="text-[12px] text-muted transition hover:text-accent">See the whole network →</button>}>
-            Your network
-          </SectionLabel>
-          <div className="grid grid-cols-2 gap-x-6 gap-y-6 sm:grid-cols-4">
-            <Stat n={people.length} label="People" hint={`${companies.toLocaleString()} companies`} onClick={() => goTo({})} />
-            <Stat
-              n={relevant.length}
-              label="Worth exploring"
-              hint={goalsSet ? "In your target areas" : "Senior and above"}
-              onClick={() => goTo(goalFilters)}
-            />
-            <Stat n={founders.length} label="Founders" hint={foundersUncontacted ? `${foundersUncontacted} not contacted` : "All contacted"} onClick={() => goTo({ audiences: ["founders"] })} />
-            <Stat
-              n={replied}
-              label="Have replied to you"
-              hint={archive ? "From your message history" : "Add your archive to fill this in"}
-              onClick={() => goTo({ history: "replied" })}
-            />
-          </div>
+        <section className="mt-12 grid gap-2 sm:grid-cols-3" aria-label="Your network at a glance">
+          <Figure
+            n={people.length}
+            label="Total connections"
+            hint="Everyone in your network"
+            onClick={() => goTo({})}
+          />
+          <Figure
+            n={toContact}
+            label="People to contact"
+            hint={focused ? "Match your focus, not yet contacted" : "Not yet contacted"}
+            onClick={() => goTo({ ...focus, statuses: ["not_contacted"] })}
+          />
+          <Figure
+            n={replied}
+            label="Have replied"
+            hint={archive ? "From your message history" : "Add your archive to fill this in"}
+            onClick={() => goTo({ history: "replied" }, "/outreach")}
+          />
         </section>
 
-        {/* ---- today -------------------------------------------------------- */}
-        {due.length > 0 ? (
-          <section className="mt-10">
-            <SectionLabel action={<button type="button" onClick={() => router.push("/follow-ups")} className="text-[12px] text-muted transition hover:text-accent">All follow-ups →</button>}>
-              Waiting on you
-            </SectionLabel>
-            <div>
-              {due.slice(0, 4).map((p) => (
-                <PersonRow
-                  key={p.id}
-                  person={p}
-                  onOpen={() => openPerson(p.id)}
-                  right={
-                    <span className="flex shrink-0 items-center gap-2">
-                      <span className={cx("text-[12px]", buckets.overdue.includes(p) ? "text-[var(--t-orange)]" : "text-muted")}>
-                        {relativeDue(p.followUpAt, today)}
-                      </span>
-                      <Button
-                        size="sm"
-                        onClick={() => {
-                          completeFollowUp(p.id);
-                          toast(`${p.name}, follow-up done.`);
-                        }}
-                      >
-                        Done
-                      </Button>
-                    </span>
-                  }
-                />
-              ))}
-            </div>
-          </section>
-        ) : null}
-
-        {/* ---- who to talk to, strictly by what you said you want --------- */}
-        <section className="mt-10">
-          <SectionLabel
-            action={
-              goalsSet ? (
-                <button type="button" onClick={() => goTo({ ...goalFilters, statuses: ["not_contacted"] })} className="text-[12px] text-muted transition hover:text-accent">
-                  See all →
-                </button>
-              ) : null
-            }
+        <div className="mt-8 border-t border-line pt-6">
+          <button
+            type="button"
+            onClick={() => router.push("/analytics")}
+            className="group inline-flex items-center gap-1.5 text-[14px] font-medium transition duration-200 hover:text-accent"
           >
-            People worth talking to
-          </SectionLabel>
-
-          {!goalsSet ? (
-            <div className="max-w-[58ch]">
-              <p className="text-[14px] leading-relaxed">
-                Tell it what you are after and this fills with the people in your network who match, ranked and with the
-                reason shown.
-              </p>
-              <p className="mt-1.5 text-[12.5px] text-muted">
-                Target areas, roles, seniority and companies all feed it. Without them, any list here would just be a
-                guess.
-              </p>
-              <Button variant="primary" className="mt-3" onClick={() => router.push("/settings")}>Set what you are looking for</Button>
-            </div>
-          ) : suggestions.length === 0 ? (
-            <EmptyState
-              title="Everyone matching is already in your pipeline"
-              body="Widen your goals in Settings, or go looking for more people."
-              action={<Button onClick={() => router.push("/find")}>Find more people</Button>}
-            />
-          ) : (
-            <PeopleCarousel people={suggestions} onOpen={openPerson} onStart={(id) => openComposer(id)} />
-          )}
-        </section>
-
-        {/* ---- outreach, as a state of play, not four more boxes ----------- */}
-        {inPipeline > 0 ? (
-          <section className="mt-10">
-            <SectionLabel action={<button type="button" onClick={() => router.push("/outreach")} className="text-[12px] text-muted transition hover:text-accent">Open outreach →</button>}>
-              Your conversations
-            </SectionLabel>
-            <p className="max-w-[60ch] text-[14px] leading-relaxed">
-              <button type="button" onClick={() => router.push("/outreach")} className="font-semibold tracking-tight transition hover:text-accent">
-                {inPipeline.toLocaleString()} people
-              </button>{" "}
-              <span className="text-muted">are in your pipeline.</span>{" "}
-              {awaiting > 0 ? <span className="text-muted">{awaiting.toLocaleString()} are waiting on a reply. </span> : null}
-              {replied > 0 ? <span className="text-muted">{replied.toLocaleString()} have written back.</span> : null}
-            </p>
-          </section>
-        ) : null}
-
-
-        {/* ---- what you last did -------------------------------------------- */}
-        {activity.length ? (
-          <section className="mt-10">
-            <SectionLabel>Recent activity</SectionLabel>
-            <ol>
-              {activity.map((a, i) => (
-                <li key={`${a.person.id}-${a.at}-${i}`} className="flex items-baseline gap-3 border-b border-line/50 py-2 last:border-0">
-                  <span aria-hidden className={cx("mt-1.5 size-1.5 shrink-0 rounded-full", a.kind === "status" ? "bg-accent" : a.kind === "followup" ? "dot-green" : "bg-line-strong")} />
-                  <span className="min-w-0 flex-1 text-[13px]">
-                    <button type="button" onClick={() => openPerson(a.person.id)} className="font-medium transition hover:text-accent">
-                      {a.person.name}
-                    </button>
-                    <span className="text-muted">, {a.text}</span>
-                  </span>
-                  <span className="shrink-0 text-[11.5px] text-faint">{formatDate(new Date(a.at), true)}</span>
-                </li>
-              ))}
-            </ol>
-          </section>
-        ) : null}
-
-        <Spark categories={["networking", "outreach", "relationships", "conversation"]} className="mt-10" />
-
-        {/* ---- one closing observation, computed, not invented -------------- */}
-        {biggestArea ? (
-          <section className="mt-10 border-t border-line pt-6">
-            <SectionLabel>Worth noticing</SectionLabel>
-            <p className="max-w-[58ch] text-[15px] leading-relaxed">
-              <strong className="font-semibold">{domainLabel(biggestArea.domain)}</strong> is the largest area in your
-              network, <span className="tabular">{biggestArea.count.toLocaleString()}</span> people.
-              {foundersUncontacted > 0 ? (
-                <>
-                  {" "}You also know <span className="tabular">{founders.length.toLocaleString()}</span> founders, and
-                  haven&apos;t spoken to <span className="tabular">{foundersUncontacted.toLocaleString()}</span> of them.
-                </>
-              ) : null}
-            </p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <Button onClick={() => goTo({ domains: [biggestArea.domain] })}>
-                Explore {domainLabel(biggestArea.domain).toLowerCase()}
+            View network overview
+            <ArrowRight size={14} className="text-muted transition duration-200 group-hover:translate-x-0.5 group-hover:text-accent" />
+          </button>
+          {!focused ? (
+            <p className="mt-4 max-w-[58ch] text-[13px] leading-relaxed text-muted">
+              You have not told this what you are looking for yet, so &ldquo;people to contact&rdquo; is simply everyone
+              you have not spoken to.{" "}
+              <Button size="sm" variant="ghost" className="align-baseline" onClick={() => router.push("/settings")}>
+                Set your focus
               </Button>
-              {foundersUncontacted > 0 ? (
-                <Button variant="ghost" onClick={() => goTo({ audiences: ["founders"], statuses: ["not_contacted"] })}>
-                  Explore founders
-                </Button>
-              ) : null}
-            </div>
-          </section>
-        ) : null}
+            </p>
+          ) : null}
+        </div>
 
-          </>
+        {!archive ? (
+          <div className="mt-12">
+            <ArchiveImport />
+          </div>
         ) : null}
-
-        {!archive ? <div className="mt-10"><ArchiveImport /></div> : null}
       </div>
     </PageBody>
   );

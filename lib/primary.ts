@@ -1,14 +1,12 @@
 // The twelve categories people are sorted into for discovery.
 //
-// The classifier underneath works across a much wider taxonomy, because a nurse
+// The classifier underneath works across a much wider vocabulary, because a nurse
 // is not an engineer and pretending otherwise would be worse than saying nothing.
 // This module is the discovery surface on top of it: the twelve buckets people
-// actually search by, mapped from the detailed category the classifier produced.
+// actually search by, derived from the function the classifier already worked out.
 //
-// Anyone whose real category has no honest home among the twelve keeps their
+// Anyone whose real function has no honest home among the twelve keeps their
 // detailed label instead of being forced into a bucket that is not true.
-
-import type { CategoryId } from "./taxonomy";
 
 export const PRIMARY_IDS = [
   "software", "core_engineering", "sales", "founders", "consulting", "data",
@@ -32,25 +30,61 @@ export const PRIMARY_LABEL: Record<PrimaryId, string> = {
   recruiters: "Recruiters",
 };
 
-/** Detailed category to primary. Categories absent here have no honest mapping. */
-const FROM_CATEGORY: Partial<Record<CategoryId, PrimaryId>> = {
-  software: "software",
-  engineering: "core_engineering",
+/** Function to primary. Functions absent here have no honest mapping. */
+const FROM_FUNCTION: Record<string, PrimaryId> = {
+  "software-engineering": "software",
+  "quality-testing": "software",
+  "cloud-devops": "software",
+  "developer-relations": "software",
+  "enterprise-apps": "software",
+
+  "core-engineering": "core_engineering",
+  "hardware-semiconductors": "core_engineering",
+  manufacturing: "core_engineering",
+
   sales: "sales",
+  "business-development": "sales",
+  "account-management": "sales",
+  presales: "sales",
+  "revops-gtm": "sales",
+
   founders: "founders",
-  consulting: "consulting",
-  product: "product",
-  finance: "finance",
-  research: "research",
-  education: "education",
-  recruiting: "recruiters",
+  "management-consulting": "consulting",
+
+  "data-engineering": "data",
+  analytics: "data",
+  "machine-learning": "ai",
+
+  "product-management": "product",
+  "product-operations": "product",
+
+  accounting: "finance",
+  "corporate-finance": "finance",
+  banking: "finance",
+  "investment-banking": "finance",
+  quant: "finance",
+  investing: "finance",
+  "risk-insurance": "finance",
+
+  "academic-research": "research",
+  sciences: "research",
+
+  faculty: "education",
+  mentoring: "education",
+  training: "education",
+
+  "talent-acquisition": "recruiters",
 };
 
-/** Splits the data/AI category, which the taxonomy keeps together, by the title. */
+/**
+ * Data scientists sit on the line, so the title decides rather than the function:
+ * an applied scientist is doing AI work, a BI-focused one is doing data work.
+ */
 const AI_TITLE =
   /\b(a\.?i\.?|ml|mle|mlops|machine\s*learning|deep\s*learning|neural|nlp|natural\s+language|computer\s+vision|llm|genai|generative|applied\s+scientist|prompt|reinforcement\s+learning)\b/i;
 
-export function primaryOf(domain: string, title: string): PrimaryId | null {
-  if (domain === "data_ai") return AI_TITLE.test(title) ? "ai" : "data";
-  return FROM_CATEGORY[domain as CategoryId] ?? null;
+export function primaryOf(fn: string, title: string, isFounder = false): PrimaryId | null {
+  if (isFounder) return "founders";
+  if (fn === "data-science") return AI_TITLE.test(title) ? "ai" : "data";
+  return FROM_FUNCTION[fn] ?? null;
 }

@@ -3,10 +3,10 @@ import type { Cadence, Goals, NetworkingFocus, PriorityWeights, Profile, Setting
 export const DEFAULT_STATUSES: StatusDef[] = [
   { id: "not_contacted", label: "Not contacted", tone: "gray", onBoard: false, kind: "idle" },
   { id: "to_contact", label: "To contact", tone: "blue", onBoard: true, kind: "active" },
-  { id: "contacted", label: "Contacted", tone: "violet", onBoard: true, kind: "active", followUpDays: 5 },
-  { id: "awaiting", label: "Awaiting response", tone: "amber", onBoard: true, kind: "active", followUpDays: 4 },
+  { id: "contacted", label: "Contacted", tone: "violet", onBoard: true, kind: "active", followUpDays: 3 },
+  { id: "awaiting", label: "Awaiting response", tone: "amber", onBoard: true, kind: "active", followUpDays: 3 },
   { id: "follow_up", label: "Follow-up", tone: "orange", onBoard: true, kind: "active", followUpDays: 0 },
-  { id: "replied", label: "Replied", tone: "teal", onBoard: false, kind: "positive", followUpDays: 2 },
+  { id: "replied", label: "Replied", tone: "teal", onBoard: false, kind: "positive", followUpDays: 3 },
   { id: "call_scheduled", label: "Call scheduled", tone: "teal", onBoard: false, kind: "positive" },
   { id: "interested", label: "Interested", tone: "green", onBoard: true, kind: "positive", followUpDays: 3 },
   { id: "referral", label: "Referral", tone: "green", onBoard: false, kind: "positive" },

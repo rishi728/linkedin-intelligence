@@ -169,7 +169,7 @@ export function PersonPanel() {
     })),
   ].sort((a, b) => (a.at || "").localeCompare(b.at || ""));
 
-  const relationshipFirst = pathname === "/outreach" || pathname === "/follow-ups" || pathname === "/session";
+  const relationshipFirst = pathname === "/outreach" || pathname === "/session";
 
   return (
     <Sheet open onClose={() => openPerson(null)} width={580}>
