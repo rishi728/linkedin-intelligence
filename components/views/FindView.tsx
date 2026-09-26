@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Building2, Compass, Search, Target } from "lucide-react";
+import { SECTORS } from "@/lib/knowledge/sectors";
 import { applyFilters, buildIntents, parseQuery } from "@/lib/workspace/filters";
 import { groupCompanies } from "@/lib/workspace/insights";
 import type { Filters } from "@/lib/workspace/types";
@@ -43,6 +44,13 @@ export function FindView() {
   const intents = useMemo(() => buildIntents(people, settings), [people, settings]);
 
   const targetPeople = useMemo(() => applyFilters(people, { targetOnly: true }, settings).length, [people, settings]);
+
+  /** Broad sectors only. There is no industry hierarchy under these, by design. */
+  const sectors = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const p of people) if (p.sector) m.set(p.sector, (m.get(p.sector) ?? 0) + 1);
+    return SECTORS.map((x) => ({ ...x, count: m.get(x.id) ?? 0 })).filter((x) => x.count > 0).sort((a, b) => b.count - a.count);
+  }, [people]);
 
   return (
     <PageBody className="px-6 py-10">
@@ -141,6 +149,25 @@ export function FindView() {
             <GuidedSearch people={people} settings={settings} onShow={go} />
           </div>
         )}
+
+        {sectors.length ? (
+          <>
+            <p className="mb-3 mt-9 text-[10.5px] font-medium uppercase tracking-[0.12em] text-muted">Or by where they work</p>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+              {sectors.map((x) => (
+                <button
+                  key={x.id}
+                  type="button"
+                  onClick={() => go({ sectors: [x.id] })}
+                  className="flex items-center justify-between gap-2 rounded-xl border border-line bg-panel px-3 py-2.5 text-left transition duration-200 hover:border-line-strong hover:shadow-pop"
+                >
+                  <span className="truncate text-[12.5px]">{x.label}</span>
+                  <span className="tabular shrink-0 text-[12px] text-muted">{x.count.toLocaleString()}</span>
+                </button>
+              ))}
+            </div>
+          </>
+        ) : null}
 
         <Card className="mt-6 p-4">
           <div className="flex items-start gap-3">

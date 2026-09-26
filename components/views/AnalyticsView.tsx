@@ -15,7 +15,7 @@ type Lens = "area" | "role" | "sector" | "company";
 
 const LENS_LABEL: Record<Lens, string> = {
   area: "area of work",
-  role: "job",
+  role: "role",
   sector: "sector",
   company: "company",
 };
@@ -224,7 +224,7 @@ export function AnalyticsView() {
                     onChange={(v) => { setLens(v); setQ(""); }}
                     options={[
                       { value: "area", label: "Area" },
-                      { value: "role", label: "Job" },
+                      { value: "role", label: "Role" },
                       { value: "sector", label: "Sector" },
                       { value: "company", label: "Company" },
                     ]}
