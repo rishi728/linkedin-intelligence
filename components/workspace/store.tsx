@@ -40,6 +40,12 @@ interface DataContext {
   toggleTarget: (companyName: string) => void;
   saveSegment: (name: string, filters: Filters) => string;
   deleteSegment: (id: string) => void;
+  createList: (name: string, description: string, memberIds?: string[]) => string;
+  updateList: (id: string, patch: { name?: string; description?: string }) => void;
+  deleteList: (id: string) => void;
+  /** Adds people to a list, skipping anyone already in it. Returns how many were new. */
+  addToList: (id: string, personIds: string[]) => number;
+  removeFromList: (id: string, personIds: string[]) => void;
   exportBackup: () => string;
   importBackup: (json: string) => void;
   resetWorkspace: () => Promise<void>;
@@ -109,6 +115,8 @@ function mergeSettings(saved: Partial<Settings> | undefined): Settings {
     ...saved,
     profile: { ...d.profile, ...saved.profile },
     goals: { ...d.goals, ...saved.goals },
+    focus: { ...d.focus, ...saved.focus },
+    lists: saved.lists ?? d.lists,
     statuses: saved.statuses?.length ? saved.statuses : d.statuses,
     templates: saved.templates?.length ? saved.templates : d.templates,
   };
@@ -405,6 +413,44 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     return id;
   }, [updateSettings]);
 
+  const createList = useCallback((name: string, description: string, memberIds: string[] = []) => {
+    const id = uid();
+    updateSettings((s) => ({
+      ...s,
+      lists: [...s.lists, { id, name, description, memberIds: [...new Set(memberIds)], createdAt: now() }],
+    }));
+    return id;
+  }, [updateSettings]);
+
+  const updateList = useCallback((id: string, patch: { name?: string; description?: string }) => {
+    updateSettings((s) => ({ ...s, lists: s.lists.map((l) => (l.id === id ? { ...l, ...patch } : l)) }));
+  }, [updateSettings]);
+
+  const deleteList = useCallback((id: string) => {
+    updateSettings((s) => ({ ...s, lists: s.lists.filter((l) => l.id !== id) }));
+  }, [updateSettings]);
+
+  /** Membership lives on the list, never on the person, so nobody is duplicated. */
+  const addToList = useCallback((id: string, personIds: string[]) => {
+    const have = new Set(settings.lists.find((l) => l.id === id)?.memberIds ?? []);
+    const fresh = personIds.filter((p) => !have.has(p));
+    if (fresh.length) {
+      updateSettings((s) => ({
+        ...s,
+        lists: s.lists.map((l) => (l.id === id ? { ...l, memberIds: [...l.memberIds, ...fresh] } : l)),
+      }));
+    }
+    return fresh.length;
+  }, [settings.lists, updateSettings]);
+
+  const removeFromList = useCallback((id: string, personIds: string[]) => {
+    const drop = new Set(personIds);
+    updateSettings((s) => ({
+      ...s,
+      lists: s.lists.map((l) => (l.id === id ? { ...l, memberIds: l.memberIds.filter((m) => !drop.has(m)) } : l)),
+    }));
+  }, [updateSettings]);
+
   const deleteSegment = useCallback((id: string) => updateSettings((s) => ({ ...s, segments: s.segments.filter((x) => x.id !== id) })), [updateSettings]);
 
   const exportBackup = useCallback(
@@ -457,7 +503,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const data = useMemo<DataContext>(() => ({
     ready, dataset, people, byId, settings, records, archive, savedAt, snapshots,
     importCsv, importArchive, loadSample, updateRecord, setStatus, setClassification, resetClassification, updateSettings,
-    deleteRule, toggleTarget, saveSegment, deleteSegment, exportBackup, importBackup, resetWorkspace, removeDatasetFile,
+    deleteRule, toggleTarget, saveSegment, deleteSegment, createList, updateList, deleteList, addToList, removeFromList, exportBackup, importBackup, resetWorkspace, removeDatasetFile,
     completeFollowUp, restoreSnapshot,
   }), [ready, dataset, people, byId, settings, records, archive, savedAt, snapshots, importCsv, importArchive, loadSample,
     updateRecord, setStatus, setClassification, resetClassification, updateSettings, deleteRule, toggleTarget, saveSegment,

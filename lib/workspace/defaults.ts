@@ -1,4 +1,4 @@
-import type { Cadence, Goals, PriorityWeights, Profile, Settings, StatusDef, Template } from "./types";
+import type { Cadence, Goals, NetworkingFocus, PriorityWeights, Profile, Settings, StatusDef, Template } from "./types";
 
 export const DEFAULT_STATUSES: StatusDef[] = [
   { id: "not_contacted", label: "Not contacted", tone: "gray", onBoard: false, kind: "idle" },
@@ -60,6 +60,7 @@ export const DEFAULT_WEIGHTS: PriorityWeights = {
 };
 
 export const EMPTY_GOALS: Goals = { opportunityTypes: [], domains: [], functions: [], seniorities: [], audiences: [] };
+export const EMPTY_FOCUS: NetworkingFocus = { goals: [], direction: "", confirmedAt: "" };
 export const EMPTY_PROFILE: Profile = { name: "", background: "", schools: [] };
 
 export function defaultSettings(): Settings {
@@ -72,6 +73,8 @@ export function defaultSettings(): Settings {
     statuses: DEFAULT_STATUSES.map((s) => ({ ...s })),
     templates: DEFAULT_TEMPLATES.map((t) => ({ ...t })),
     segments: [],
+    lists: [],
+    focus: { ...EMPTY_FOCUS, goals: [] },
     rules: [],
   };
 }

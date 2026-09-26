@@ -1,6 +1,7 @@
 import type { ContactHistory } from "../archive";
 import type { Basis } from "../classifier";
 import type { ClassificationSource, CustomRule, Hierarchy } from "../intelligence";
+import type { PrimaryId } from "../primary";
 import type { Seniority, TagId } from "../taxonomy";
 
 export type Priority = "high" | "medium" | "low";
@@ -91,6 +92,27 @@ export interface Template {
   body: string;
 }
 
+/** What the user said they are here for, confirmed at first import. */
+export type FocusGoalId =
+  | "research" | "internship" | "job" | "networking" | "learning" | "mentorship" | "building";
+
+export interface NetworkingFocus {
+  goals: FocusGoalId[];
+  /** Optional free text, e.g. "Looking for AI research internships". */
+  direction: string;
+  /** Set once the user finishes the setup flow, so it never runs twice. */
+  confirmedAt: string;
+}
+
+/** A list of people the user put together by hand. Membership only, no statuses. */
+export interface PersonList {
+  id: string;
+  name: string;
+  description: string;
+  memberIds: string[];
+  createdAt: string;
+}
+
 export interface Segment {
   id: string;
   name: string;
@@ -126,6 +148,8 @@ export interface Settings {
   statuses: StatusDef[];
   templates: Template[];
   segments: Segment[];
+  lists: PersonList[];
+  focus: NetworkingFocus;
   rules: CustomRule[];
   /** ISO date of the last downloaded backup, so the app can nudge when it goes stale. */
   lastBackupAt?: string;
@@ -187,6 +211,10 @@ export interface Filters {
   /** Conversation history from the archive. */
   history?: "messaged" | "replied" | "no-reply" | "never" | "they-invited";
   pastCompanies?: string[];
+  /** One of the twelve discovery categories. */
+  primaries?: string[];
+  /** People in this user-made list. */
+  listId?: string;
   /** Connected within the last N days. */
   connectedWithinDays?: number;
   /** Connected over a year ago and never contacted. */
@@ -248,6 +276,8 @@ export interface Person {
   isFounder: boolean;
   isAlumni: boolean;
   duplicateOf: string | null;
+  /** One of the twelve discovery categories, or null when none of them is honest. */
+  primary: PrimaryId | null;
   /** Lower-cased text used by search. */
   haystack: string;
 }

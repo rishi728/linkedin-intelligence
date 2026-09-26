@@ -16,6 +16,7 @@ import { PersonPanel } from "@/components/people/PersonPanel";
 import { AddData } from "@/components/workspace/AddData";
 import { Logo } from "@/components/shell/Logo";
 import { Guide } from "@/components/shell/Guide";
+import { Setup } from "@/components/setup/Setup";
 import { BackupNudge } from "@/components/shell/BackupNudge";
 import { Button, Spinner, cx } from "@/components/ui";
 import { useUI, useWorkspace } from "@/components/workspace/store";
@@ -61,6 +62,10 @@ export function AppShell({ children }: { children: ReactNode }) {
       </div>
     );
   }
+
+  // The one-time setup owns the whole screen: Home should already know what the
+  // user is after by the time they first see it.
+  if (!settings.focus.confirmedAt && people.length > 0) return <Setup />;
 
   const buckets = followUpBuckets(people, settings);
   const due = buckets.overdue.length + buckets.today.length;
