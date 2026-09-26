@@ -162,7 +162,8 @@ describe("outreach", () => {
   it("status changes set contact and follow-up dates", () => {
     const settings = defaultSettings();
     const patch = statusChangePatch({}, "contacted", settings, "2026-09-16");
-    expect(patch).toMatchObject({ status: "contacted", lastContactedAt: "2026-09-16", followUpAt: "2026-09-21" });
+    // Follow-ups default to three days after the status change.
+    expect(patch).toMatchObject({ status: "contacted", lastContactedAt: "2026-09-16", followUpAt: "2026-09-19" });
     expect(statusChangePatch({ followUpAt: "2026-09-20" }, "closed", settings, "2026-09-16").followUpAt).toBe("");
   });
 
