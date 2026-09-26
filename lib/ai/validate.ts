@@ -5,7 +5,7 @@
 // does not appear in the source data is dropped too. The result is that the
 // model can only ever choose among answers the product already understands.
 
-import { ROLE_BUCKETS } from "../knowledge/roles";
+import { ROLE_BUCKETS, ROLE_PATH } from "../knowledge/roles";
 import { SECTOR_IDS, SECTOR_LABEL, type SectorId } from "../knowledge/sectors";
 import type { AiClassification, Correction, EvidenceItem, NetworkInsight, RawClassification } from "./types";
 
@@ -165,4 +165,63 @@ export function validateInsights(rows: unknown): NetworkInsight[] {
     if (out.length >= 8) break;
   }
   return out;
+}
+
+// ---------------------------------------------------------------------------
+// The compact reply
+//
+// A detailed role already implies its section and its bucket, so asking for all
+// three wastes output tokens and invites the model to return a path that does
+// not line up. One role id per profile is both smaller and impossible to get
+// internally wrong.
+
+
+/** `[index, "role-id", confidence, "sector-id"?]`, as the model is asked to reply. */
+export type CompactRow = [number, string, number?, string?];
+
+export function validateCompactRow(
+  row: unknown,
+  sources: Array<{ fingerprint: string; title: string; company: string }>,
+): AiClassification | null {
+  if (!Array.isArray(row) || row.length < 2) return null;
+  const [index, roleValue, conf, sectorValue] = row as CompactRow;
+  if (typeof index !== "number" || !Number.isInteger(index)) return null;
+
+  const source = sources[index];
+  if (!source) return null;
+
+  const key = typeof roleValue === "string" ? roleValue.trim().toLowerCase() : "";
+  const path = ROLE_PATH.get(key) ?? [...ROLE_PATH.values()].find((p) => p.roleLabel.toLowerCase() === key);
+  if (!path) return null;
+
+  const roleConfidence = confidence(conf, 0.6);
+
+  return {
+    fingerprint: source.fingerprint,
+    bucket: path.bucketId,
+    section: path.sectionId,
+    roleId: path.roleId,
+    sector: resolveSector(sectorValue),
+    roleConfidence,
+    sectorConfidence: sectorValue ? Math.min(roleConfidence, 0.8) : 0,
+    // Evidence is built here rather than asked for: the classification was made
+    // from this title, and saying so is true without a round trip that could
+    // come back quoting something nobody sent.
+    evidence: [{ field: "title", text: source.title, supports: "role" }],
+  };
+}
+
+export function validateCompactRows(
+  rows: unknown,
+  sources: Array<{ fingerprint: string; title: string; company: string }>,
+): { accepted: AiClassification[]; rejected: number } {
+  if (!Array.isArray(rows)) return { accepted: [], rejected: 0 };
+  const accepted: AiClassification[] = [];
+  let rejected = 0;
+  for (const row of rows) {
+    const ok = validateCompactRow(row, sources);
+    if (ok) accepted.push(ok);
+    else rejected++;
+  }
+  return { accepted, rejected };
 }

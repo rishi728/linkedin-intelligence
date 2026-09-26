@@ -19,6 +19,14 @@ import type { CompactProfile } from "./types";
  */
 export const SAFE_BATCH_CHARS = 96_000;
 
+/**
+ * The reply is the real constraint, not the request. Every profile sent needs a
+ * row back, and a model that will read 100k characters will still only write a
+ * few thousand tokens before it is cut off. At roughly 18 tokens a row this
+ * keeps a reply inside about 4k tokens, which every model can manage.
+ */
+export const MAX_PROFILES_PER_BATCH = 200;
+
 export const estimateTokens = (text: string): number => Math.ceil(text.length / 4);
 
 /**
@@ -110,6 +118,16 @@ export function buildBatches(pending: PendingGroup[], maxBatches: number): { bat
     if (batches.length >= maxBatches && current.profiles.length === 0) {
       skipped.push(g);
       continue;
+    }
+
+    if (current.profiles.length >= MAX_PROFILES_PER_BATCH) {
+      batches.push(current);
+      if (batches.length >= maxBatches) {
+        skipped.push(g);
+        start();
+        continue;
+      }
+      start();
     }
 
     const title = g.title.slice(0, MAX_TITLE_CHARS);

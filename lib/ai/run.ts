@@ -20,7 +20,7 @@ import {
   type RunMode,
   type RunStats,
 } from "./types";
-import { validateClassifications, validateCorrections, validateInsights, type ValidationSource } from "./validate";
+import { validateCompactRows, validateCorrections, validateInsights } from "./validate";
 
 /** Fingerprint to its validated answer, kept across runs and imports. */
 export type AiCache = Record<string, AiClassification>;
@@ -59,20 +59,19 @@ function taxonomyBlock(): string {
   return `ROLE TAXONOMY (bucket: section[role,role,...])\n${roles}\n\nSECTORS\n${sectors}`;
 }
 
-const CLASSIFY_SYSTEM = `You classify professional job titles into a fixed taxonomy.
+const CLASSIFY_SYSTEM = `You match job titles to role ids from a fixed list.
 
 Rules, in order of importance:
-1. Only ever use ids that appear in the taxonomy below. Never invent a bucket, section, role or sector.
-2. role_section must belong to role_bucket, and detailed_role must belong to role_section.
-3. The same title with the same employer must always get the same answer.
-4. Classify by the occupation, not by a word that belongs to another field. "Technical Recruiter" is recruitment, not engineering. "AI Product Manager" is product management. "Founder's Office" is a business role, not founding a company. "Sales Engineer" is sales.
-5. Words describing how senior somebody is never decide the occupation.
-6. If a title names no occupation at all, omit that entry rather than guessing.
-7. sector describes the employer, not the person. Omit it if the employer is unknown to you.
-8. Confidence is a probability between 0.01 and 0.99. Never 1.
-9. Every evidence item must quote text that appears verbatim in the title or company given to you.
+1. Only ever answer with a role id that appears in the list below. Never invent one.
+2. Classify by the occupation, not by a word borrowed from another field. "Technical Recruiter" is recruitment, not engineering. "AI Product Manager" is product management. "Founder's Office" is a business role, not founding a company. "Sales Engineer" is sales.
+3. Words describing how senior somebody is never decide the occupation.
+4. If a title names no occupation at all, leave that profile out entirely rather than guessing.
+5. Confidence is a probability between 0.01 and 0.99. Never 1.
+6. The optional sector id describes the employer, not the person. Leave it out unless you recognise the employer.
 
-Reply with JSON only: {"results":[{"id","role_bucket","role_section","detailed_role","sector","role_confidence","sector_confidence","evidence":[{"field","text","supports"}]}]}`;
+Reply with JSON only, one compact row per profile you can place:
+{"r":[[i,"role-id",confidence,"sector-id"],[i,"role-id",confidence]]}
+i is the profile's index exactly as given. Return nothing else: no prose, no explanation.`;
 
 const RECONCILE_SYSTEM = `You are checking one set of classifications for internal consistency.
 
@@ -99,6 +98,27 @@ Return 3 to 6 insights and up to 3 gaps.`;
 
 // --- one request, retried at most once, always inside the budget -----------
 
+type Attempt = { ok: true; payload: unknown } | { ok: false; reason: string };
+
+/** What went wrong, in words the user can act on. */
+function explain(err: unknown): string {
+  if (!(err instanceof ProviderError)) return `The request failed: ${String(err)}`;
+  switch (err.kind) {
+    case "auth":
+      return "OpenRouter rejected the key. Check it in Settings, and that the account has credit.";
+    case "no-key":
+      return "No OpenRouter key is set. Add one in Settings.";
+    case "rate-limit":
+      return "OpenRouter rate limited the request. Wait a moment and run it again.";
+    case "timeout":
+      return "The request timed out before the model answered.";
+    case "malformed":
+      return "The model's reply was not usable JSON.";
+    default:
+      return err.message;
+  }
+}
+
 async function askOnce(
   ai: AiSettings,
   budget: RunBudget,
@@ -106,21 +126,23 @@ async function askOnce(
   system: string,
   user: string,
   maxTokens: number,
-): Promise<unknown | null> {
+): Promise<Attempt> {
+  let reason = "The request budget was already spent.";
   for (let attempt = 0; attempt < 2; attempt++) {
-    if (!budget.canSpend(kind)) return null;
+    if (!budget.canSpend(kind)) return { ok: false, reason };
     budget.spend(kind);
     try {
-      return await chatJson(ai, { system, user, maxTokens });
+      return { ok: true, payload: await chatJson(ai, { system, user, maxTokens }) };
     } catch (err) {
       budget.recordFailure();
+      reason = explain(err);
       const retryable = err instanceof ProviderError ? err.retryable : false;
       // A retry costs a request like any other, so it only happens when one is
       // both plausibly useful and actually affordable.
-      if (!retryable || attempt === 1 || !budget.canSpend(kind)) return null;
+      if (!retryable || attempt === 1 || !budget.canSpend(kind)) return { ok: false, reason };
     }
   }
-  return null;
+  return { ok: false, reason };
 }
 
 // --- the run ---------------------------------------------------------------
@@ -159,40 +181,48 @@ export async function runNetworkIntelligence(input: RunInput): Promise<RunResult
 
   const taxonomy = taxonomyBlock();
 
-  for (const batch of batches) {
-    const sources = new Map<string, ValidationSource>();
-    for (const p of batch.profiles) {
-      const g = groupById.get(p.id);
-      sources.set(p.id, { title: g?.title ?? p.title, company: g?.company ?? "" });
-    }
+  let fatal: string | null = null;
 
-    const payload = await askOnce(
+  for (const batch of batches) {
+    const sources = batch.profiles.map((p) => {
+      const g = groupById.get(p.id);
+      return { fingerprint: p.id, title: g?.title ?? p.title, company: g?.company ?? "" };
+    });
+
+    const attempt = await askOnce(
       input.ai,
       budget,
       "classify",
       `${CLASSIFY_SYSTEM}\n\n${taxonomy}`,
       buildBatchPrompt(batch),
-      Math.min(16000, 200 + batch.profiles.length * 90),
+      // Room for one compact row per profile, with slack for formatting.
+      Math.min(16000, 400 + batch.profiles.length * 30),
     );
 
-    if (payload === null) {
-      stoppedBecause = stoppedBecause ?? "The model could not be reached, so the rest was left to the repository.";
+    if (!attempt.ok) {
+      // A key or model problem will fail identically every time, so the run
+      // stops rather than spending the rest of the budget proving it.
+      fatal = attempt.reason;
       break;
     }
 
-    const rows = (payload as { results?: unknown }).results ?? payload;
-    const { accepted } = validateClassifications(rows, sources);
+    const rows = (attempt.payload as { r?: unknown; results?: unknown }).r
+      ?? (attempt.payload as { results?: unknown }).results
+      ?? attempt.payload;
+    const { accepted } = validateCompactRows(rows, sources);
     for (const c of accepted) {
       classifications[c.fingerprint] = c;
       for (const id of groupById.get(c.fingerprint)?.personIds ?? []) byPerson[id] = c;
     }
   }
 
+  if (fatal) stoppedBecause = fatal;
+
   // 3. One consistency pass over everything decided this run.
   let corrections: Correction[] = [];
   const decided = Object.values(classifications);
-  if (decided.length > 1 && budget.canSpend("reconcile")) {
-    const payload = await askOnce(
+  if (!fatal && decided.length > 1 && budget.canSpend("reconcile")) {
+    const attempt = await askOnce(
       input.ai,
       budget,
       "reconcile",
@@ -200,16 +230,16 @@ export async function runNetworkIntelligence(input: RunInput): Promise<RunResult
       buildReconcilePrompt(decided, groupById),
       6000,
     );
-    if (payload) {
-      corrections = validateCorrections((payload as { corrections?: unknown }).corrections ?? payload);
+    if (attempt.ok) {
+      corrections = validateCorrections((attempt.payload as { corrections?: unknown }).corrections ?? attempt.payload);
       applyCorrections(corrections, classifications, byPerson, groupById);
     }
   }
 
   // 4. One pass over the shape of the whole network, for this user.
   let intelligence: NetworkIntelligence | null = null;
-  if (budget.canSpend("personalize")) {
-    const payload = await askOnce(
+  if (!fatal && budget.canSpend("personalize")) {
+    const attempt = await askOnce(
       input.ai,
       budget,
       "personalize",
@@ -217,8 +247,8 @@ export async function runNetworkIntelligence(input: RunInput): Promise<RunResult
       buildPersonalizePrompt(input.people, input.settings, byPerson),
       3000,
     );
-    if (payload) {
-      const p = payload as { insights?: unknown; gaps?: unknown };
+    if (attempt.ok) {
+      const p = attempt.payload as { insights?: unknown; gaps?: unknown };
       intelligence = {
         insights: validateInsights(p.insights),
         gaps: Array.isArray(p.gaps) ? p.gaps.filter((g): g is string => typeof g === "string").slice(0, 3) : [],
@@ -261,12 +291,14 @@ export async function runNetworkIntelligence(input: RunInput): Promise<RunResult
 
 function buildBatchPrompt(batch: Batch): string {
   const companies = batch.companies.length
-    ? `COMPANIES (referenced by index)\n${batch.companies.map((n, i) => `${i}=${n}`).join("\n")}\n\n`
+    ? "COMPANIES\n" + batch.companies.map((n, i) => "c" + i + "=" + n).join("\n") + "\n\n"
     : "";
+  // "index|title|company-ref" is the smallest form that still carries an
+  // employer, and the index is what comes back rather than a long fingerprint.
   const rows = batch.profiles
-    .map((p) => JSON.stringify({ id: p.id, title: p.title, ...(p.c === undefined ? {} : { c: p.c }) }))
+    .map((p, i) => i + "|" + p.title + (p.c === undefined ? "" : "|c" + p.c))
     .join("\n");
-  return `${companies}PROFILES (one per line; c is an index into COMPANIES)\n${rows}`;
+  return companies + "PROFILES (index|title|company)\n" + rows;
 }
 
 function buildReconcilePrompt(decided: AiClassification[], groups: Map<string, PendingGroup>): string {
