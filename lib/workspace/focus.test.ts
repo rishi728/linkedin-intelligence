@@ -34,7 +34,7 @@ describe("networking focus", () => {
     const { people, settings } = sample();
     settings.focus = { goals: ["job"], direction: "", confirmedAt: "x" };
     const one = applyFilters(people, focusFilters(settings), settings).length;
-    settings.focus = { goals: ["job", "research", "building"], direction: "", confirmedAt: "x" };
+    settings.focus = { goals: ["job", "research", "networking"], direction: "", confirmedAt: "x" };
     const many = applyFilters(people, focusFilters(settings), settings).length;
     expect(many).toBeGreaterThan(one);
   });

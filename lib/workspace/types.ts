@@ -95,8 +95,7 @@ export interface Template {
 }
 
 /** What the user said they are here for, confirmed at first import. */
-export type FocusGoalId =
-  | "research" | "internship" | "job" | "networking" | "learning" | "mentorship" | "building";
+export type FocusGoalId = "research" | "job" | "networking";
 
 export interface NetworkingFocus {
   goals: FocusGoalId[];

@@ -11,6 +11,7 @@ import type { Filters } from "@/lib/workspace/types";
 import { PageBody } from "@/components/shell/AppShell";
 import { Button } from "@/components/ui";
 import { ArchiveImport } from "@/components/workspace/ArchiveImport";
+import { NetworkShape } from "@/components/home/NetworkShape";
 import { useUI, useWorkspace } from "@/components/workspace/store";
 
 /**
@@ -128,6 +129,8 @@ export function HomeView() {
             </p>
           ) : null}
         </div>
+
+        <NetworkShape people={people} onExplore={(f) => goTo(f)} />
 
         {!archive ? (
           <div className="mt-12">

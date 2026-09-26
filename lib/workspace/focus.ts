@@ -18,52 +18,24 @@ export interface FocusGoalDef {
 export const FOCUS_GOALS: FocusGoalDef[] = [
   {
     id: "research",
-    label: "Research",
-    hint: "Researchers, professors, collaborators and research opportunities.",
+    label: "Research opportunities",
+    hint: "Researchers, professors, collaborators and lab positions.",
     buckets: ["research-and-science", "education-and-academia", "data-and-ai"],
     audiences: [],
   },
   {
-    id: "internship",
-    label: "Internship",
-    hint: "Internships, relevant teams, and people to learn from.",
-    buckets: ["people-and-talent"],
-    audiences: ["recruiters", "managers"],
-  },
-  {
     id: "job",
-    label: "Job",
-    hint: "Roles, companies and people relevant to a career path.",
+    label: "Internship or full-time",
+    hint: "Roles, the teams behind them, and the people who hire.",
     buckets: ["people-and-talent"],
-    audiences: ["recruiters", "managers", "directors"],
+    audiences: ["recruiters", "founders"],
   },
   {
     id: "networking",
     label: "Networking",
     hint: "Meet interesting people and build professional relationships.",
     buckets: [],
-    audiences: ["peers", "alumni"],
-  },
-  {
-    id: "learning",
-    label: "Learning",
-    hint: "People whose experience or knowledge you want to learn from.",
-    buckets: [],
-    audiences: ["managers", "directors"],
-  },
-  {
-    id: "mentorship",
-    label: "Mentorship",
-    hint: "People who can give career or domain guidance.",
-    buckets: [],
-    audiences: ["directors", "executives", "alumni"],
-  },
-  {
-    id: "building",
-    label: "Building / Business",
-    hint: "Founders, operators and collaborators relevant to something you are building.",
-    buckets: ["founders-and-entrepreneurship", "product-and-design"],
-    audiences: ["founders"],
+    audiences: ["alumni", "founders"],
   },
 ];
 
