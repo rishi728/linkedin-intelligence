@@ -9,6 +9,8 @@ import { archiveSeedPatches, autoClassifyAll, buildPeople, nextCadenceDate, stat
 import { todayISO } from "@/lib/workspace/dates";
 import { dbDelete, dbGet, dbSet, requestPersistence } from "@/lib/workspace/db";
 import { writeBackup } from "@/lib/workspace/autobackup";
+import { runNetworkIntelligence, type AiCache } from "@/lib/ai/run";
+import { DEFAULT_AI_SETTINGS, type AiSettings, type NetworkIntelligence, type RunMode, type RunStats } from "@/lib/ai/types";
 import { defaultSettings } from "@/lib/workspace/defaults";
 import type { Activity, ArchiveData, Dataset, DatasetFile, Filters, Person, PersonRecord, Settings } from "@/lib/workspace/types";
 
@@ -46,6 +48,16 @@ interface DataContext {
   /** Adds people to a list, skipping anyone already in it. Returns how many were new. */
   addToList: (id: string, personIds: string[]) => number;
   removeFromList: (id: string, personIds: string[]) => void;
+  /** The model's answers for titles the repository could not place. */
+  aiClassifications: AiCache;
+  aiSettings: AiSettings;
+  lastRun: RunStats | null;
+  intelligence: NetworkIntelligence | null;
+  /** True while a run is in flight, so the UI can say so. */
+  running: boolean;
+  updateAiSettings: (patch: Partial<AiSettings>) => void;
+  runIntelligence: (mode: RunMode) => Promise<RunStats | null>;
+  clearIntelligence: () => Promise<void>;
   exportBackup: () => string;
   importBackup: (json: string) => void;
   resetWorkspace: () => Promise<void>;
@@ -135,6 +147,11 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const [archive, setArchive] = useState<ArchiveData | null>(null);
   const [savedAt, setSavedAt] = useState<string | null>(null);
   const [snapshots, setSnapshots] = useState<Snapshot[]>([]);
+  const [aiClassifications, setAiClassifications] = useState<AiCache>({});
+  const [aiSettings, setAiSettings] = useState<AiSettings>(DEFAULT_AI_SETTINGS);
+  const [lastRun, setLastRun] = useState<RunStats | null>(null);
+  const [intelligence, setIntelligence] = useState<NetworkIntelligence | null>(null);
+  const [running, setRunning] = useState(false);
 
   // ---- load -----------------------------------------------------------------
   useEffect(() => {
@@ -142,7 +159,9 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     Promise.all([
       dbGet<Dataset>("dataset"), dbGet<Records>("records"), dbGet<Settings>("settings"),
       dbGet<ArchiveData>("archive"), dbGet<Snapshot[]>("snapshots"), dbGet<string>("savedAt"),
-    ]).then(([d, r, s, a, snaps, saved]) => {
+      dbGet<AiCache>("aiClassifications"), dbGet<AiSettings>("aiSettings"),
+      dbGet<RunStats>("lastRun"), dbGet<NetworkIntelligence>("intelligence"),
+    ]).then(([d, r, s, a, snaps, saved, aiCache, aiCfg, run, intel]) => {
       if (!alive) return;
       setDataset(d ?? null);
       setRecords(r ?? {});
@@ -150,6 +169,10 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       setArchive(a ?? null);
       setSnapshots(snaps ?? []);
       setSavedAt(saved ?? null);
+      setAiClassifications(aiCache ?? {});
+      setAiSettings({ ...DEFAULT_AI_SETTINGS, ...aiCfg });
+      setLastRun(run ?? null);
+      setIntelligence(intel ?? null);
       setReady(true);
     });
     return () => {
@@ -263,7 +286,10 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     return [...merged.values()];
   }, [dataset]);
   const cache: AutoCache = useMemo(() => autoClassifyAll(rows), [rows]);
-  const people = useMemo(() => buildPeople(rows, cache, records, settings, archive), [rows, cache, records, settings, archive]);
+  const people = useMemo(
+    () => buildPeople(rows, cache, records, settings, archive, aiClassifications),
+    [rows, cache, records, settings, archive, aiClassifications],
+  );
   const byId = useMemo(() => new Map(people.map((p) => [p.id, p])), [people]);
 
   // ---- actions --------------------------------------------------------------------
@@ -453,9 +479,71 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
 
   const deleteSegment = useCallback((id: string) => updateSettings((s) => ({ ...s, segments: s.segments.filter((x) => x.id !== id) })), [updateSettings]);
 
+  const updateAiSettings = useCallback((patch: Partial<AiSettings>) => {
+    setAiSettings((prev) => {
+      const next = { ...prev, ...patch };
+      void dbSet("aiSettings", next);
+      return next;
+    });
+  }, []);
+
+  /**
+   * One intelligence run. The budget lives inside `runNetworkIntelligence`, so
+   * this cannot make it overspend however it is called.
+   */
+  const runIntelligence = useCallback(
+    async (mode: RunMode): Promise<RunStats | null> => {
+      if (running || !aiSettings.apiKey) return null;
+      setRunning(true);
+      try {
+        const only =
+          mode === "incremental"
+            ? new Set(people.filter((p) => !p.bucket || p.certainty !== "high").map((p) => p.id))
+            : undefined;
+
+        const result = await runNetworkIntelligence({
+          people,
+          settings,
+          ai: aiSettings,
+          cache: aiClassifications,
+          mode,
+          only,
+        });
+
+        const merged = { ...aiClassifications, ...result.classifications };
+        setAiClassifications(merged);
+        void dbSet("aiClassifications", merged);
+        setLastRun(result.stats);
+        void dbSet("lastRun", result.stats);
+        if (result.intelligence) {
+          setIntelligence(result.intelligence);
+          void dbSet("intelligence", result.intelligence);
+        }
+        return result.stats;
+      } finally {
+        setRunning(false);
+      }
+    },
+    [running, aiSettings, people, settings, aiClassifications],
+  );
+
+  const clearIntelligence = useCallback(async () => {
+    setAiClassifications({});
+    setLastRun(null);
+    setIntelligence(null);
+    await Promise.all([dbDelete("aiClassifications"), dbDelete("lastRun"), dbDelete("intelligence")]);
+  }, []);
+
   const exportBackup = useCallback(
-    () => JSON.stringify({ app: "netlens", version: 3, exportedAt: now(), settings, records, archive }, null, 2),
-    [settings, records, archive],
+    () =>
+      JSON.stringify(
+        // The OpenRouter key is deliberately absent: a backup is a file the user
+        // moves around, and a secret does not belong in one.
+        { app: "netlens", version: 3, exportedAt: now(), settings, records, archive, aiClassifications },
+        null,
+        2,
+      ),
+    [settings, records, archive, aiClassifications],
   );
   // Assigned in an effect: a ref must not be written during render.
   useEffect(() => {
@@ -503,6 +591,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const data = useMemo<DataContext>(() => ({
     ready, dataset, people, byId, settings, records, archive, savedAt, snapshots,
     importCsv, importArchive, loadSample, updateRecord, setStatus, setClassification, resetClassification, updateSettings,
+    aiClassifications, aiSettings, lastRun, intelligence, running, updateAiSettings, runIntelligence, clearIntelligence,
     deleteRule, toggleTarget, saveSegment, deleteSegment, createList, updateList, deleteList, addToList, removeFromList, exportBackup, importBackup, resetWorkspace, removeDatasetFile,
     completeFollowUp, restoreSnapshot,
   }), [ready, dataset, people, byId, settings, records, archive, savedAt, snapshots, importCsv, importArchive, loadSample,

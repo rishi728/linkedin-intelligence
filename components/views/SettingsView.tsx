@@ -19,7 +19,7 @@ import { DEFAULT_WEIGHTS } from "@/lib/workspace/defaults";
 import { addDays, formatDate, todayISO } from "@/lib/workspace/dates";
 import { useUI, useWorkspace } from "@/components/workspace/store";
 
-type Tab = "goals" | "targets" | "pipeline" | "outreach" | "templates" | "rules" | "data";
+type Tab = "goals" | "targets" | "pipeline" | "outreach" | "templates" | "rules" | "model" | "data";
 
 const TONES: Tone[] = ["gray", "blue", "violet", "amber", "orange", "teal", "green", "slate", "red"];
 
@@ -37,6 +37,7 @@ function Chip({ active, onClick, children }: { active: boolean; onClick: () => v
 
 export function SettingsView() {
   const {
+    aiSettings, lastRun, updateAiSettings,
     people, settings, updateSettings, deleteRule, deleteSegment, toggleTarget, importCsv, exportBackup, importBackup,
     resetWorkspace, dataset, snapshots, restoreSnapshot, savedAt,
   } = useWorkspace();
@@ -82,6 +83,7 @@ export function SettingsView() {
               { value: "outreach", label: "Outreach" },
               { value: "templates", label: "Templates" },
               { value: "rules", label: "Rules" },
+              { value: "model", label: "Model" },
               { value: "data", label: "Data" },
             ]}
           />
@@ -482,6 +484,53 @@ export function SettingsView() {
                     );
                   })
                 )}
+              </div>
+            </Card>
+          ) : null}
+
+          {tab === "model" ? (
+            <Card>
+              <CardTitle hint="Used only for titles the repository cannot place">Language model</CardTitle>
+              <div className="space-y-4 p-4">
+                <p className="max-w-[68ch] text-[12.5px] leading-relaxed text-muted">
+                  Everything in this product works without this. The repository classifies most of your network on this
+                  device, and it stays that way. A model is only asked about the titles it could not place, at most nine
+                  requests for the whole network, and every answer is checked against the repository before it is kept.
+                </p>
+
+                <Field label="OpenRouter API key" hint="Stored in this browser only. It is never put in a backup file.">
+                  <Input
+                    type="password"
+                    autoComplete="off"
+                    spellCheck={false}
+                    value={aiSettings.apiKey}
+                    onChange={(e) => updateAiSettings({ apiKey: e.target.value.trim() })}
+                    placeholder="sk-or-..."
+                  />
+                </Field>
+
+                <Field label="Model" hint="Any model id OpenRouter accepts. Nothing in the code assumes a particular one.">
+                  <Input
+                    value={aiSettings.model}
+                    onChange={(e) => updateAiSettings({ model: e.target.value.trim() })}
+                    placeholder="anthropic/claude-3.5-haiku"
+                  />
+                </Field>
+
+                <div className="rounded-lg border border-line bg-subtle p-3">
+                  <p className="text-[12.5px] font-medium">What is sent</p>
+                  <p className="mt-0.5 text-[12px] leading-relaxed text-muted">
+                    A job title and an employer name, once per distinct combination, for the people the repository could
+                    not place. Never names, never profile links, never email addresses, never your notes or messages.
+                  </p>
+                </div>
+
+                {lastRun ? (
+                  <p className="text-[12px] text-muted">
+                    Last run used {lastRun.requestsUsed} of 9 requests and placed{" "}
+                    {lastRun.aiClassifications.toLocaleString()} people.
+                  </p>
+                ) : null}
               </div>
             </Card>
           ) : null}

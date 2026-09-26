@@ -344,7 +344,7 @@ export interface CustomRule {
   createdAt: string;
 }
 
-export type ClassificationSource = "repository" | "rule" | "manual";
+export type ClassificationSource = "repository" | "ai" | "rule" | "manual";
 
 export interface ResolvedRole extends Classification {
   source: ClassificationSource;
