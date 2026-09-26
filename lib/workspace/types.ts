@@ -1,7 +1,8 @@
+import type { Confidence } from "../knowledge/classify";
+import type { SectorId } from "../knowledge/sectors";
 import type { ContactHistory } from "../archive";
 import type { Basis } from "../classifier";
 import type { ClassificationSource, CustomRule, Hierarchy } from "../intelligence";
-import type { PrimaryId } from "../primary";
 import type { Seniority, TagId } from "../taxonomy";
 
 export type Priority = "high" | "medium" | "low";
@@ -211,8 +212,12 @@ export interface Filters {
   /** Conversation history from the archive. */
   history?: "messaged" | "replied" | "no-reply" | "never" | "they-invited";
   pastCompanies?: string[];
-  /** One of the twelve discovery categories. */
-  primaries?: string[];
+  /** Role buckets from the knowledge repository. */
+  buckets?: string[];
+  /** Sections inside a bucket. */
+  sections?: string[];
+  /** Broad sectors. */
+  sectors?: string[];
   /** People in this user-made list. */
   listId?: string;
   /** Connected within the last N days. */
@@ -276,8 +281,17 @@ export interface Person {
   isFounder: boolean;
   isAlumni: boolean;
   duplicateOf: string | null;
-  /** One of the twelve discovery categories, or null when none of them is honest. */
-  primary: PrimaryId | null;
+  // ---- the knowledge repository's view of this person ---------------------
+  /** One of the seventeen role buckets, or null when the title says nothing. */
+  bucket: string | null;
+  section: string | null;
+  roleId: string | null;
+  /** The detailed role's label, ready to show. */
+  roleLabel: string;
+  sector: SectorId | null;
+  /** How sure the repository is, and what convinced it. */
+  certainty: Confidence;
+  evidence: string[];
   /** Lower-cased text used by search. */
   haystack: string;
 }

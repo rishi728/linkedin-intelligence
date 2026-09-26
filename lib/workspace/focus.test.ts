@@ -24,10 +24,10 @@ describe("networking focus", () => {
     const { people, settings } = sample();
     settings.focus = { goals: ["job"], direction: "", confirmedAt: "x" };
     const f = focusFilters(settings);
-    expect(f.primaries).toContain("recruiters");
+    expect(f.buckets).toContain("people-and-talent");
     const matched = applyFilters(people, f, settings);
     expect(matched.length).toBeGreaterThan(0);
-    expect(matched.every((p) => p.primary === "recruiters")).toBe(true);
+    expect(matched.every((p) => p.bucket === "people-and-talent")).toBe(true);
   });
 
   it("widens rather than narrows when several goals are picked", () => {
@@ -45,6 +45,6 @@ describe("networking focus", () => {
     settings.focus = { goals: ["job"], direction: "", confirmedAt: "x" };
     const f = focusFilters(settings);
     expect(f.domains).toEqual(["finance"]);
-    expect(f.primaries).toBeUndefined();
+    expect(f.buckets).toBeUndefined();
   });
 });

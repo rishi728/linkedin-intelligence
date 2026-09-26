@@ -4,15 +4,14 @@
 // is translate a chosen goal into the kinds of people that goal actually implies,
 // using the same category and audience vocabulary the rest of the app filters on.
 
-import type { PrimaryId } from "../primary";
 import type { AudienceId, FocusGoalId, Filters, NetworkingFocus, Settings } from "./types";
 
 export interface FocusGoalDef {
   id: FocusGoalId;
   label: string;
   hint: string;
-  /** Categories this goal makes relevant, on top of whatever the user targets. */
-  primaries: PrimaryId[];
+  /** Role buckets this goal makes relevant, on top of whatever the user targets. */
+  buckets: string[];
   audiences: AudienceId[];
 }
 
@@ -21,49 +20,49 @@ export const FOCUS_GOALS: FocusGoalDef[] = [
     id: "research",
     label: "Research",
     hint: "Researchers, professors, collaborators and research opportunities.",
-    primaries: ["research", "education", "ai"],
+    buckets: ["research-and-science", "education-and-academia", "data-and-ai"],
     audiences: [],
   },
   {
     id: "internship",
     label: "Internship",
     hint: "Internships, relevant teams, and people to learn from.",
-    primaries: ["recruiters"],
+    buckets: ["people-and-talent"],
     audiences: ["recruiters", "managers"],
   },
   {
     id: "job",
     label: "Job",
     hint: "Roles, companies and people relevant to a career path.",
-    primaries: ["recruiters"],
+    buckets: ["people-and-talent"],
     audiences: ["recruiters", "managers", "directors"],
   },
   {
     id: "networking",
     label: "Networking",
     hint: "Meet interesting people and build professional relationships.",
-    primaries: [],
+    buckets: [],
     audiences: ["peers", "alumni"],
   },
   {
     id: "learning",
     label: "Learning",
     hint: "People whose experience or knowledge you want to learn from.",
-    primaries: [],
+    buckets: [],
     audiences: ["managers", "directors"],
   },
   {
     id: "mentorship",
     label: "Mentorship",
     hint: "People who can give career or domain guidance.",
-    primaries: [],
+    buckets: [],
     audiences: ["directors", "executives", "alumni"],
   },
   {
     id: "building",
     label: "Building / Business",
     hint: "Founders, operators and collaborators relevant to something you are building.",
-    primaries: ["founders", "product"],
+    buckets: ["founders-and-entrepreneurship", "product-and-design"],
     audiences: ["founders"],
   },
 ];
@@ -84,7 +83,7 @@ export function focusFilters(settings: Settings): Filters {
   const { goals } = settings;
   const chosen = (settings.focus?.goals ?? []).map((g) => FOCUS_MAP.get(g)).filter(Boolean) as FocusGoalDef[];
 
-  const primaries = [...new Set(chosen.flatMap((g) => g.primaries))];
+  const buckets = [...new Set(chosen.flatMap((g) => g.buckets))];
   const implied = [...new Set(chosen.flatMap((g) => g.audiences))];
 
   const f: Filters = {};
@@ -97,7 +96,7 @@ export function focusFilters(settings: Settings): Filters {
   // asking for both the categories and the audiences a goal implies would return
   // the people in both at once, which is far narrower than the goal means.
   const named = goals.domains.length + goals.functions.length > 0;
-  if (!named && primaries.length) f.primaries = primaries;
+  if (!named && buckets.length) f.buckets = buckets;
   else if (!named && !goals.audiences.length && implied.length) f.audiences = implied;
   return f;
 }

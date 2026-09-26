@@ -1,5 +1,6 @@
 import { domainLabel, functionLabel, rolesInText } from "../intelligence";
-import { PRIMARY_LABEL, type PrimaryId } from "../primary";
+import { bucketLabel } from "../knowledge/roles";
+import { sectorLabel } from "../knowledge/sectors";
 import { DOMAINS, INDUSTRIES } from "../roles";
 import { SENIORITY_LEVELS, type Seniority } from "../taxonomy";
 import { tokenize } from "../text";
@@ -169,7 +170,9 @@ export function applyFilters(people: Person[], f: Filters, settings: Settings, t
       if (f.history === "they-invited" && h?.invited !== "them") return false;
     }
     if (listMembers && !listMembers.has(p.id)) return false;
-    if (has(f.primaries) && (!p.primary || !f.primaries.includes(p.primary))) return false;
+    if (has(f.buckets) && (!p.bucket || !f.buckets.includes(p.bucket))) return false;
+    if (has(f.sections) && (!p.section || !f.sections.includes(p.section))) return false;
+    if (has(f.sectors) && (!p.sector || !f.sectors.includes(p.sector))) return false;
     if (has(f.pastCompanies) && !f.pastCompanies.some((c) => p.pastCompanies.some((x) => x.toLowerCase().includes(c.toLowerCase())))) return false;
     if (f.connectedWithinDays !== undefined) {
       if (!p.connectedOn) return false;
@@ -465,7 +468,8 @@ export function describeFilters(f: Filters, settings: Settings): Array<{ key: ke
   if (f.followUp) out.push({ key: "followUp", label: { overdue: "Follow-up overdue", scheduled: "Follow-up scheduled", none: "No follow-up" }[f.followUp] });
   if (f.health) out.push({ key: "health", label: HEALTH_LABELS[f.health] });
   if (f.history) out.push({ key: "history", label: HISTORY_LABELS[f.history] });
-  list("primaries", f.primaries, (v) => PRIMARY_LABEL[v as PrimaryId] ?? v, "categories");
+  list("buckets", f.buckets, (v) => bucketLabel(v), "role areas");
+  list("sectors", f.sectors, (v) => sectorLabel(v), "sectors");
   if (f.listId) out.push({ key: "listId", label: settings.lists?.find((l) => l.id === f.listId)?.name ?? "List" });
   list("pastCompanies", f.pastCompanies, (v) => `Ex-${v}`, "past companies");
   if (f.connectedWithinDays !== undefined) out.push({ key: "connectedWithinDays", label: `Connected in last ${f.connectedWithinDays} days` });
@@ -481,7 +485,7 @@ export function broaden(f: Filters, settings: Settings): { filters: Filters; rem
   const order: Array<keyof Filters> = [
     "roles", "seniorities", "audiences", "statuses", "history", "followUp", "hasEmail", "hasLinkedIn",
     "tags", "needsReview", "dormant", "connectedWithinDays", "connectedAfter", "connectedBefore",
-    "targetOnly", "inPipeline", "industries", "companies", "pastCompanies", "functions", "domains", "primaries", "listId", "q",
+    "targetOnly", "inPipeline", "industries", "companies", "pastCompanies", "functions", "domains", "buckets", "sections", "sectors", "listId", "q",
   ];
   const described = describeFilters(f, settings);
   for (const key of order) {

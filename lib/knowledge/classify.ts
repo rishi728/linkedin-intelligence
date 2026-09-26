@@ -234,7 +234,20 @@ export interface ClassifyInput {
  * title itself, then the wider title context, then whatever else the export
  * carried, then the employer.
  */
-export function classify({ title, company = "", context = "" }: ClassifyInput): Classification {
+// Scanning every alias is cheap once and expensive seven thousand times, and a
+// connections export repeats the same title and employer constantly.
+const CACHE = new Map<string, Classification>();
+
+export function classify(input: ClassifyInput): Classification {
+  const key = `${input.title} ${input.company ?? ""} ${input.context ?? ""}`;
+  const hit = CACHE.get(key);
+  if (hit) return hit;
+  const result = run(input);
+  if (CACHE.size < 50_000) CACHE.set(key, result);
+  return result;
+}
+
+function run({ title, company = "", context = "" }: ClassifyInput): Classification {
   const evidence: string[] = [];
   const { sector, evidence: sectorWhy } = classifySector(company);
   if (sectorWhy) evidence.push(sectorWhy);
