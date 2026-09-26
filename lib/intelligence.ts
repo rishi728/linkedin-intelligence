@@ -10,17 +10,12 @@ import { CATEGORY_DEFAULTS, DOMAINS, INDUSTRY_BY_COMPANY_CATEGORY } from "./role
 import type { CategoryId, Seniority, TagId } from "./taxonomy";
 import { cleanField, splitSegments, tokenize } from "./text";
 
-export interface Hierarchy {
+export type ClassificationSource = "auto" | "rule" | "manual";
+
+export interface PersonClassification {
   domain: string;
   fn: string;
   role: string;
-  seniority: Seniority;
-  industry: string;
-}
-
-export type ClassificationSource = "auto" | "rule" | "manual";
-
-export interface PersonClassification extends Hierarchy {
   /** 0–100. */
   confidence: number;
   source: ClassificationSource;
@@ -37,18 +32,6 @@ export interface PersonClassification extends Hierarchy {
   /** Employers named as past roles in the title ("Ex-Google", "formerly at Bain"). */
   pastCompanies: string[];
   ruleId?: string;
-}
-
-export interface CustomRule {
-  id: string;
-  /** "exact": whole title must match; "contains": phrase anywhere in the title. */
-  match: "exact" | "contains";
-  /** Normalized title tokens joined by spaces (see `titleKey`). */
-  pattern: string;
-  /** The title as the user saw it when the rule was created. */
-  example: string;
-  set: Partial<Hierarchy>;
-  createdAt: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -359,25 +342,11 @@ export function classifyAuto(rawPosition: string, rawCompany: string): PersonCla
     fn = "campus";
   }
 
-  // --- Seniority --------------------------------------------------------------
+  // --- Founder --------------------------------------------------------------
   const currentText = (current.length ? current : segments).map((s) => s.title).join(" | ");
   const isFounder =
     !campusOrg && !FOUNDER_BLOCK.test(currentText) && (FOUNDER_TITLE.test(currentText) || FOUNDER_ROLES.has(role));
 
-  let seniority = base.seniority;
-  if (domain === "students" && (fn === "students" || fn === "campus")) seniority = "Student";
-  else if (fn === "internships" || /\bintern(ship)?\b/i.test(role)) seniority = "Intern";
-  else if (isFounder) seniority = "Founder";
-  else if (fn === "early-career" && seniority === "Mid-level") seniority = "Entry-level";
-  else if (seniority === "Manager / Lead" && IC_MANAGER_ROLES.has(role) && !/\b(lead|head|group|principal|director)\b/i.test(position)) {
-    // A Product or Account "Manager" is usually an individual contributor, not a people manager.
-    seniority = /\b(senior|sr)\b/i.test(position) ? "Senior" : "Mid-level";
-  }
-
-  // --- Industry (from the employer only) --------------------------------------
-  const industry = campusOrg
-    ? "Education"
-    : (base.companyCategory && INDUSTRY_BY_COMPANY_CATEGORY[base.companyCategory]) || "Unknown";
 
   // --- Confidence --------------------------------------------------------------
   let confidence: number;
@@ -399,7 +368,7 @@ export function classifyAuto(rawPosition: string, rawCompany: string): PersonCla
   }
 
   return {
-    domain, fn, role, seniority, industry,
+    domain, fn, role,
     confidence,
     pastCompanies: extractPastCompanies(position),
     source: "auto",
@@ -413,22 +382,3 @@ export function classifyAuto(rawPosition: string, rawCompany: string): PersonCla
   };
 }
 
-export function applyRules(auto: PersonClassification, position: string, rules: CustomRule[]): PersonClassification {
-  if (!rules.length) return auto;
-  const key = titleKey(position);
-  if (!key) return auto;
-  const padded = ` ${key} `;
-  const rule =
-    rules.find((r) => r.match === "exact" && r.pattern === key) ??
-    rules.find((r) => r.match === "contains" && r.pattern && padded.includes(` ${r.pattern} `));
-  if (!rule) return auto;
-  return {
-    ...auto,
-    ...rule.set,
-    confidence: 99,
-    source: "rule",
-    needsReview: false,
-    ruleId: rule.id,
-    reasons: [`your rule: “${rule.example}”`, ...auto.reasons].slice(0, 5),
-  };
-}

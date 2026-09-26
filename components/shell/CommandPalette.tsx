@@ -66,7 +66,7 @@ export function CommandPalette() {
     { id: "people", label: "All people", icon: Users, run: () => go("/people", {}) },
     { id: "companies", label: "Companies", icon: Building2, run: () => go("/companies") },
     { id: "outreach", label: "Outreach board", icon: KanbanSquare, run: () => go("/outreach") },
-    { id: "review", label: "Review classifications", hint: `${people.filter((p) => p.needsReview || p.domain === "unclassified").length} to check`, icon: ListChecks, run: () => go("/review") },
+    { id: "review", label: "Review classifications", hint: `${people.filter((p) => p.needsReview || p.bucket === "unclassified").length} to check`, icon: ListChecks, run: () => go("/review") },
     { id: "session", label: "Start an outreach session", icon: Send, run: () => go("/session") },
     { id: "analytics", label: "Analytics", icon: BarChart3, run: () => go("/analytics") },
     { id: "health", label: "Data health", icon: Stethoscope, run: () => go("/health") },
@@ -164,7 +164,7 @@ export function CommandPalette() {
                   <Avatar name={item.p.name} size={22} />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-[13px]">{item.p.name}</span>
-                    <span className="block truncate text-[11.5px] text-muted">{item.p.role}{item.p.company ? ` · ${item.p.company}` : ""}</span>
+                    <span className="block truncate text-[11.5px] text-muted">{item.p.roleLabel}{item.p.company ? ` · ${item.p.company}` : ""}</span>
                   </span>
                 </button>
               );

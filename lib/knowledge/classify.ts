@@ -318,3 +318,169 @@ function run({ title, company = "", context = "" }: ClassifyInput): Classificati
 
   return empty("low", `Title "${title}" does not match any known role`);
 }
+
+// ---------------------------------------------------------------------------
+// Corrections
+//
+// A classification the user has fixed, and the rules those fixes teach. Both
+// speak the repository's vocabulary, so there is only ever one set of role names
+// in the product.
+
+export interface RoleHierarchy {
+  bucket: string;
+  section: string;
+  roleId: string;
+}
+
+export interface CustomRule {
+  id: string;
+  /** "exact": the whole title must match; "contains": the phrase appears in it. */
+  match: "exact" | "contains";
+  /** Normalised title tokens joined by spaces (see `titleKey`). */
+  pattern: string;
+  /** The title as the user saw it when they made the correction. */
+  example: string;
+  set: Partial<RoleHierarchy>;
+  createdAt: string;
+}
+
+export type ClassificationSource = "repository" | "rule" | "manual";
+
+export interface ResolvedRole extends Classification {
+  source: ClassificationSource;
+  ruleId?: string;
+}
+
+const apply = (c: Classification, set: Partial<RoleHierarchy>): Classification => ({
+  ...c,
+  bucketId: set.bucket ?? c.bucketId,
+  sectionId: set.section ?? c.sectionId,
+  roleId: set.roleId ?? c.roleId,
+});
+
+/** Normalised title, used as the key a rule matches on. */
+export function titleKey(title: string): string {
+  return normaliseTitle(title);
+}
+
+/**
+ * The repository's reading, then any rule the user taught, then any correction
+ * they made to this person specifically. Later wins, and says so.
+ */
+export function resolveRole(
+  auto: Classification,
+  position: string,
+  rules: CustomRule[],
+  manual?: Partial<RoleHierarchy> | null,
+): ResolvedRole {
+  let out: ResolvedRole = { ...auto, source: "repository" };
+
+  if (rules.length) {
+    const key = titleKey(position);
+    const padded = ` ${key} `;
+    const rule =
+      rules.find((x) => x.match === "exact" && x.pattern === key) ??
+      rules.find((x) => x.match === "contains" && x.pattern && padded.includes(` ${x.pattern} `));
+    if (rule) {
+      out = {
+        ...apply(out, rule.set),
+        confidence: "high",
+        source: "rule",
+        ruleId: rule.id,
+        evidence: [`Your rule for "${rule.example}"`, ...auto.evidence].slice(0, 5),
+      };
+    }
+  }
+
+  if (manual && Object.keys(manual).length) {
+    out = {
+      ...apply(out, manual),
+      confidence: "high",
+      source: "manual",
+      evidence: ["You set this classification yourself"],
+    };
+  }
+
+  return out;
+}
+
+// ---------------------------------------------------------------------------
+// Reading a search box
+
+export interface TextMatch {
+  buckets: string[];
+  sections: string[];
+  roles: string[];
+  /** What was recognised, in the words the repository uses. */
+  understood: string[];
+  /** The query with the recognised phrases taken out. */
+  rest: string;
+}
+
+const BUCKET_PHRASES: Array<[string, string]> = ROLE_BUCKETS.flatMap((bucket) => {
+  const label = normaliseTitle(bucket.label);
+  const out: Array<[string, string]> = [[label, bucket.id]];
+  // "technology and engineering" is also reached by "technology" or "engineering".
+  for (const part of bucket.label.split(" & ")) out.push([normaliseTitle(part), bucket.id]);
+  return out;
+}).sort((a, b) => b[0].length - a[0].length);
+
+const SECTION_PHRASES: Array<[string, string, string]> = ROLE_BUCKETS.flatMap((bucket) =>
+  bucket.sections.map((section) => [normaliseTitle(section.label), section.id, bucket.id] as [string, string, string]),
+).sort((a, b) => b[0].length - a[0].length);
+
+/**
+ * Finds roles, sections and buckets named anywhere in a phrase, longest first.
+ * Used by search, so "senior product managers" narrows to the Product Manager
+ * role and "people in engineering" to the whole bucket.
+ */
+export function matchRolesInText(text: string): TextMatch {
+  let rest = ` ${normaliseTitle(text)} `;
+  const buckets: string[] = [];
+  const sections: string[] = [];
+  const roles: string[] = [];
+  const understood: string[] = [];
+
+  const take = (phrase: string) => {
+    const padded = ` ${phrase} `;
+    const plural = ` ${phrase}s `;
+    if (rest.includes(padded)) {
+      rest = rest.replace(padded, " ");
+      return true;
+    }
+    if (rest.includes(plural)) {
+      rest = rest.replace(plural, " ");
+      return true;
+    }
+    return false;
+  };
+
+  for (const entry of ALIAS_INDEX) {
+    if (entry.words < 2 && entry.broad) continue;
+    if (roles.includes(entry.path.roleId)) continue;
+    if (!take(entry.phrase)) continue;
+    roles.push(entry.path.roleId);
+    understood.push(entry.path.roleLabel);
+    if (roles.length >= 4) break;
+  }
+
+  if (!roles.length) {
+    for (const [phrase, sectionId, bucketId] of SECTION_PHRASES) {
+      if (!take(phrase)) continue;
+      sections.push(sectionId);
+      if (!buckets.includes(bucketId)) understood.push(phrase);
+      break;
+    }
+  }
+
+  if (!roles.length && !sections.length) {
+    for (const [phrase, bucketId] of BUCKET_PHRASES) {
+      if (!take(phrase)) continue;
+      buckets.push(bucketId);
+      understood.push(ROLE_BUCKETS.find((b) => b.id === bucketId)!.label);
+      break;
+    }
+  }
+
+  return { buckets, sections, roles, understood, rest: rest.trim() };
+}

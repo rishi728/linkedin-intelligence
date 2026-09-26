@@ -2,8 +2,8 @@ import type { Confidence } from "../knowledge/classify";
 import type { SectorId } from "../knowledge/sectors";
 import type { ContactHistory } from "../archive";
 import type { Basis } from "../classifier";
-import type { ClassificationSource, CustomRule, Hierarchy } from "../intelligence";
-import type { Seniority, TagId } from "../taxonomy";
+import type { ClassificationSource, CustomRule, RoleHierarchy } from "../knowledge/classify";
+import type { TagId } from "../taxonomy";
 
 export type Priority = "high" | "medium" | "low";
 export type Tone = "gray" | "blue" | "violet" | "amber" | "orange" | "teal" | "green" | "slate" | "red";
@@ -47,7 +47,7 @@ export interface Activity {
 
 /** Everything the user adds to a connection. Stored locally, keyed by connection id. */
 export interface PersonRecord {
-  classification?: Partial<Hierarchy>;
+  classification?: Partial<RoleHierarchy>;
   location?: string;
   status?: string;
   priority?: Priority;
@@ -72,9 +72,10 @@ export type AudienceId = "peers" | "alumni" | "managers" | "directors" | "founde
 
 export interface Goals {
   opportunityTypes: string[];
-  domains: string[];
-  functions: string[];
-  seniorities: Seniority[];
+  /** Role buckets from the knowledge repository. */
+  buckets: string[];
+  /** Sections inside those buckets. */
+  sections: string[];
   audiences: AudienceId[];
 }
 
@@ -188,12 +189,8 @@ export type HealthIssue =
 
 export interface Filters {
   q?: string;
-  domains?: string[];
-  functions?: string[];
   roles?: string[];
-  seniorities?: string[];
   companies?: string[];
-  industries?: string[];
   locations?: string[];
   connectedAfter?: string;
   connectedBefore?: string;
@@ -238,17 +235,9 @@ export interface Person {
   position: string;
   connectedOn: Date | null;
 
-  domain: string;
-  fn: string;
-  role: string;
-  seniority: Seniority;
-  industry: string;
-  industryInferred: boolean;
-  confidence: number;
   needsReview: boolean;
   classSource: ClassificationSource;
   classBasis: Basis;
-  reasons: string[];
   systemTags: TagId[];
   tags: string[];
 

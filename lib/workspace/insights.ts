@@ -1,4 +1,5 @@
-import { domainLabel } from "../intelligence";
+import { bucketLabel, sectionLabel } from "../knowledge/roles";
+import { sectorLabel } from "../knowledge/sectors";
 import { companyMatches } from "./build";
 import { dueBucket, todayISO, type DueBucket } from "./dates";
 import { matchesHealth } from "./filters";
@@ -9,10 +10,11 @@ export interface CompanyGroup {
   name: string;
   count: number;
   isTarget: boolean;
-  industry: string;
+  /** The broad sector most of this company's people fall into. */
+  sector: string;
   domains: Array<[string, number]>;
   roles: Array<[string, number]>;
-  seniorities: Array<[string, number]>;
+  sections: Array<[string, number]>;
   contacted: number;
   highPriority: number;
   people: Person[];
@@ -39,10 +41,10 @@ export function groupCompanies(people: Person[], settings: Settings): CompanyGro
       name: names[0][0],
       count: list.length,
       isTarget: companyMatches(key, settings.targetCompanies),
-      industry: tally(list.map((p) => p.industry))[0][0],
-      domains: tally(list.map((p) => domainLabel(p.domain))),
-      roles: tally(list.map((p) => p.role)),
-      seniorities: tally(list.map((p) => p.seniority)),
+      sector: tally(list.map((p) => sectorLabel(p.sector)))[0][0],
+      domains: tally(list.map((p) => bucketLabel(p.bucket ?? ""))),
+      roles: tally(list.map((p) => p.roleLabel).filter(Boolean)),
+      sections: tally(list.map((p) => sectionLabel(p.bucket ?? "", p.section ?? "")).filter(Boolean)),
       contacted: list.filter((p) => p.status !== "not_contacted").length,
       highPriority: list.filter((p) => p.priority === "high").length,
       people: list,

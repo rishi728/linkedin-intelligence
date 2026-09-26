@@ -1,7 +1,7 @@
 "use client";
 
 import { ExternalLink, Search } from "lucide-react";
-import { domainLabel, functionLabel } from "@/lib/intelligence";
+import { bucketLabel, sectionLabel } from "@/lib/knowledge/roles";
 import { RESEARCH_ACTIONS, researchUrl } from "@/lib/workspace/outreach";
 import type { Person, Priority, Settings, Tone } from "@/lib/workspace/types";
 import { Avatar, Button, Dot, Menu, MenuItem, MenuLabel, Pill, cx } from "@/components/ui";
@@ -32,21 +32,17 @@ export function PriorityBadge({ person }: { person: Person }) {
   );
 }
 
-export function ConfidenceBadge({ person, showPercent = true }: { person: Person; showPercent?: boolean }) {
-  if (person.fn === "unspecified") return <Pill tone="amber" title="The title gives a level but never says what they work on. Open them to set it.">Area not stated</Pill>;
-  if (person.domain === "unclassified") return <Pill tone="gray">No role data</Pill>;
+export function ConfidenceBadge({ person }: { person: Person; showPercent?: boolean }) {
+  if (!person.bucket) return <Pill tone="gray" title={person.evidence.join(" · ")}>Role unclear</Pill>;
   if (person.classSource === "manual") return <Pill tone="teal">Set by you</Pill>;
   if (person.classSource === "rule") return <Pill tone="teal">Your rule</Pill>;
-  const tone: Tone = person.confidence >= 80 ? "green" : person.confidence >= 60 ? "blue" : "amber";
-  // "Needs review" read as a judgement about the person. It is only ever about how
-  // well their job title could be read, so the label and tooltip now say so.
-  const title = person.needsReview
-    ? `Their job title was hard to place, ${person.confidence}% sure. Matched: ${person.reasons.join(" · ")}. Open them to correct it.`
-    : `${person.confidence}% sure. Matched: ${person.reasons.join(" · ")}`;
+  const tone: Tone = person.certainty === "high" ? "green" : person.certainty === "medium" ? "blue" : "amber";
+  // The label is about how well the job title could be read, never about the
+  // person, so it says exactly that.
+  const title = `${person.certainty[0].toUpperCase()}${person.certainty.slice(1)} confidence. ${person.evidence.join(" · ")}`;
   return (
     <Pill tone={tone} title={title}>
-      {person.needsReview ? "Job unclear" : "Auto"}
-      {showPercent ? ` ${person.confidence}%` : ""}
+      {person.certainty === "high" ? "Clear" : person.certainty === "medium" ? "Likely" : "Uncertain"}
     </Pill>
   );
 }
@@ -54,7 +50,9 @@ export function ConfidenceBadge({ person, showPercent = true }: { person: Person
 export function RoleLine({ person, className }: { person: Person; className?: string }) {
   return (
     <span className={cx("truncate text-[12px] text-muted", className)}>
-      {person.fn === "unspecified" ? "Area not stated" : person.domain === "unclassified" ? "Role not shared" : `${domainLabel(person.domain)} · ${functionLabel(person.fn)}`}
+      {person.bucket
+        ? `${bucketLabel(person.bucket)}${person.section ? ` · ${sectionLabel(person.bucket, person.section)}` : ""}`
+        : "Role not stated"}
     </span>
   );
 }

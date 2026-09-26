@@ -214,7 +214,7 @@ export function SessionView() {
                   >
                     {live.name}
                   </button>
-                  <p className="mt-0.5 truncate text-[13.5px] text-ink-2">{live.position || live.role}</p>
+                  <p className="mt-0.5 truncate text-[13.5px] text-ink-2">{live.position || live.roleLabel}</p>
                   {live.company ? <p className="truncate text-[12.5px] text-muted">{live.company}</p> : null}
 
                   {(live.isTarget || live.isAlumni || live.history?.theyReplied) && (

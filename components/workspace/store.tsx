@@ -3,7 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { parseConnectionsCsv, type Connection } from "@/lib/analyzer";
 import { describeArchive, parseArchive, type ArchiveResult } from "@/lib/archive";
-import { titleKey, type CustomRule, type Hierarchy } from "@/lib/intelligence";
+import { titleKey, type CustomRule, type RoleHierarchy } from "@/lib/knowledge/classify";
 import { generateSampleCsv } from "@/lib/sample";
 import { archiveSeedPatches, autoClassifyAll, buildPeople, nextCadenceDate, statusChangePatch, type AutoCache } from "@/lib/workspace/build";
 import { todayISO } from "@/lib/workspace/dates";
@@ -33,7 +33,7 @@ interface DataContext {
   loadSample: () => void;
   updateRecord: (id: string, patch: PersonRecord | ((rec: PersonRecord) => PersonRecord), activity?: Omit<Activity, "at">) => void;
   setStatus: (ids: string[], status: string) => void;
-  setClassification: (id: string, patch: Partial<Hierarchy>, learn: null | "exact") => number;
+  setClassification: (id: string, patch: Partial<RoleHierarchy>, learn: null | "exact") => number;
   resetClassification: (id: string) => void;
   updateSettings: (fn: (s: Settings) => Settings) => void;
   deleteRule: (ruleId: string) => void;
@@ -369,7 +369,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     });
   }, [commitRecords, settings]);
 
-  const setClassification = useCallback((id: string, patch: Partial<Hierarchy>, learn: null | "exact") => {
+  const setClassification = useCallback((id: string, patch: Partial<RoleHierarchy>, learn: null | "exact") => {
     const person = byId.get(id);
     let affected = 1;
     const describe = Object.values(patch).filter(Boolean).join(" → ");

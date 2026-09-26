@@ -2,14 +2,14 @@
 
 import { useMemo, useState } from "react";
 import { Briefcase, Building2, MessageSquare, Search, Send, SlidersHorizontal, Sparkles, Users, X } from "lucide-react";
-import { domainLabel, functionLabel } from "@/lib/intelligence";
-import { DOMAINS, INDUSTRIES } from "@/lib/roles";
-import { SENIORITY_LEVELS, TAGS } from "@/lib/taxonomy";
+import { ROLE_BUCKETS, bucketLabel, roleLabel, sectionLabel } from "@/lib/knowledge/roles";
+import { SECTORS } from "@/lib/knowledge/sectors";
+import { TAGS } from "@/lib/taxonomy";
 import { applyFilters, AUDIENCES, describeFilters, parseQuery } from "@/lib/workspace/filters";
 import type { Filters, Person, Priority, Settings } from "@/lib/workspace/types";
 import { Button, Checkbox, Input, Menu, MenuItem, MenuLabel, Pill, Select, cx } from "@/components/ui";
 
-type ListKey = "domains" | "functions" | "roles" | "seniorities" | "companies" | "industries" | "statuses" | "priorities" | "tags" | "audiences";
+type ListKey = "buckets" | "sections" | "roles" | "companies" | "sectors" | "statuses" | "priorities" | "tags" | "audiences";
 
 interface Option {
   value: string;
@@ -63,7 +63,7 @@ const QUICK: Array<{ label: string; patch: Filters; on: (f: Filters) => boolean 
   { label: "I've spoken to", patch: { history: "messaged" }, on: (f) => f.history === "messaged" },
   { label: "They replied", patch: { history: "replied" }, on: (f) => f.history === "replied" },
   { label: "Founders", patch: { audiences: ["founders"] }, on: (f) => f.audiences?.includes("founders") ?? false },
-  { label: "Senior people", patch: { seniorities: ["Senior", "Manager / Lead", "Director / Head", "VP", "C-Level", "Founder"] }, on: (f) => (f.seniorities?.length ?? 0) > 3 },
+  { label: "Recruiters", patch: { audiences: ["recruiters"] }, on: (f) => f.audiences?.includes("recruiters") ?? false },
   { label: "Has email", patch: { hasEmail: true }, on: (f) => f.hasEmail === true },
   { label: "Follow-up due", patch: { followUp: "overdue" }, on: (f) => f.followUp === "overdue" },
 ];
@@ -96,12 +96,11 @@ export function FilterBar({
       return m;
     };
     return {
-      domains: tally("domains", (p) => p.domain),
-      functions: tally("functions", (p) => p.fn),
-      roles: tally("roles", (p) => p.role),
-      seniorities: tally("seniorities", (p) => p.seniority),
+      buckets: tally("buckets", (p) => p.bucket ?? ""),
+      sections: tally("sections", (p) => p.section ?? ""),
+      roles: tally("roles", (p) => p.roleId ?? ""),
       companies: tally("companies", (p) => p.companyKey),
-      industries: tally("industries", (p) => p.industry),
+      sectors: tally("sectors", (p) => p.sector ?? ""),
       statuses: tally("statuses", (p) => p.status),
       tags: tally("tags", (p) => p.tags),
     };
@@ -161,57 +160,24 @@ export function FilterBar({
         </div>
 
         {/* WHO */}
-        <Menu width={250} trigger={({ toggle }) => <TriggerButton label="Who" icon={Users} active={n("domains", "seniorities", "audiences")} toggle={toggle} />}>
+        <Menu width={250} trigger={({ toggle }) => <TriggerButton label="Who" icon={Users} active={n("audiences")} toggle={toggle} />}>
           {() => (
-            <>
-              <MultiSelect
-                label="Area of work"
-                selected={filters.domains ?? []}
-                onChange={set("domains")}
-                options={DOMAINS.map((d) => ({ value: d.id, label: d.label, count: counts.domains.get(d.id) ?? 0 })).filter((o) => keep(filters.domains, o))}
-              />
-              <MultiSelect
-                label="Seniority"
-                selected={filters.seniorities ?? []}
-                onChange={set("seniorities")}
-                options={SENIORITY_LEVELS.map((s) => ({ value: s, label: s, count: counts.seniorities.get(s) ?? 0 })).filter((o) => keep(filters.seniorities, o))}
-              />
-              <MultiSelect
-                label="Who they are"
-                selected={filters.audiences ?? []}
-                onChange={(v) => onChange({ ...filters, audiences: v.length ? (v as Filters["audiences"]) : undefined })}
-                options={AUDIENCES.map((a) => ({ value: a.id, label: a.label }))}
-              />
-            </>
+            <MultiSelect
+              label="Who they are"
+              selected={filters.audiences ?? []}
+              onChange={(v) => onChange({ ...filters, audiences: v.length ? (v as Filters["audiences"]) : undefined })}
+              options={AUDIENCES.map((a) => ({ value: a.id, label: a.label }))}
+            />
           )}
         </Menu>
 
-        {/* ROLE */}
-        <Menu width={260} trigger={({ toggle }) => <TriggerButton label="Role" icon={Briefcase} active={n("functions", "roles")} toggle={toggle} />}>
-          {() => (
-            <>
-              <MultiSelect
-                label="Function"
-                searchable
-                selected={filters.functions ?? []}
-                onChange={set("functions")}
-                options={DOMAINS.flatMap((d) => d.functions.map((f) => ({ value: f.id, label: f.label, count: counts.functions.get(f.id) ?? 0 })))
-                  .filter((o) => keep(filters.functions, o))
-                  .sort((a, b) => b.count! - a.count!)}
-              />
-              <MultiSelect
-                label="Exact role"
-                searchable
-                selected={filters.roles ?? []}
-                onChange={set("roles")}
-                options={[...counts.roles.entries()].sort((a, b) => b[1] - a[1]).map(([r, c]) => ({ value: r, label: r, count: c }))}
-              />
-            </>
-          )}
+        {/* ROLE: bucket, then section, then the detailed roles inside it */}
+        <Menu width={300} trigger={({ toggle }) => <TriggerButton label="Role" icon={Briefcase} active={n("buckets", "sections", "roles")} toggle={toggle} />}>
+          {() => <RolePicker filters={filters} counts={counts} onChange={onChange} />}
         </Menu>
 
         {/* WHERE */}
-        <Menu width={260} trigger={({ toggle }) => <TriggerButton label="Where" icon={Building2} active={n("companies", "industries", "targetOnly")} toggle={toggle} />}>
+        <Menu width={260} trigger={({ toggle }) => <TriggerButton label="Where" icon={Building2} active={n("companies", "sectors", "targetOnly")} toggle={toggle} />}>
           {() => (
             <>
               <MultiSelect
@@ -222,10 +188,10 @@ export function FilterBar({
                 options={companies.map((c) => ({ value: c.key, label: c.name, count: counts.companies.get(c.key) ?? 0 })).filter((o) => keep(filters.companies, o))}
               />
               <MultiSelect
-                label="Industry"
-                selected={filters.industries ?? []}
-                onChange={set("industries")}
-                options={INDUSTRIES.map((i) => ({ value: i, label: i, count: counts.industries.get(i) ?? 0 })).filter((o) => keep(filters.industries, o))}
+                label="Sector"
+                selected={filters.sectors ?? []}
+                onChange={set("sectors")}
+                options={SECTORS.map((x) => ({ value: x.id, label: x.label, count: counts.sectors.get(x.id) ?? 0 })).filter((o) => keep(filters.sectors, o))}
               />
               <div className="px-2 pb-2 pt-1">
                 <Checkbox checked={!!filters.targetOnly} onChange={(v) => onChange({ ...filters, targetOnly: v || undefined })} label="Target companies only" />
@@ -383,4 +349,92 @@ export function FilterBar({
   );
 }
 
-export { domainLabel, functionLabel };
+/**
+ * Role discovery, one level at a time: the seventeen areas, the six sections
+ * inside whichever one you open, then the detailed roles inside that section.
+ * Showing every role at once would be a list of several hundred.
+ */
+function RolePicker({
+  filters, counts, onChange,
+}: {
+  filters: Filters;
+  counts: { buckets: Map<string, number>; sections: Map<string, number>; roles: Map<string, number> };
+  onChange: (f: Filters) => void;
+}) {
+  const [openBucket, setOpenBucket] = useState<string | null>(filters.buckets?.[0] ?? null);
+  const [openSection, setOpenSection] = useState<string | null>(filters.sections?.[0] ?? null);
+
+  const bucket = ROLE_BUCKETS.find((b) => b.id === openBucket) ?? null;
+  const section = bucket?.sections.find((x) => x.id === openSection) ?? null;
+
+  const toggleIn = (key: "buckets" | "sections" | "roles", value: string) => {
+    const current = filters[key] ?? [];
+    const next = current.includes(value) ? current.filter((v) => v !== value) : [...current, value];
+    onChange({ ...filters, [key]: next.length ? next : undefined });
+  };
+
+  if (section) {
+    return (
+      <div className="max-h-[320px] overflow-auto py-1 scroll-thin">
+        <button
+          type="button"
+          onClick={() => setOpenSection(null)}
+          className="flex w-full items-center gap-1.5 px-2 py-1 text-left text-[11.5px] text-muted transition hover:text-ink"
+        >
+          ← {bucket!.label}
+        </button>
+        <MenuLabel>{section.label}</MenuLabel>
+        {section.roles.map((x) => (
+          <MenuItem key={x.id} selected={filters.roles?.includes(x.id)} onClick={() => toggleIn("roles", x.id)}>
+            <span className="flex w-full items-center gap-2">
+              <span className="flex-1 truncate">{x.label}</span>
+              <span className="tabular text-[11.5px] text-muted">{counts.roles.get(x.id) ?? 0}</span>
+            </span>
+          </MenuItem>
+        ))}
+      </div>
+    );
+  }
+
+  if (bucket) {
+    return (
+      <div className="max-h-[320px] overflow-auto py-1 scroll-thin">
+        <button
+          type="button"
+          onClick={() => setOpenBucket(null)}
+          className="flex w-full items-center gap-1.5 px-2 py-1 text-left text-[11.5px] text-muted transition hover:text-ink"
+        >
+          ← All role areas
+        </button>
+        <MenuLabel>{bucket.label}</MenuLabel>
+        <MenuItem selected={filters.buckets?.includes(bucket.id)} onClick={() => toggleIn("buckets", bucket.id)}>
+          Everyone in {bucket.label}
+        </MenuItem>
+        {bucket.sections.map((x) => (
+          <MenuItem key={x.id} onClick={() => setOpenSection(x.id)}>
+            <span className="flex w-full items-center gap-2">
+              <span className="flex-1 truncate">{x.label}</span>
+              <span className="tabular text-[11.5px] text-muted">{counts.sections.get(x.id) ?? 0}</span>
+              <span className="text-muted">›</span>
+            </span>
+          </MenuItem>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-h-[320px] overflow-auto py-1 scroll-thin">
+      <MenuLabel>Role area</MenuLabel>
+      {ROLE_BUCKETS.map((b) => (
+        <MenuItem key={b.id} selected={filters.buckets?.includes(b.id)} onClick={() => setOpenBucket(b.id)}>
+          <span className="flex w-full items-center gap-2">
+            <span className="flex-1 truncate">{b.label}</span>
+            <span className="tabular text-[11.5px] text-muted">{counts.buckets.get(b.id) ?? 0}</span>
+            <span className="text-muted">›</span>
+          </span>
+        </MenuItem>
+      ))}
+    </div>
+  );
+}

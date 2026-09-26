@@ -41,10 +41,10 @@ describe("networking focus", () => {
 
   it("never overrides areas the user named themselves", () => {
     const { settings } = sample();
-    settings.goals.domains = ["finance"];
+    settings.goals.buckets = ["finance-and-investment"];
     settings.focus = { goals: ["job"], direction: "", confirmedAt: "x" };
     const f = focusFilters(settings);
-    expect(f.domains).toEqual(["finance"]);
-    expect(f.buckets).toBeUndefined();
+    // The user's own area wins; the goal does not widen past it.
+    expect(f.buckets).toEqual(["finance-and-investment"]);
   });
 });

@@ -3,13 +3,11 @@
 import { useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
 import { Building2, Calendar, CheckCircle2, Mail, MessageSquarePlus, Pencil, RotateCcw, X } from "lucide-react";
-import { domainLabel, functionLabel } from "@/lib/intelligence";
-import { DOMAINS, INDUSTRIES } from "@/lib/roles";
-import { SENIORITY_LEVELS } from "@/lib/taxonomy";
-import { ROLE_CATALOG } from "@/lib/intelligence";
 import { addDays, formatDate, relativeDue, todayISO } from "@/lib/workspace/dates";
 import { CHANNELS, OPPORTUNITY_TYPES, RESPONSES } from "@/lib/workspace/defaults";
-import type { Hierarchy } from "@/lib/intelligence";
+import { ROLE_BUCKETS, bucketLabel, roleLabel, sectionLabel } from "@/lib/knowledge/roles";
+import { sectorLabel } from "@/lib/knowledge/sectors";
+import type { RoleHierarchy } from "@/lib/knowledge/classify";
 import type { Person } from "@/lib/workspace/types";
 import { useUI, useWorkspace } from "@/components/workspace/store";
 import { Avatar, Button, Checkbox, Field, IconButton, Input, Meter, Pill, Select, Sheet, Textarea, cx } from "@/components/ui";
@@ -50,59 +48,52 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
 function ClassificationEditor({ person, onDone }: { person: Person; onDone: () => void }) {
   const { setClassification, people } = useWorkspace();
   const { toast } = useUI();
-  const [draft, setDraft] = useState<Hierarchy>({
-    domain: person.domain, fn: person.fn, role: person.role, seniority: person.seniority, industry: person.industry,
+  const [draft, setDraft] = useState<RoleHierarchy>({
+    bucket: person.bucket ?? ROLE_BUCKETS[0].id,
+    section: person.section ?? ROLE_BUCKETS[0].sections[0].id,
+    roleId: person.roleId ?? ROLE_BUCKETS[0].sections[0].roles[0].id,
   });
   const sameTitle = useMemo(
     () => (person.position ? people.filter((p) => p.position.toLowerCase() === person.position.toLowerCase()).length : 1),
     [people, person.position],
   );
   const [learn, setLearn] = useState(sameTitle > 1);
-  const domain = DOMAINS.find((d) => d.id === draft.domain) ?? DOMAINS[0];
-  const roleOptions = ROLE_CATALOG.filter((r) => r.fn === draft.fn).map((r) => r.role);
+  const bucket = ROLE_BUCKETS.find((b) => b.id === draft.bucket) ?? ROLE_BUCKETS[0];
+  const section = bucket.sections.find((x) => x.id === draft.section) ?? bucket.sections[0];
 
   return (
     <div className="space-y-2.5">
       <div className="grid grid-cols-2 gap-2.5">
-        <Field label="Domain">
+        <Field label="Role area">
           <Select
-            value={draft.domain}
+            value={draft.bucket}
             onChange={(e) => {
-              const d = DOMAINS.find((x) => x.id === e.target.value)!;
-              setDraft((v) => ({ ...v, domain: d.id, fn: d.functions[0].id, role: d.functions[0].generalist }));
+              const b = ROLE_BUCKETS.find((x) => x.id === e.target.value)!;
+              setDraft({ bucket: b.id, section: b.sections[0].id, roleId: b.sections[0].roles[0].id });
             }}
           >
-            {DOMAINS.map((d) => (
-              <option key={d.id} value={d.id}>{d.label}</option>
+            {ROLE_BUCKETS.map((b) => (
+              <option key={b.id} value={b.id}>{b.label}</option>
             ))}
           </Select>
         </Field>
-        <Field label="Function">
-          <Select value={draft.fn} onChange={(e) => setDraft((v) => ({ ...v, fn: e.target.value }))}>
-            {domain.functions.map((f) => (
-              <option key={f.id} value={f.id}>{f.label}</option>
+        <Field label="Section">
+          <Select
+            value={section.id}
+            onChange={(e) => {
+              const x = bucket.sections.find((y) => y.id === e.target.value)!;
+              setDraft((v) => ({ ...v, section: x.id, roleId: x.roles[0].id }));
+            }}
+          >
+            {bucket.sections.map((x) => (
+              <option key={x.id} value={x.id}>{x.label}</option>
             ))}
           </Select>
         </Field>
-        <Field label="Role" hint="Pick a known role or type your own">
-          <Input list="role-options" value={draft.role} onChange={(e) => setDraft((v) => ({ ...v, role: e.target.value }))} />
-          <datalist id="role-options">
-            {roleOptions.map((r) => (
-              <option key={r} value={r} />
-            ))}
-          </datalist>
-        </Field>
-        <Field label="Seniority">
-          <Select value={draft.seniority} onChange={(e) => setDraft((v) => ({ ...v, seniority: e.target.value as Person["seniority"] }))}>
-            {SENIORITY_LEVELS.map((s) => (
-              <option key={s} value={s}>{s}</option>
-            ))}
-          </Select>
-        </Field>
-        <Field label="Industry" className="col-span-2">
-          <Select value={draft.industry} onChange={(e) => setDraft((v) => ({ ...v, industry: e.target.value }))}>
-            {INDUSTRIES.map((i) => (
-              <option key={i} value={i}>{i}</option>
+        <Field label="Role" className="col-span-2">
+          <Select value={draft.roleId} onChange={(e) => setDraft((v) => ({ ...v, roleId: e.target.value }))}>
+            {section.roles.map((x) => (
+              <option key={x.id} value={x.id}>{x.label}</option>
             ))}
           </Select>
         </Field>
@@ -330,7 +321,7 @@ export function PersonPanel() {
           action={
             editing ? null : (
               <div className="flex gap-1">
-                {person.classSource !== "auto" ? (
+                {person.classSource !== "repository" ? (
                   <IconButton label="Reset to automatic" icon={RotateCcw} onClick={() => { resetClassification(person.id); toast("Back to the automatic classification."); }} />
                 ) : null}
                 <IconButton label="Edit classification" icon={Pencil} onClick={() => setEditing(true)} />
@@ -342,23 +333,18 @@ export function PersonPanel() {
             <ClassificationEditor person={person} onDone={() => setEditing(false)} />
           ) : (
             <div className="space-y-1">
-              <Row label="Domain">{domainLabel(person.domain)}</Row>
-              <Row label="Function">{functionLabel(person.fn)}</Row>
-              <Row label="Role">{person.role}</Row>
-              <Row label="Seniority">{person.seniority}</Row>
-              <Row label="Industry">
-                {person.industry}
-                {person.industryInferred ? <span className="ml-1 text-[11px] text-muted">(inferred from colleagues)</span> : null}
+              {/* The raw LinkedIn title stays visible above what was made of it. */}
+              <Row label="Their title">{person.position || <span className="text-muted">Not given</span>}</Row>
+              <Row label="Role area">{person.bucket ? bucketLabel(person.bucket) : <span className="text-muted">Not stated</span>}</Row>
+              {person.bucket && person.section ? <Row label="Section">{sectionLabel(person.bucket, person.section)}</Row> : null}
+              {person.roleId ? <Row label="Role">{roleLabel(person.roleId)}</Row> : null}
+              <Row label="Sector">
+                {person.sector ? sectorLabel(person.sector) : <span className="text-muted">Employer not recognised</span>}
               </Row>
               <div className="mt-2 flex items-center gap-2">
                 <ConfidenceBadge person={person} />
-                {person.classSource === "auto" && person.domain !== "unclassified" ? (
-                  <span className="flex-1">
-                    <Meter value={person.confidence} tone={person.confidence >= 80 ? "green" : person.confidence >= 60 ? "blue" : "amber"} />
-                  </span>
-                ) : null}
               </div>
-              {person.reasons.length ? <p className="mt-1.5 text-[11.5px] text-muted">Matched {person.reasons.join(" · ")}</p> : null}
+              {person.evidence.length ? <p className="mt-1.5 text-[11.5px] text-muted">{person.evidence.join(" · ")}</p> : null}
             </div>
           )}
         </Section>

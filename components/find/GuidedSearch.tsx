@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { ArrowRight, Check, ChevronLeft } from "lucide-react";
-import { functionLabel } from "@/lib/intelligence";
+import { roleLabel } from "@/lib/knowledge/roles";
 import { applyFilters, buildIntents } from "@/lib/workspace/filters";
 import type { AudienceId, Filters, Person, Settings } from "@/lib/workspace/types";
 import { Button, cx } from "@/components/ui";
@@ -13,16 +13,13 @@ import { Button, cx } from "@/components/ui";
  * the chips and a saved list behave exactly as if the search had been typed.
  */
 
-type Who = "anyone" | AudienceId | "senior";
+type Who = "anyone" | AudienceId;
 type Where = "all" | "target";
 type Rel = "any" | "spoken" | "replied" | "never";
 
 const WHO_OPTIONS: Array<{ id: Who; label: string; hint: string }> = [
   { id: "anyone", label: "Anyone", hint: "Every level" },
-  { id: "peers", label: "Peers", hint: "Students and early career" },
-  { id: "senior", label: "Experienced professionals", hint: "Senior and above" },
-  { id: "managers", label: "Managers", hint: "Managers and leads" },
-  { id: "directors", label: "Directors & Heads", hint: "Directors, heads, VPs" },
+  { id: "alumni", label: "Alumni", hint: "People from your schools" },
   { id: "founders", label: "Founders", hint: "Founders and co-founders" },
   { id: "recruiters", label: "Recruiters", hint: "Talent acquisition" },
 ];
@@ -34,11 +31,8 @@ const REL_OPTIONS: Array<{ id: Rel; label: string; hint: string }> = [
   { id: "never", label: "Never contacted", hint: "Fresh outreach" },
 ];
 
-const SENIOR_LEVELS = ["Senior", "Manager / Lead", "Director / Head", "VP", "C-Level", "Founder"];
-
 function whoFilters(who: Who): Filters {
   if (who === "anyone") return {};
-  if (who === "senior") return { seniorities: SENIOR_LEVELS };
   return { audiences: [who] };
 }
 
@@ -115,10 +109,10 @@ export function GuidedSearch({
     const inArea = intent ? applyFilters(people, intent.filters, settings) : [];
     const byRole = new Map<string, { fn: string; count: number }>();
     for (const p of inArea) {
-      if (p.domain === "unclassified") continue;
-      const e = byRole.get(p.role) ?? { fn: p.fn, count: 0 };
+      if (!p.roleId) continue;
+      const e = byRole.get(p.roleId) ?? { fn: roleLabel(p.roleId), count: 0 };
       e.count++;
-      byRole.set(p.role, e);
+      byRole.set(p.roleId, e);
     }
 
     return {
@@ -175,13 +169,13 @@ export function GuidedSearch({
               key={r.role}
               type="button"
               onClick={() => setRole(role === r.role ? null : r.role)}
-              title={functionLabel(r.fn)}
+              title={r.fn}
               className={cx(
                 "rounded-md border px-2 py-1 text-[12px] transition",
                 role === r.role ? "border-accent bg-accent-soft/40" : "border-line text-muted hover:border-line-strong hover:text-ink",
               )}
             >
-              {r.role} <span className="tabular text-muted">{r.count}</span>
+              {r.fn} <span className="tabular text-muted">{r.count}</span>
             </button>
           ))}
         </div>

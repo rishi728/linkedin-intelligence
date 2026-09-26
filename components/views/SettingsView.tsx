@@ -4,9 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Download, Plus, Trash2, Upload, X } from "lucide-react";
 import { CsvFormatError } from "@/lib/analyzer";
-import { domainLabel, functionLabel } from "@/lib/intelligence";
+import { ROLE_BUCKETS, bucketLabel, roleLabel, sectionLabel } from "@/lib/knowledge/roles";
 import { DOMAINS } from "@/lib/roles";
-import { SENIORITY_LEVELS } from "@/lib/taxonomy";
 import { OPPORTUNITY_TYPES, PURPOSES, CHANNELS, defaultSettings } from "@/lib/workspace/defaults";
 import { groupCompanies } from "@/lib/workspace/insights";
 import { TEMPLATE_VARIABLES } from "@/lib/workspace/outreach";
@@ -151,21 +150,21 @@ export function SettingsView() {
                     </div>
                   </div>
                   <div>
-                    <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-muted">Target domains</p>
+                    <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-muted">Target role areas</p>
                     <div className="flex flex-wrap gap-2">
-                      {DOMAINS.filter((d) => d.id !== "unclassified").map((d) => (
-                        <Chip key={d.id} active={settings.goals.domains.includes(d.id)} onClick={() => toggle(settings.goals.domains, d.id, (next) => updateSettings((s) => ({ ...s, goals: { ...s.goals, domains: next } })))}>
+                      {ROLE_BUCKETS.map((d) => (
+                        <Chip key={d.id} active={settings.goals.buckets.includes(d.id)} onClick={() => toggle(settings.goals.buckets, d.id, (next) => updateSettings((s) => ({ ...s, goals: { ...s.goals, buckets: next } })))}>
                           {d.label}
                         </Chip>
                       ))}
                     </div>
                   </div>
                   <div>
-                    <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-muted">Target functions</p>
+                    <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-muted">Target sections</p>
                     <div className="flex flex-wrap gap-1.5">
-                      {settings.goals.functions.map((f) => (
-                        <button key={f} type="button" onClick={() => toggle(settings.goals.functions, f, (next) => updateSettings((s) => ({ ...s, goals: { ...s.goals, functions: next } })))} className="inline-flex items-center gap-1 rounded-md border border-accent bg-accent-soft px-2 py-0.5 text-[12px] text-accent">
-                          {functionLabel(f)}
+                      {settings.goals.sections.map((f) => (
+                        <button key={f} type="button" onClick={() => toggle(settings.goals.sections, f, (next) => updateSettings((s) => ({ ...s, goals: { ...s.goals, sections: next } })))} className="inline-flex items-center gap-1 rounded-md border border-accent bg-accent-soft px-2 py-0.5 text-[12px] text-accent">
+                          {sectionLabel(ROLE_BUCKETS.find((b) => b.sections.some((x) => x.id === f))?.id ?? "", f)}
                           <X size={11} />
                         </button>
                       ))}
@@ -173,27 +172,17 @@ export function SettingsView() {
                     <div className="mt-2 max-w-sm">
                       <Select
                         value=""
-                        onChange={(e) => e.target.value && toggle(settings.goals.functions, e.target.value, (next) => updateSettings((s) => ({ ...s, goals: { ...s.goals, functions: next } })))}
+                        onChange={(e) => e.target.value && toggle(settings.goals.sections, e.target.value, (next) => updateSettings((s) => ({ ...s, goals: { ...s.goals, sections: next } })))}
                       >
-                        <option value="">Add a function…</option>
-                        {DOMAINS.filter((d) => d.id !== "unclassified").map((d) => (
+                        <option value="">Add a section…</option>
+                        {ROLE_BUCKETS.map((d) => (
                           <optgroup key={d.id} label={d.label}>
-                            {d.functions.map((f) => (
+                            {d.sections.map((f) => (
                               <option key={f.id} value={f.id}>{f.label}</option>
                             ))}
                           </optgroup>
                         ))}
                       </Select>
-                    </div>
-                  </div>
-                  <div>
-                    <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-muted">Seniority you want to reach</p>
-                    <div className="flex flex-wrap gap-2">
-                      {SENIORITY_LEVELS.filter((s) => s !== "Unknown").map((lvl) => (
-                        <Chip key={lvl} active={settings.goals.seniorities.includes(lvl)} onClick={() => toggle(settings.goals.seniorities, lvl, (next) => updateSettings((s) => ({ ...s, goals: { ...s.goals, seniorities: next } })))}>
-                          {lvl}
-                        </Chip>
-                      ))}
                     </div>
                   </div>
                 </div>
@@ -480,12 +469,12 @@ export function SettingsView() {
                   </p>
                 ) : (
                   settings.rules.map((r) => {
-                    const affected = people.filter((p) => p.classSource === "rule" && p.reasons[0]?.includes(r.example)).length;
+                    const affected = people.filter((p) => p.classSource === "rule" && p.evidence[0]?.includes(r.example)).length;
                     return (
                       <div key={r.id} className="flex flex-wrap items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-hover">
                         <span className="truncate text-[12.5px] font-medium">“{r.example}”</span>
                         <span className="text-[12px] text-muted">
-                          → {[r.set.domain && domainLabel(r.set.domain), r.set.fn && functionLabel(r.set.fn), r.set.role, r.set.seniority].filter(Boolean).join(" · ")}
+                          → {[r.set.bucket && bucketLabel(r.set.bucket), r.set.section && sectionLabel(r.set.bucket ?? "", r.set.section), r.set.roleId && roleLabel(r.set.roleId)].filter(Boolean).join(" · ")}
                         </span>
                         <span className="tabular ml-auto text-[12px] text-muted">{affected} people</span>
                         <Button size="sm" variant="ghost" icon={Trash2} onClick={() => { deleteRule(r.id); toast("Rule deleted."); }}>Delete</Button>

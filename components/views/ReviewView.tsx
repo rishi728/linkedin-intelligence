@@ -3,9 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check, ChevronRight, ListChecks, SkipForward, Undo2 } from "lucide-react";
-import { domainLabel, functionLabel, rolesInText, FUNCTIONS } from "@/lib/intelligence";
-import { DOMAINS } from "@/lib/roles";
-import type { Hierarchy } from "@/lib/intelligence";
+import { matchRolesInText, type RoleHierarchy } from "@/lib/knowledge/classify";
+import { ROLE_BUCKETS, ROLE_PATH, bucketLabel, roleLabel, sectionLabel } from "@/lib/knowledge/roles";
 import type { Person } from "@/lib/workspace/types";
 import { PageBody, PageHeader } from "@/components/shell/AppShell";
 import { Avatar, Button, Card, Checkbox, EmptyState, Field, Meter, Pill, Select, cx } from "@/components/ui";
@@ -13,23 +12,30 @@ import { useUI, useWorkspace } from "@/components/workspace/store";
 
 interface Suggestion {
   label: string;
-  hierarchy: Pick<Hierarchy, "domain" | "fn" | "role">;
+  hierarchy: RoleHierarchy;
+}
+
+/** The most common places a person like this belongs, so there is always something to press. */
+const FALLBACK_ROLES = [
+  "software-engineer", "data-analyst", "product-manager", "management-consultant",
+  "business-development-manager", "operations-manager", "recruiter", "finance-manager",
+];
+
+function push(out: Suggestion[], roleId: string, label?: string) {
+  const path = ROLE_PATH.get(roleId);
+  if (!path || out.some((s) => s.hierarchy.roleId === roleId)) return;
+  out.push({
+    label: label ?? `${path.roleLabel} · ${path.sectionLabel}`,
+    hierarchy: { bucket: path.bucketId, section: path.sectionId, roleId: path.roleId },
+  });
 }
 
 function suggestionsFor(person: Person): Suggestion[] {
   const out: Suggestion[] = [];
-  const push = (domain: string, fn: string, role: string, label?: string) => {
-    if (out.some((s) => s.hierarchy.fn === fn && s.hierarchy.role === role)) return;
-    out.push({ label: label ?? `${role} · ${functionLabel(fn)}`, hierarchy: { domain, fn, role } });
-  };
-  if (person.domain !== "unclassified") push(person.domain, person.fn, person.role, `Keep: ${person.role} · ${functionLabel(person.fn)}`);
+  if (person.roleId) push(out, person.roleId, `Keep: ${roleLabel(person.roleId)}`);
   // Anything the title hints at, including matches that lost to something else.
-  for (const c of rolesInText(person.position).slice(0, 5)) push(c.domain, c.fn, c.role);
-  // Common destinations, so there is always something to press.
-  for (const fn of ["software-engineering", "management-consulting", "product-management", "business-ops", "students", "sales"]) {
-    const info = FUNCTIONS.get(fn);
-    if (info && out.length < 8) push(info.domain, info.id, info.generalist);
-  }
+  for (const roleId of matchRolesInText(person.position).roles.slice(0, 5)) push(out, roleId);
+  for (const roleId of FALLBACK_ROLES) if (out.length < 8) push(out, roleId);
   return out.slice(0, 8);
 }
 
@@ -40,11 +46,11 @@ export function ReviewView() {
   const [index, setIndex] = useState(0);
   const [learn, setLearn] = useState(true);
   const [done, setDone] = useState<string[]>([]);
-  const [custom, setCustom] = useState<{ domain: string; fn: string } | null>(null);
+  const [custom, setCustom] = useState<{ bucket: string; section: string } | null>(null);
 
   const queue = useMemo(
     () => people
-      .filter((p) => (p.needsReview || p.domain === "unclassified") && p.classSource === "auto" && !done.includes(p.id))
+      .filter((p) => (p.needsReview || !p.bucket) && p.classSource === "repository" && !done.includes(p.id))
       .sort((a, b) => b.priorityScore - a.priorityScore || (b.position ? 1 : 0) - (a.position ? 1 : 0)),
     [people, done],
   );
@@ -57,11 +63,11 @@ export function ReviewView() {
 
   const accept = (s: Suggestion) => {
     if (!person) return;
-    const n = setClassification(person.id, { ...s.hierarchy, seniority: person.seniority, industry: person.industry }, learn && sameTitle > 1 ? "exact" : null);
+    const n = setClassification(person.id, s.hierarchy, learn && sameTitle > 1 ? "exact" : null);
     setDone((d) => [...d, person.id]);
     setCustom(null);
     toast(
-      learn && sameTitle > 1 && person.position ? `Saved for ${n} people titled “${person.position}”` : `${person.name}: ${s.hierarchy.role}`,
+      learn && sameTitle > 1 && person.position ? `Saved for ${n} people titled “${person.position}”` : `${person.name}: ${roleLabel(s.hierarchy.roleId)}`,
       { label: "Undo", run: () => setDone((d) => d.filter((x) => x !== person.id)) },
     );
   };
@@ -75,7 +81,7 @@ export function ReviewView() {
 
   const markUnknown = () => {
     if (!person) return;
-    updateRecord(person.id, { classification: { domain: "unclassified", fn: "unclassified", role: "Role not shared" } }, { kind: "classification", text: "Marked as no role information" });
+    updateRecord(person.id, { classification: { bucket: "", section: "", roleId: "" } }, { kind: "classification", text: "Marked as no role information" });
     setDone((d) => [...d, person.id]);
   };
 
@@ -147,22 +153,22 @@ export function ReviewView() {
                   <p className="text-[12.5px] text-muted">{person.company || "No company in the export"}</p>
                 </div>
                 <div className="text-right">
-                  <Pill tone={person.domain === "unclassified" ? "gray" : person.confidence >= 60 ? "blue" : "amber"}>
-                    {person.fn === "unspecified" ? "Area not stated" : person.domain === "unclassified" ? "No role data" : `${person.confidence}% sure`}
+                  <Pill tone={!person.bucket ? "gray" : person.certainty === "medium" ? "blue" : "amber"}>
+                    {person.bucket ? `${person.certainty[0].toUpperCase()}${person.certainty.slice(1)} confidence` : "Role not stated"}
                   </Pill>
                   {person.priorityScore > 0 ? <p className="mt-1 text-[11px] text-muted">Priority {person.priority}</p> : null}
                 </div>
               </div>
 
-              {person.reasons.length ? (
-                <p className="mt-3 rounded-lg bg-subtle px-3 py-2 text-[12px] text-ink-2">Matched {person.reasons.join(" · ")}</p>
+              {person.evidence.length ? (
+                <p className="mt-3 rounded-lg bg-subtle px-3 py-2 text-[12px] text-ink-2">{person.evidence.join(" · ")}</p>
               ) : null}
 
               <p className="mb-2 mt-4 text-[11px] font-medium uppercase tracking-wide text-muted">Where does this person belong?</p>
               <div className="space-y-1.5">
                 {suggestions.map((s, i) => (
                   <button
-                    key={`${s.hierarchy.fn}-${s.hierarchy.role}`}
+                    key={s.hierarchy.roleId}
                     type="button"
                     onClick={() => accept(s)}
                     className={cx(
@@ -172,39 +178,45 @@ export function ReviewView() {
                   >
                     <kbd className="rounded border border-line bg-panel px-1.5 text-[11px] text-muted">{i + 1}</kbd>
                     <span className="flex-1 truncate">{s.label}</span>
-                    <span className="text-[11.5px] text-muted">{domainLabel(s.hierarchy.domain)}</span>
+                    <span className="text-[11.5px] text-muted">{bucketLabel(s.hierarchy.bucket)}</span>
                     <ChevronRight size={13} className="text-faint" />
                   </button>
                 ))}
               </div>
 
               <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                <Field label="Or choose a domain">
+                <Field label="Or choose a role area">
                   <Select
-                    value={custom?.domain ?? ""}
+                    value={custom?.bucket ?? ""}
                     onChange={(e) => {
-                      const d = DOMAINS.find((x) => x.id === e.target.value);
-                      setCustom(d ? { domain: d.id, fn: d.functions[0].id } : null);
+                      const b = ROLE_BUCKETS.find((x) => x.id === e.target.value);
+                      setCustom(b ? { bucket: b.id, section: b.sections[0].id } : null);
                     }}
                   >
                     <option value="">-</option>
-                    {DOMAINS.filter((d) => d.id !== "unclassified").map((d) => (
-                      <option key={d.id} value={d.id}>{d.label}</option>
+                    {ROLE_BUCKETS.map((b) => (
+                      <option key={b.id} value={b.id}>{b.label}</option>
                     ))}
                   </Select>
                 </Field>
                 {custom ? (
-                  <Field label="Function">
+                  <Field label="Section">
                     <div className="flex gap-2">
-                      <Select value={custom.fn} onChange={(e) => setCustom({ ...custom, fn: e.target.value })}>
-                        {DOMAINS.find((d) => d.id === custom.domain)!.functions.map((f) => (
-                          <option key={f.id} value={f.id}>{f.label}</option>
+                      <Select value={custom.section} onChange={(e) => setCustom({ ...custom, section: e.target.value })}>
+                        {ROLE_BUCKETS.find((b) => b.id === custom.bucket)!.sections.map((x) => (
+                          <option key={x.id} value={x.id}>{x.label}</option>
                         ))}
                       </Select>
                       <Button
                         variant="primary"
                         icon={Check}
-                        onClick={() => accept({ label: "", hierarchy: { domain: custom.domain, fn: custom.fn, role: FUNCTIONS.get(custom.fn)!.generalist } })}
+                        onClick={() => {
+                          const section = ROLE_BUCKETS.find((b) => b.id === custom.bucket)!.sections.find((x) => x.id === custom.section)!;
+                          accept({
+                            label: sectionLabel(custom.bucket, custom.section),
+                            hierarchy: { bucket: custom.bucket, section: custom.section, roleId: section.roles[0].id },
+                          });
+                        }}
                       >
                         Set
                       </Button>

@@ -145,7 +145,7 @@ export function Composer() {
             <Avatar name={person.name} size={36} />
             <div className="min-w-0">
               <p className="truncate text-[13.5px] font-semibold tracking-tight">{person.name}</p>
-              <p className="truncate text-[12px] text-muted">{person.role}</p>
+              <p className="truncate text-[12px] text-muted">{person.roleLabel}</p>
               {person.company ? <p className="truncate text-[12px] text-faint">{person.company}</p> : null}
             </div>
           </div>

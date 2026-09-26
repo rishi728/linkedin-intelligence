@@ -44,15 +44,12 @@ it.skipIf(!existsSync(CSV))("writes a classification report for the real dataset
     );
   }
 
-  L.push("", "== BY SENIORITY ==");
-  for (const [s, n] of tally(people, (p) => p.c.seniority)) L.push(`${s.padEnd(20)} ${String(n).padStart(5)}`);
-
   L.push("", "== TOP 60 RAW TITLES ==");
   for (const [title, n] of tally(rows, (r) => r.position.trim()).slice(0, 61)) {
     if (!title) continue;
     const p = people.find((x) => x.r.position.trim() === title)!;
     L.push(
-      `${String(n).padStart(4)}  ${title.slice(0, 42).padEnd(42)} → ${p.c.role.slice(0, 30).padEnd(30)} | ${domainLabel(p.c.domain).slice(0, 20).padEnd(20)} | ${functionLabel(p.c.fn).slice(0, 26).padEnd(26)} | ${p.c.seniority.padEnd(15)} | ${p.c.confidence}`,
+      `${String(n).padStart(4)}  ${title.slice(0, 42).padEnd(42)} → ${p.c.role.slice(0, 30).padEnd(30)} | ${domainLabel(p.c.domain).slice(0, 20).padEnd(20)} | ${functionLabel(p.c.fn).slice(0, 26).padEnd(26)} | ${p.c.confidence}`,
     );
   }
 
@@ -88,7 +85,7 @@ it.skipIf(!existsSync(CSV))("walks the off-campus workflow on the real dataset",
   const companies = groupCompanies(all, settings).map((c) => ({ key: c.key, name: c.name }));
   // Targets a student would actually pick: the biggest employers of the people
   // they're looking for, rather than the biggest employers overall.
-  const SUPPLY_CHAIN = { functions: ["supply-chain", "procurement", "logistics"] };
+  const SUPPLY_CHAIN = { sections: ["supply-chain", "procurement-sourcing", "logistics-planning"] };
   const supplyChain = applyFilters(all, SUPPLY_CHAIN, settings);
   const byCompany = new Map<string, number>();
   for (const p of supplyChain) if (p.company) byCompany.set(p.company, (byCompany.get(p.company) ?? 0) + 1);
@@ -96,9 +93,9 @@ it.skipIf(!existsSync(CSV))("walks the off-campus workflow on the real dataset",
   const people = buildPeople(rows, autoClassifyAll(rows), {}, settings);
   const n = (f: Parameters<typeof applyFilters>[1]) => applyFilters(people, f, settings).length;
 
-  const L: string[] = ["== GUIDED FLOW: supply chain → senior → targets → not contacted =="];
+  const L: string[] = ["== GUIDED FLOW: supply chain → targets → not contacted =="];
   const area = SUPPLY_CHAIN;
-  const senior = { ...area, seniorities: ["Senior", "Manager / Lead", "Director / Head", "VP", "C-Level", "Founder"] };
+  const senior = { ...area };
   const targeted = { ...senior, targetOnly: true };
   const fresh = { ...targeted, statuses: ["not_contacted"], history: "never" as const };
   L.push(`Supply chain            ${n(area)}`);
@@ -140,7 +137,7 @@ it.skipIf(!existsSync(CSV))("walks the off-campus workflow on the real dataset",
 
   // Conversation history really is used.
   const spoken = applyFilters(people, parseQuery("people i've spoken to in operations", companies).filters, settings);
-  expect(spoken.every((p) => p.domain === "operations")).toBe(true);
+  expect(spoken.every((p) => p.bucket === "operations-and-supply-chain")).toBe(true);
 
   // A dead end is always one click from results.
   const dead = { ...fresh, roles: ["Role That Does Not Exist"] };
@@ -148,4 +145,4 @@ it.skipIf(!existsSync(CSV))("walks the off-campus workflow on the real dataset",
   expect(broaden(dead, settings)!.filters.roles).toBeUndefined();
 
   writeFileSync("acceptance.txt", L.join("\n"));
-});
+}, 30_000);

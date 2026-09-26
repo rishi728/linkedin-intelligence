@@ -59,7 +59,7 @@ export const DEFAULT_WEIGHTS: PriorityWeights = {
   recruiter: 12, hiring: 8, alumni: 10, hasEmail: 4, replied: 12, theyInvited: 6,
 };
 
-export const EMPTY_GOALS: Goals = { opportunityTypes: [], domains: [], functions: [], seniorities: [], audiences: [] };
+export const EMPTY_GOALS: Goals = { opportunityTypes: [], buckets: [], sections: [], audiences: [] };
 export const EMPTY_FOCUS: NetworkingFocus = { goals: [], direction: "", confirmedAt: "" };
 export const EMPTY_PROFILE: Profile = { name: "", background: "", schools: [] };
 

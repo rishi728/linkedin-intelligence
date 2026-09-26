@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { BookmarkPlus, Download, ExternalLink, LayoutGrid, List, ListPlus, Plus, Rows3, Sparkles, UserPlus, X } from "lucide-react";
-import { applyFilters, broaden, PRIORITY_ORDER, SENIORITY_ORDER } from "@/lib/workspace/filters";
+import { applyFilters, broaden, PRIORITY_ORDER } from "@/lib/workspace/filters";
 import { groupCompanies } from "@/lib/workspace/insights";
 import type { Person } from "@/lib/workspace/types";
 import { PageBody, PageHeader } from "@/components/shell/AppShell";
@@ -13,17 +13,19 @@ import { Button, Menu, MenuItem, MenuLabel, Segmented, Select, cx } from "@/comp
 import { NewList } from "@/components/outreach/NewList";
 import { useUI, useWorkspace } from "@/components/workspace/store";
 
-type SortKey = "relevance" | "name" | "company" | "recent" | "followup" | "seniority" | "confidence";
+type SortKey = "relevance" | "name" | "company" | "recent" | "followup" | "confidence";
 
 const SORTS: Array<{ value: SortKey; label: string }> = [
   { value: "relevance", label: "Best match" },
   { value: "recent", label: "Recently connected" },
   { value: "name", label: "Name (A–Z)" },
   { value: "company", label: "Company" },
-  { value: "seniority", label: "Seniority" },
   { value: "followup", label: "Follow-up date" },
   { value: "confidence", label: "Lowest confidence" },
 ];
+
+/** Least certain first, because that is the order worth reviewing in. */
+const CERTAINTY_ORDER = { low: 0, medium: 1, high: 2 };
 
 function sortPeople(people: Person[], key: SortKey): Person[] {
   const copy = [...people];
@@ -31,9 +33,8 @@ function sortPeople(people: Person[], key: SortKey): Person[] {
     case "name": return copy.sort((a, b) => a.name.localeCompare(b.name));
     case "company": return copy.sort((a, b) => (a.company || "zzz").localeCompare(b.company || "zzz") || a.name.localeCompare(b.name));
     case "recent": return copy.sort((a, b) => (b.connectedOn?.getTime() ?? 0) - (a.connectedOn?.getTime() ?? 0));
-    case "seniority": return copy.sort((a, b) => (SENIORITY_ORDER.get(a.seniority) ?? 99) - (SENIORITY_ORDER.get(b.seniority) ?? 99) || b.priorityScore - a.priorityScore);
     case "followup": return copy.sort((a, b) => (a.followUpAt || "9999").localeCompare(b.followUpAt || "9999"));
-    case "confidence": return copy.sort((a, b) => a.confidence - b.confidence);
+    case "confidence": return copy.sort((a, b) => CERTAINTY_ORDER[a.certainty] - CERTAINTY_ORDER[b.certainty] || a.name.localeCompare(b.name));
     default:
       return copy.sort((a, b) => PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority] || b.priorityScore - a.priorityScore || a.name.localeCompare(b.name));
   }

@@ -84,7 +84,7 @@ export function CompaniesView() {
                     {active.name}
                   </h2>
                   <p className="mt-0.5 text-[12.5px] text-muted">
-                    {active.count.toLocaleString()} connections · {active.industry}
+                    {active.count.toLocaleString()} connections · {active.sector}
                     {active.contacted ? ` · ${active.contacted} contacted` : ""}
                   </p>
                 </div>
@@ -119,9 +119,9 @@ export function CompaniesView() {
                   </div>
                 </Card>
                 <Card>
-                  <CardTitle hint="How senior they are">Seniority</CardTitle>
+                  <CardTitle hint="What they do there">Sections</CardTitle>
                   <div className="p-2">
-                    {active.seniorities.slice(0, 8).map(([label, n]) => (
+                    {active.sections.slice(0, 8).map(([label, n]: [string, number]) => (
                       <BarRow key={label} label={label} value={n} max={active.count} />
                     ))}
                   </div>
@@ -145,8 +145,7 @@ export function CompaniesView() {
                     else if (p.history?.messageCount) { score += 15; why.push("you have messaged before"); }
                     if (p.isAlumni) { score += 25; why.push("shares your school"); }
                     if (p.history?.invited === "them") { score += 10; why.push("invited you to connect"); }
-                    if (["Manager / Lead", "Senior", "Director / Head", "VP", "C-Level", "Founder"].includes(p.seniority)) { score += 12; why.push(`${p.seniority.toLowerCase()} enough to help`); }
-                    if (p.fn === "talent-acquisition") { score += 15; why.push("recruits for this company"); }
+                    if (p.section === "recruitment") { score += 15; why.push("recruits for this company"); }
                     if (p.email) { score += 5; why.push("email available"); }
                     return { p, score, why };
                   })
@@ -188,9 +187,8 @@ export function CompaniesView() {
                       <Avatar name={p.name} size={26} />
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-[13px] font-medium">{p.name}</span>
-                        <span className="block truncate text-[12px] text-muted">{p.position || p.role}</span>
+                        <span className="block truncate text-[12px] text-muted">{p.position || p.roleLabel}</span>
                       </span>
-                      <Pill tone="gray">{p.seniority}</Pill>
                       <StatusMenu person={p} size="sm" align="right" />
                     </button>
                   ))}

@@ -219,7 +219,7 @@ function Row({
         <Avatar name={person.name} size={26} />
         <span className="min-w-0">
           <span className="block truncate text-[13px] font-medium">{person.name}</span>
-          <span className="block truncate text-[12px] text-muted">{person.role}</span>
+          <span className="block truncate text-[12px] text-muted">{person.roleLabel}</span>
         </span>
       </button>
 

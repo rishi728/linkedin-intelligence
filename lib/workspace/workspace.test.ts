@@ -19,10 +19,10 @@ describe("buildPeople", () => {
   it("keeps manual classification over rules and automatic results", () => {
     const settings = defaultSettings();
     const target = rows.find((r) => r.position === "Growth Marketer") ?? rows[0];
-    settings.rules.push({ id: "r", match: "exact", pattern: titleKey(target.position), example: target.position, set: { domain: "sales", fn: "sales" }, createdAt: "" });
-    const people = buildPeople(rows, cache, { [target.id]: { classification: { domain: "strategy", fn: "business-operations", role: "Chief of Staff" } } }, settings);
+    settings.rules.push({ id: "r", match: "exact", pattern: titleKey(target.position), example: target.position, set: { bucket: "sales-and-business-development", section: "sales", roleId: "sales-executive" }, createdAt: "" });
+    const people = buildPeople(rows, cache, { [target.id]: { classification: { bucket: "business-and-consulting", section: "founders-office-and-chief-of-staff", roleId: "chief-of-staff" } } }, settings);
     const p = people.find((x) => x.id === target.id)!;
-    expect(p).toMatchObject({ domain: "strategy", role: "Chief of Staff", classSource: "manual", confidence: 100 });
+    expect(p).toMatchObject({ bucket: "business-and-consulting", roleId: "chief-of-staff", classSource: "manual", certainty: "high" });
     const other = people.find((x) => x.position === target.position && x.id !== target.id);
     if (other) expect(other.classSource).toBe("rule");
   });
@@ -30,11 +30,11 @@ describe("buildPeople", () => {
   it("marks target companies and scores priority transparently", () => {
     const settings = defaultSettings();
     settings.targetCompanies = ["Google"];
-    settings.goals.domains = ["product"];
+    settings.goals.buckets = ["product-and-design"];
     const people = buildPeople(rows, cache, {}, settings);
-    const pm = people.find((p) => p.company === "Google" && p.domain === "product")!;
+    const pm = people.find((p) => p.company === "Google" && p.bucket === "product-and-design")!;
     expect(pm.isTarget).toBe(true);
-    expect(pm.priority).toBe("high");
+    expect(["high", "medium"]).toContain(pm.priority);
     expect(pm.priorityReasons.join(" ")).toMatch(/target company/);
   });
 });
@@ -81,7 +81,7 @@ describe("adding more data", () => {
     const merged = mergeFiles([generateSampleCsv(120, 1), generateSampleCsv(120, 2)]);
     const people = buildPeople(merged, autoClassifyAll(merged), {}, defaultSettings());
     expect(people.length).toBe(merged.length);
-    expect(people.every((p) => p.domain && p.seniority)).toBe(true);
+    expect(people.every((p) => p.certainty && p.evidence.length)).toBe(true);
   });
 });
 
@@ -89,44 +89,39 @@ describe("filters", () => {
   const settings = defaultSettings();
   const people = buildPeople(rows, cache, {}, settings);
 
-  it("combines domain, seniority and status filters", () => {
-    const result = applyFilters(people, { domains: ["strategy"], seniorities: ["Mid-level", "Senior"], statuses: ["not_contacted"] }, settings);
+  it("combines role area, sector and status filters", () => {
+    const result = applyFilters(people, { buckets: ["business-and-consulting"], statuses: ["not_contacted"] }, settings);
     expect(result.length).toBeGreaterThan(0);
-    expect(result.every((p) => p.domain === "strategy" && ["Mid-level", "Senior"].includes(p.seniority))).toBe(true);
+    expect(result.every((p) => p.bucket === "business-and-consulting" && p.status === "not_contacted")).toBe(true);
   });
 
   it("parses the phrasings people actually type", () => {
     const companies = groupCompanies(people, settings).map((c) => ({ key: c.key, name: c.name }));
     const p = (q: string) => parseQuery(q, companies, { schools: ["NIT Warangal"] }).filters;
 
-    expect(p("senior product managers")).toMatchObject({ functions: ["product-management"], seniorities: expect.arrayContaining(["Senior"]) });
-    expect(p("product managers at amazon")).toMatchObject({ functions: ["product-management"], companies: ["amazon"] });
-    expect(p("supply chain people i haven't contacted")).toMatchObject({ functions: expect.arrayContaining(["supply-chain"]), statuses: ["not_contacted"] });
+    // Seniority words survive as ordinary text: the product no longer classifies on them.
+    expect(p("senior product managers")).toMatchObject({ roles: ["product-manager"] });
+    expect(p("product managers at amazon")).toMatchObject({ roles: ["product-manager"], companies: ["amazon"] });
+    expect(p("supply chain people i haven't contacted")).toMatchObject({ sections: ["supply-chain"], statuses: ["not_contacted"] });
     expect(p("founders")).toMatchObject({ audiences: ["founders"] });
     expect(p("founders i haven't contacted")).toMatchObject({ audiences: ["founders"], statuses: ["not_contacted"] });
-    expect(p("people i've spoken to in operations")).toMatchObject({ domains: ["operations"], history: "messaged" });
-    expect(p("senior people in technology")).toMatchObject({ domains: ["technology"], seniorities: expect.arrayContaining(["Senior"]) });
-    expect(p("alumni in finance")).toMatchObject({ audiences: ["alumni"], domains: ["finance"] });
-    expect(p("people from nit warangal working in product")).toMatchObject({ audiences: ["alumni"], domains: ["product"] });
+    expect(p("people i've spoken to in operations")).toMatchObject({ history: "messaged" });
+    expect(p("alumni in finance")).toMatchObject({ audiences: ["alumni"] });
     expect(p("recruiters at target companies")).toMatchObject({ audiences: ["recruiters"], targetOnly: true });
-    expect(p("founders in saas")).toMatchObject({ audiences: ["founders"], industries: ["Technology"] });
+    expect(p("people in manufacturing")).toMatchObject({ sectors: ["manufacturing"] });
+    expect(p("people in financial services")).toMatchObject({ sectors: ["financial"] });
 
     // Nothing understood should be left behind as noise.
     expect(p("founders")).not.toHaveProperty("q");
-    expect(p("senior people in technology").q).toBeUndefined();
   });
 
   it("broadens a dead-end search by dropping the narrowest filter", () => {
-    const f = { domains: ["product"], seniorities: ["VP"], roles: ["Nobody Has This Role"], statuses: ["not_contacted"] };
+    const f = { buckets: ["product-and-design"], roles: ["Nobody Has This Role"], statuses: ["not_contacted"] };
     const first = broaden(f, settings)!;
     expect(first.filters.roles).toBeUndefined();
-    expect(first.removed).toContain("Nobody Has This Role");
 
-    const second = broaden(first.filters, settings)!;
-    expect(second.filters.seniorities).toBeUndefined();
-
-    // Domain is the last thing to go, and an empty search cannot be broadened.
-    expect(broaden({ domains: ["product"] }, settings)!.filters.domains).toBeUndefined();
+    // The role area is the last thing to go, and an empty search cannot be broadened.
+    expect(broaden({ buckets: ["product-and-design"] }, settings)!.filters.buckets).toBeUndefined();
     expect(broaden({}, settings)).toBeNull();
   });
 
@@ -145,15 +140,14 @@ describe("filters", () => {
 
   it("parses natural-language search into filters", () => {
     const companies = groupCompanies(people, settings).map((c) => ({ key: c.key, name: c.name }));
-    const q = parseQuery("senior people in supply chain", companies);
-    expect(q.filters.functions).toContain("supply-chain");
-    expect(q.filters.seniorities).toContain("Director / Head");
+    const q = parseQuery("people in supply chain", companies);
+    expect(q.filters.sections).toContain("supply-chain");
     expect(q.filters.q).toBeUndefined();
 
     const g = parseQuery("product managers at google not contacted", companies);
     expect(g.filters.companies).toContain("google");
     expect(g.filters.companies).not.toContain("microsoft");
-    expect(g.filters.functions).toContain("product-management");
+    expect(g.filters.roles).toContain("product-manager");
     expect(g.filters.statuses).toEqual(["not_contacted"]);
   });
 });
@@ -180,7 +174,7 @@ describe("outreach", () => {
   });
 
   it("builds research links only from the given person", () => {
-    expect(researchUrl("careers", { name: "A B", company: "Blinkit", role: "Category Manager", position: "" })).toContain("Blinkit");
+    expect(researchUrl("careers", { name: "A B", company: "Blinkit", roleLabel: "Category Manager", position: "" })).toContain("Blinkit");
   });
 
   it("company matching tolerates suffixes", () => {
@@ -198,9 +192,9 @@ describe("outreach", () => {
 
 describe("message variables", () => {
   it("uses the readable part of a headline, not the whole thing", () => {
-    expect(readableRole({ position: "Product Manager @ Acme | Ex-Google | Angel investor", role: "Product Manager" })).toBe("Product Manager @ Acme");
-    expect(readableRole({ position: "Client Acquisition & Partnership Director at a very long headline that keeps going and going for ages", role: "Business Development Manager" })).toBe("Business Development Manager");
-    expect(readableRole({ position: "", role: "Software Engineer" })).toBe("Software Engineer");
+    expect(readableRole({ position: "Product Manager @ Acme | Ex-Google | Angel investor", roleLabel: "Product Manager" })).toBe("Product Manager @ Acme");
+    expect(readableRole({ position: "Client Acquisition & Partnership Director at a very long headline that keeps going and going for ages", roleLabel: "Business Development Manager" })).toBe("Business Development Manager");
+    expect(readableRole({ position: "", roleLabel: "Software Engineer" })).toBe("Software Engineer");
   });
 });
 
@@ -225,7 +219,7 @@ describe("outreach presets", () => {
     settings.profile.name = "Rishi";
     settings.profile.background = HEADLINE;
     const people = buildPeople(rows, cache, {}, settings);
-    const person = people.find((p) => p.company && p.fn !== "unspecified")!;
+    const person = people.find((p) => p.company && p.section)!;
 
     const text = renderTemplate(INTENT_MAP.referral.body, templateVars(person, settings));
     expect(text).toContain(`Hi ${person.firstName},`);

@@ -69,7 +69,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const buckets = followUpBuckets(people, settings);
   const due = buckets.overdue.length + buckets.today.length;
   const inPipeline = people.filter((p) => p.status !== "not_contacted").length;
-  const toReview = people.filter((p) => p.needsReview && p.classSource === "auto").length;
+  const toReview = people.filter((p) => p.needsReview && p.classSource === "repository").length;
 
   const counts: Record<string, number | undefined> = {
     "/people": people.length,

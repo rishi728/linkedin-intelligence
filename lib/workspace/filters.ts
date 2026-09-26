@@ -1,8 +1,6 @@
-import { domainLabel, functionLabel, rolesInText } from "../intelligence";
-import { bucketLabel } from "../knowledge/roles";
-import { sectorLabel } from "../knowledge/sectors";
-import { DOMAINS, INDUSTRIES } from "../roles";
-import { SENIORITY_LEVELS, type Seniority } from "../taxonomy";
+import { matchRolesInText } from "../knowledge/classify";
+import { bucketLabel, roleLabel, sectionLabel } from "../knowledge/roles";
+import { sectorLabel, type SectorId } from "../knowledge/sectors";
 import { tokenize } from "../text";
 import { daysBetween, todayISO, toISODate } from "./dates";
 import type { AudienceId, Filters, HealthIssue, Person, Priority, Settings } from "./types";
@@ -11,13 +9,9 @@ import type { AudienceId, Filters, HealthIssue, Person, Priority, Settings } fro
 // Audiences ("Who do you want to reach?")
 
 export const AUDIENCES: Array<{ id: AudienceId; label: string; hint: string; test: (p: Person) => boolean }> = [
-  { id: "peers", label: "Peers", hint: "Students, interns and early-career people", test: (p) => ["Student", "Intern", "Entry-level", "Mid-level"].includes(p.seniority) },
   { id: "alumni", label: "Alumni", hint: "People at your schools or their clubs (set schools in Settings)", test: (p) => p.isAlumni },
-  { id: "managers", label: "Managers", hint: "Managers, leads and senior individual contributors", test: (p) => ["Manager / Lead", "Senior"].includes(p.seniority) },
-  { id: "directors", label: "Directors & Heads", hint: "Directors, heads and VPs", test: (p) => ["Director / Head", "VP"].includes(p.seniority) },
   { id: "founders", label: "Founders", hint: "Founders and co-founders", test: (p) => p.isFounder },
-  { id: "recruiters", label: "Recruiters", hint: "Recruiters and talent acquisition", test: (p) => p.fn === "talent-acquisition" },
-  { id: "executives", label: "Executives", hint: "C-level, VPs and executive leadership", test: (p) => ["C-Level", "VP"].includes(p.seniority) || p.fn === "executive-leadership" },
+  { id: "recruiters", label: "Recruiters", hint: "Recruiters and talent acquisition", test: (p) => p.section === "recruitment" },
 ];
 
 // ---------------------------------------------------------------------------
@@ -30,8 +24,6 @@ export interface Intent {
   filters: Filters;
 }
 
-const SENIOR_PLUS = ["Senior", "Manager / Lead", "Director / Head", "VP", "C-Level", "Founder"];
-const NOT_STUDENTS = ["Entry-level", "Mid-level", "Senior", "Manager / Lead", "Director / Head", "VP", "C-Level", "Founder"];
 
 /**
  * Goals that mean the same thing in anyone's network. Areas of work are not in here
@@ -40,10 +32,9 @@ const NOT_STUDENTS = ["Entry-level", "Mid-level", "Senior", "Manager / Lead", "D
 export const GOAL_INTENTS: Intent[] = [
   { id: "founders", label: "Founders", hint: "Founders & co-founders", filters: { audiences: ["founders"] } },
   { id: "recruiters", label: "Recruiters", hint: "Recruiters & talent acquisition", filters: { audiences: ["recruiters"] } },
-  { id: "mentors", label: "Mentors", hint: "Experienced people who can advise you", filters: { seniorities: SENIOR_PLUS } },
-  { id: "referrals", label: "Referrals", hint: "Working professionals who could refer you", filters: { seniorities: NOT_STUDENTS, targetOnly: true } },
-  { id: "internships", label: "Internships", hint: "Recruiters, founders and hiring managers", filters: { audiences: ["recruiters", "founders", "managers", "directors"] } },
-  { id: "jobs", label: "Jobs", hint: "Recruiters, managers and people who are hiring", filters: { audiences: ["recruiters", "managers", "directors", "executives"] } },
+  { id: "referrals", label: "Referrals", hint: "People at the companies you are aiming for", filters: { targetOnly: true } },
+  { id: "internships", label: "Internships", hint: "Recruiters, founders and hiring managers", filters: { audiences: ["recruiters", "founders"] } },
+  { id: "jobs", label: "Jobs", hint: "Recruiters, managers and people who are hiring", filters: { audiences: ["recruiters", "founders"] } },
   { id: "talked", label: "People I know already", hint: "There is a conversation to pick up", filters: { history: "messaged" } },
 ];
 
@@ -67,24 +58,24 @@ export function resolveIntent(intent: Intent, settings: Settings): Filters {
  * the areas they actually know people in, then the goals that have someone behind them.
  */
 export function buildIntents(people: Person[], settings: Settings): Array<Intent & { count: number }> {
-  const byDomain = new Map<string, { count: number; fns: Map<string, number> }>();
+  const byBucket = new Map<string, { count: number; sections: Map<string, number> }>();
   for (const p of people) {
-    if (p.domain === "unclassified" || p.domain === "students") continue;
-    const e = byDomain.get(p.domain) ?? { count: 0, fns: new Map() };
+    if (!p.bucket) continue;
+    const e = byBucket.get(p.bucket) ?? { count: 0, sections: new Map() };
     e.count++;
-    e.fns.set(p.fn, (e.fns.get(p.fn) ?? 0) + 1);
-    byDomain.set(p.domain, e);
+    if (p.section) e.sections.set(p.section, (e.sections.get(p.section) ?? 0) + 1);
+    byBucket.set(p.bucket, e);
   }
 
-  const areas = [...byDomain.entries()]
+  const areas = [...byBucket.entries()]
     .sort((a, b) => b[1].count - a[1].count)
     .filter(([, e]) => e.count >= 3)
     .slice(0, 9)
-    .map(([domain, e]) => ({
-      id: `area:${domain}`,
-      label: domainLabel(domain),
-      hint: [...e.fns.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3).map(([fn]) => functionLabel(fn)).join(" · "),
-      filters: { domains: [domain] } as Filters,
+    .map(([id, e]) => ({
+      id: `area:${id}`,
+      label: bucketLabel(id),
+      hint: [...e.sections.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3).map(([x]) => sectionLabel(id, x)).join(" · "),
+      filters: { buckets: [id] } as Filters,
       count: e.count,
     }));
 
@@ -122,9 +113,9 @@ export function matchesHealth(p: Person, issue: HealthIssue): boolean {
     case "missing-company": return !p.company;
     case "missing-email": return !p.email;
     case "missing-linkedin": return !p.url;
-    case "unclassified": return p.domain === "unclassified";
+    case "unclassified": return !p.bucket;
     case "low-confidence": return p.needsReview;
-    case "manual": return p.classSource !== "auto";
+    case "manual": return p.classSource === "manual";
   }
 }
 
@@ -138,15 +129,13 @@ export function applyFilters(people: Person[], f: Filters, settings: Settings, t
     : null;
 
   return people.filter((p) => {
-    if (has(f.domains) || has(f.functions)) {
-      const inDomain = has(f.domains) && f.domains.includes(p.domain);
-      const inFn = has(f.functions) && f.functions.includes(p.fn);
+    if (has(f.buckets) || has(f.sections)) {
+      const inDomain = has(f.buckets) && !!p.bucket && f.buckets.includes(p.bucket);
+      const inFn = has(f.sections) && !!p.section && f.sections.includes(p.section);
       if (!inDomain && !inFn) return false;
     }
-    if (has(f.roles) && !f.roles.includes(p.role)) return false;
-    if (has(f.seniorities) && !f.seniorities.includes(p.seniority)) return false;
+    if (has(f.roles) && (!p.roleId || !f.roles.includes(p.roleId))) return false;
     if (companies && !companies.has(p.companyKey)) return false;
-    if (has(f.industries) && !f.industries.includes(p.industry)) return false;
     if (has(f.locations) && !f.locations.some((l) => p.location.toLowerCase().includes(l.toLowerCase()))) return false;
     if (f.connectedAfter && (!p.connectedOn || p.connectedOn < new Date(f.connectedAfter))) return false;
     if (f.connectedBefore && (!p.connectedOn || p.connectedOn > new Date(`${f.connectedBefore}T23:59:59`))) return false;
@@ -201,29 +190,6 @@ const LEVEL_WORDS = new Set([
   "senior", "sr", "junior", "jr", "principal", "staff", "chief", "head", "vp",
   "director", "lead", "intern", "student", "founder", "associate", "executive",
 ]);
-
-const SENIORITY_WORDS: Array<[string, Seniority[]]> = [
-  ["senior people", ["Senior", "Manager / Lead", "Director / Head", "VP", "C-Level", "Founder"]],
-  ["experienced", ["Senior", "Manager / Lead", "Director / Head", "VP", "C-Level"]],
-  ["leaders", ["Director / Head", "VP", "C-Level"]],
-  ["leadership", ["Director / Head", "VP", "C-Level"]],
-  ["senior", ["Senior", "Manager / Lead", "Director / Head", "VP", "C-Level"]],
-  ["junior", ["Entry-level", "Mid-level"]],
-  ["entry level", ["Entry-level"]],
-  ["freshers", ["Entry-level"]],
-  ["managers", ["Manager / Lead"]],
-  ["manager", ["Manager / Lead"]],
-  ["leads", ["Manager / Lead"]],
-  ["directors", ["Director / Head"]],
-  ["director", ["Director / Head"]],
-  ["heads", ["Director / Head"]],
-  ["vps", ["VP"]],
-  ["vp", ["VP"]],
-  ["cxos", ["C-Level"]],
-  ["executives", ["C-Level", "VP"]],
-  ["interns", ["Intern"]],
-  ["students", ["Student"]],
-];
 
 const STATUS_WORDS: Array<[string, Partial<Filters>]> = [
   ["i haven t contacted", { statuses: ["not_contacted"] }],
@@ -289,19 +255,24 @@ const DOMAIN_ALIASES: Array<[string, string]> = [
   ["leadership", "leadership"], ["founders", "leadership"],
 ];
 
-/** Words people use for an industry, mapped onto the industries we actually store. */
-const INDUSTRY_ALIASES: Array<[string, string]> = [
-  ["saas", "Technology"], ["software companies", "Technology"], ["tech companies", "Technology"],
-  ["startups", "Startups"], ["startup", "Startups"],
-  ["consulting firms", "Consulting & Professional Services"], ["consultancies", "Consulting & Professional Services"],
-  ["banks", "Financial Services"], ["fintech", "Financial Services"], ["finance industry", "Financial Services"],
-  ["vc", "Venture Capital & Private Equity"], ["venture capital", "Venture Capital & Private Equity"],
-  ["private equity", "Venture Capital & Private Equity"],
-  ["pharma", "Healthcare & Pharma"], ["hospitals", "Healthcare & Pharma"],
-  ["manufacturing", "Manufacturing, Energy & Industrial"], ["energy", "Manufacturing, Energy & Industrial"],
-  ["logistics", "Logistics & Supply Chain"], ["ecommerce", "Distribution & Trading"],
-  ["academia", "Research & Academia"], ["universities", "Education"], ["colleges", "Education"],
-  ["nonprofits", "Government & Nonprofit"], ["ngos", "Government & Nonprofit"],
+/** Words people use for a sector, mapped onto the thirteen we store. */
+const SECTOR_ALIASES: Array<[string, SectorId]> = [
+  ["saas", "technology"], ["software companies", "technology"], ["tech companies", "technology"],
+  ["technology", "technology"], ["tech", "technology"], ["it companies", "technology"],
+  ["banks", "financial"], ["banking", "financial"], ["fintech", "financial"],
+  ["financial services", "financial"], ["finance industry", "financial"], ["insurance", "financial"],
+  ["pharma", "healthcare"], ["hospitals", "healthcare"], ["healthcare", "healthcare"],
+  ["life sciences", "healthcare"], ["biotech", "healthcare"],
+  ["manufacturing", "manufacturing"], ["industrial", "manufacturing"], ["automotive", "manufacturing"],
+  ["retail", "consumer"], ["ecommerce", "consumer"], ["fmcg", "consumer"], ["consumer goods", "consumer"],
+  ["energy", "energy"], ["oil and gas", "energy"], ["renewables", "energy"], ["mining", "energy"],
+  ["logistics", "transport"], ["supply chain companies", "transport"], ["aviation", "transport"],
+  ["real estate", "realestate"], ["construction", "realestate"], ["infrastructure", "realestate"],
+  ["media", "media"], ["entertainment", "media"], ["advertising agencies", "media"],
+  ["education", "education"], ["universities", "education"], ["colleges", "education"], ["edtech", "education"],
+  ["government", "public"], ["public sector", "public"], ["nonprofits", "public"], ["ngos", "public"],
+  ["consulting firms", "professional"], ["consultancies", "professional"], ["law firms", "professional"],
+  ["professional services", "professional"],
 ];
 
 export interface ParsedQuery {
@@ -354,8 +325,8 @@ export function parseQuery(
     if (!ck) return null;
     // "in finance", "in technology" name an area of work, not an employer whose
     // name happens to start with the same word.
-    if (DOMAIN_ALIASES.some(([phrase]) => phrase === ck) || DOMAINS.some((d) => d.label.toLowerCase() === ck)) return null;
-    if (INDUSTRY_ALIASES.some(([phrase]) => phrase === ck)) return null;
+    if (DOMAIN_ALIASES.some(([phrase]) => phrase === ck)) return null;
+    if (SECTOR_ALIASES.some(([phrase]) => phrase === ck)) return null;
     const hits = companyKeys.filter((c) => {
       const k = tokenize(c.name).join(" ");
       return k === ck || k.startsWith(`${ck} `);
@@ -371,11 +342,11 @@ export function parseQuery(
     }
   }
 
-  // Industries: "founders in saas", "people at consulting firms".
-  for (const [phrase, industry] of INDUSTRY_ALIASES) {
-    if (!INDUSTRIES.includes(industry) || !take(phrase)) continue;
-    filters.industries = [...new Set([...(filters.industries ?? []), industry])];
-    understood.push(industry);
+  // Sectors: "people in manufacturing", "anyone in financial services".
+  for (const [phrase, sector] of SECTOR_ALIASES) {
+    if (!take(phrase)) continue;
+    filters.sectors = [...new Set([...(filters.sectors ?? []), sector])];
+    understood.push(sectorLabel(sector));
     break;
   }
 
@@ -384,51 +355,14 @@ export function parseQuery(
     rest = rest.replace(/\s(people|person|persons|folks|someone|anyone|connections)\s/g, " ");
   }
 
-  // Roles and functions from the role dictionary; a bare area name falls back to its domain.
-  let roles = rolesInText(rest);
-  // A bare area word ("operations") means the whole area, not the one role that
-  // happens to be spelled the same. Two-word phrases ("supply chain") still win.
-  const bareArea = DOMAIN_ALIASES.find(([phrase]) => {
-    if (phrase.includes(" ") || !rest.includes(` ${phrase} `)) return false;
-    const alone = rolesInText(phrase).map((r) => r.fn).sort().join();
-    return alone.length > 0 && alone === [...new Set(roles.map((r) => r.fn))].sort().join();
-  });
-  if (bareArea) roles = [];
-
-  if (roles.length) {
-    const fns = [...new Set(roles.map((r) => r.fn))];
-    filters.functions = fns;
-    understood.push(...fns.map(functionLabel));
-  } else {
-    const byLabel = DOMAINS.find((d) => d.id !== "unclassified" && rest.includes(` ${d.label.toLowerCase()} `));
-    const alias = byLabel ? null : DOMAIN_ALIASES.find(([phrase]) => rest.includes(` ${phrase} `));
-    const domain = byLabel?.id ?? alias?.[1];
-    if (domain) {
-      filters.domains = [domain];
-      understood.push(domainLabel(domain));
-      rest = rest.replace(` ${byLabel ? byLabel.label.toLowerCase() : alias![0]} `, " ");
-    }
-  }
-
-  // Words a matched role already explains are removed before reading seniority, so
-  // "product managers" doesn't also filter to people-managers. Level words survive:
-  // in "senior product managers" the "senior" is still the user's own requirement.
-  if (roles.length) {
-    const strip = (w: string) => {
-      if (LEVEL_WORDS.has(w)) return;
-      rest = rest.replace(new RegExp(`\\s${w}s?\\s`), " ");
-    };
-    for (const r of roles) for (const w of r.role.toLowerCase().split(/\W+/)) strip(w);
-    for (const fn of filters.functions ?? []) for (const w of functionLabel(fn).toLowerCase().split(/\W+/)) if (w.length > 2) strip(w);
-  }
-
-  for (const [phrase, levels] of SENIORITY_WORDS) {
-    if (take(phrase)) {
-      filters.seniorities = [...new Set([...(filters.seniorities ?? []), ...levels])];
-      understood.push(phrase.replace(/^\w/, (c) => c.toUpperCase()));
-      break;
-    }
-  }
+  // Roles, sections and buckets, read straight out of the knowledge repository
+  // so search can never know a role the rest of the product does not.
+  const named = matchRolesInText(rest);
+  if (named.roles.length) filters.roles = named.roles;
+  if (named.sections.length) filters.sections = named.sections;
+  if (named.buckets.length) filters.buckets = named.buckets;
+  if (named.understood.length) understood.push(...named.understood);
+  if (named.roles.length || named.sections.length || named.buckets.length) rest = ` ${named.rest} `;
 
   const leftover = rest
     .split(" ")
@@ -447,12 +381,8 @@ export function describeFilters(f: Filters, settings: Settings): Array<{ key: ke
     if (!has(values)) return;
     out.push({ key, label: values.length <= 2 ? values.map(fmt).join(", ") : `${fmt(values[0])} +${values.length - 1} ${noun}` });
   };
-  list("domains", f.domains, domainLabel, "domains");
-  list("functions", f.functions, functionLabel, "functions");
-  list("roles", f.roles, (v) => v, "roles");
-  list("seniorities", f.seniorities, (v) => v, "levels");
+  list("roles", f.roles, (v) => roleLabel(v) || v, "roles");
   list("companies", f.companies, (v) => v.replace(/\b\w/g, (c) => c.toUpperCase()), "companies");
-  list("industries", f.industries, (v) => v, "industries");
   list("locations", f.locations, (v) => v, "locations");
   list("statuses", f.statuses, (v) => settings.statuses.find((s) => s.id === v)?.label ?? v, "statuses");
   list("priorities", f.priorities, (v) => `${v[0].toUpperCase()}${v.slice(1)} priority`, "priorities");
@@ -483,9 +413,9 @@ export function describeFilters(f: Filters, settings: Settings): Array<{ key: ke
  */
 export function broaden(f: Filters, settings: Settings): { filters: Filters; removed: string } | null {
   const order: Array<keyof Filters> = [
-    "roles", "seniorities", "audiences", "statuses", "history", "followUp", "hasEmail", "hasLinkedIn",
+    "roles", "audiences", "statuses", "history", "followUp", "hasEmail", "hasLinkedIn",
     "tags", "needsReview", "dormant", "connectedWithinDays", "connectedAfter", "connectedBefore",
-    "targetOnly", "inPipeline", "industries", "companies", "pastCompanies", "functions", "domains", "buckets", "sections", "sectors", "listId", "q",
+    "targetOnly", "inPipeline", "companies", "pastCompanies", "buckets", "sections", "sectors", "listId", "q",
   ];
   const described = describeFilters(f, settings);
   for (const key of order) {
@@ -520,4 +450,3 @@ export const HEALTH_LABELS: Record<HealthIssue, string> = {
 };
 
 export const PRIORITY_ORDER: Record<Priority, number> = { high: 0, medium: 1, low: 2 };
-export const SENIORITY_ORDER = new Map<string, number>(SENIORITY_LEVELS.map((s, i) => [s, i]));

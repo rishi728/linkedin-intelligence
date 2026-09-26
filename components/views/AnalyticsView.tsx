@@ -3,25 +3,23 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Search } from "lucide-react";
-import { domainLabel } from "@/lib/intelligence";
-import { SENIORITY_LEVELS } from "@/lib/taxonomy";
-import { applyFilters } from "@/lib/workspace/filters";
+import { bucketLabel, roleLabel } from "@/lib/knowledge/roles";
+import { sectorLabel } from "@/lib/knowledge/sectors";
 import { groupCompanies } from "@/lib/workspace/insights";
 import type { Filters, Person } from "@/lib/workspace/types";
 import { PageBody, PageHeader } from "@/components/shell/AppShell";
 import { Avatar, Button, Input, Segmented, cx } from "@/components/ui";
 import { useUI, useWorkspace } from "@/components/workspace/store";
 
-type Lens = "area" | "role" | "level" | "company";
+type Lens = "area" | "role" | "sector" | "company";
 
 const LENS_LABEL: Record<Lens, string> = {
   area: "area of work",
   role: "job",
-  level: "seniority",
+  sector: "sector",
   company: "company",
 };
 
-const SENIOR = ["Senior", "Manager / Lead", "Director / Head", "VP", "C-Level", "Founder"];
 
 interface Group {
   key: string;
@@ -129,7 +127,7 @@ export function AnalyticsView() {
     router.push("/people");
   };
 
-  const known = useMemo(() => people.filter((p) => p.domain !== "unclassified"), [people]);
+  const known = useMemo(() => people.filter((p) => p.bucket), [people]);
 
   const groups: Group[] = useMemo(() => {
     const build = (key: (p: Person) => string, label: (k: string) => string, filters: (k: string) => Filters, source = known) => {
@@ -144,16 +142,18 @@ export function AnalyticsView() {
 
     switch (lens) {
       case "role":
-        return build((p) => p.role, (k) => k, (k) => ({ roles: [k] })).sort((a, b) => b.people.length - a.people.length).slice(0, 16);
-      case "level":
-        return build((p) => p.seniority, (k) => k, (k) => ({ seniorities: [k] }))
-          .sort((a, b) => SENIORITY_LEVELS.indexOf(a.key as never) - SENIORITY_LEVELS.indexOf(b.key as never));
+        return build((p) => p.roleId ?? "", (k) => roleLabel(k), (k) => ({ roles: [k] }))
+          .sort((a, b) => b.people.length - a.people.length)
+          .slice(0, 16);
+      case "sector":
+        return build((p) => p.sector ?? "", (k) => sectorLabel(k), (k) => ({ sectors: [k] }), people)
+          .sort((a, b) => b.people.length - a.people.length);
       case "company":
         return groupCompanies(people, settings)
           .slice(0, 16)
           .map((c) => ({ key: c.key, label: c.name, people: c.people, filters: { companies: [c.key] } as Filters }));
       default:
-        return build((p) => p.domain, domainLabel, (k) => ({ domains: [k] })).sort((a, b) => b.people.length - a.people.length);
+        return build((p) => p.bucket ?? "", bucketLabel, (k) => ({ buckets: [k] })).sort((a, b) => b.people.length - a.people.length);
     }
   }, [known, people, settings, lens]);
 
@@ -165,9 +165,9 @@ export function AnalyticsView() {
   const biggest = groups[0];
   const companies = useMemo(() => groupCompanies(people, settings).slice(0, 8), [people, settings]);
 
-  const senior = useMemo(() => applyFilters(people, { seniorities: SENIOR }, settings), [people, settings]);
   const founders = useMemo(() => people.filter((p) => p.isFounder), [people]);
-  const students = useMemo(() => people.filter((p) => p.domain === "students"), [people]);
+  const unclear = useMemo(() => people.filter((p) => !p.bucket), [people]);
+  const recruiters = useMemo(() => people.filter((p) => p.section === "recruitment"), [people]);
   const spokenTo = useMemo(() => people.filter((p) => p.history?.messageCount), [people]);
 
   /** Where the most people sit that you have never contacted. Computed, not judged. */
@@ -182,8 +182,8 @@ export function AnalyticsView() {
   );
 
   const worthExploring = useMemo(
-    () => senior.filter((p) => p.status === "not_contacted").sort((a, b) => b.priorityScore - a.priorityScore).slice(0, 6),
-    [senior],
+    () => people.filter((p) => p.status === "not_contacted").sort((a, b) => b.priorityScore - a.priorityScore).slice(0, 6),
+    [people],
   );
 
   return (
@@ -198,9 +198,9 @@ export function AnalyticsView() {
           {/* ---- snapshot, as numbers you can walk through ------------------ */}
           <section className="grid grid-cols-2 gap-x-8 gap-y-5 border-b border-line pb-6 lg:grid-cols-4">
             {[
-              { n: senior.length, label: "Experienced", hint: "Senior and above", f: { seniorities: SENIOR } as Filters },
+              { n: unclear.length, label: "Role unclear", hint: "Titles that name no job", f: { health: "unclassified" } as Filters },
               { n: founders.length, label: "Founders", hint: `${founders.filter((p) => p.status === "not_contacted").length.toLocaleString()} not contacted`, f: { audiences: ["founders"] } as Filters },
-              { n: students.length, label: "Students", hint: "Still studying", f: { domains: ["students"] } as Filters },
+              { n: recruiters.length, label: "Recruiters", hint: "Can point you at openings", f: { audiences: ["recruiters"] } as Filters },
               { n: spokenTo.length, label: "Already spoken to", hint: spokenTo.length ? "From your message history" : "Add your archive to fill this in", f: { history: "messaged" } as Filters },
             ].map((s) => (
               <button key={s.label} type="button" onClick={() => go(s.f)} className="group text-left">
@@ -225,7 +225,7 @@ export function AnalyticsView() {
                     options={[
                       { value: "area", label: "Area" },
                       { value: "role", label: "Job" },
-                      { value: "level", label: "Level" },
+                      { value: "sector", label: "Sector" },
                       { value: "company", label: "Company" },
                     ]}
                   />
@@ -272,7 +272,7 @@ export function AnalyticsView() {
             {/* ---- who to look at, and where you already know someone ------- */}
             <div>
               <section>
-                <SectionLabel action={<button type="button" onClick={() => go({ seniorities: SENIOR, statuses: ["not_contacted"] })} className="text-[12px] text-muted transition hover:text-accent">See all →</button>}>
+                <SectionLabel action={<button type="button" onClick={() => go({ statuses: ["not_contacted"] })} className="text-[12px] text-muted transition hover:text-accent">See all →</button>}>
                   Worth exploring
                 </SectionLabel>
                 {worthExploring.length ? (
@@ -288,7 +288,7 @@ export function AnalyticsView() {
                         <span className="min-w-0 flex-1">
                           <span className="block truncate text-[13px] font-medium group-hover:text-accent">{p.name}</span>
                           <span className="block truncate text-[11.5px] text-muted">
-                            {p.role}{p.company ? ` · ${p.company}` : ""}
+                            {p.roleLabel}{p.company ? ` · ${p.company}` : ""}
                           </span>
                         </span>
                       </button>
