@@ -132,6 +132,40 @@ export function WelcomeView() {
         }
         @keyframes spin { to { transform: rotate(360deg); } }
         .drop-zone-active { border-color: #114B3A !important; background: #EBF6F1 !important; }
+
+        /* Timeline step hover */
+        .tl-step { transition: transform 0.3s ease; }
+        .tl-step:hover { transform: translateY(-6px); }
+        .tl-step .tl-owl { transition: transform 0.3s ease; }
+        .tl-step:hover .tl-owl { transform: scale(1.05); }
+        .tl-step .tl-node { transition: transform 0.2s ease; }
+        .tl-step:hover .tl-node { transform: scale(1.25); }
+        .tl-step .tl-tag {
+          transition: background 0.2s, color 0.2s;
+        }
+        .tl-step:hover .tl-tag {
+          background: #114B3A; color: #fff;
+        }
+        .tl-step .tl-label { transition: color 0.2s; }
+        .tl-step:hover .tl-label { color: #114B3A; }
+
+        /* Banner hover */
+        .info-banner { transition: border-color 0.2s, box-shadow 0.2s; }
+        .info-banner:hover { border-color: rgba(17,75,58,0.4); }
+        .info-banner .info-arrow { transition: background 0.2s, color 0.2s; }
+        .info-banner:hover .info-arrow { background: #114B3A; color: #fff; }
+        .info-banner .info-title { transition: color 0.2s; }
+        .info-banner:hover .info-title { color: #114B3A; }
+
+        /* Product window hover */
+        .product-window { transition: box-shadow 0.3s; }
+        .product-window:hover { box-shadow: 0 25px 50px -12px rgba(12,45,34,0.18), 0 12px 24px -8px rgba(0,0,0,0.06); }
+
+        /* CTA hover */
+        .cta-main { transition: background 0.2s, box-shadow 0.2s; }
+        .cta-main:hover { background: #114B3A !important; box-shadow: 0 8px 20px rgba(12,45,34,0.3); }
+        .cta-main .cta-arrow { transition: transform 0.2s; }
+        .cta-main:hover .cta-arrow { transform: translateX(4px); }
       `}</style>
 
       <div className="landing-root" style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
@@ -221,6 +255,7 @@ export function WelcomeView() {
                   {/* CTAs */}
                   <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 12, paddingTop: 16 }}>
                     <button
+                      className="cta-main"
                       onClick={() => inputRef.current?.click()}
                       style={{
                         display: "flex", alignItems: "center", gap: 12,
@@ -231,7 +266,7 @@ export function WelcomeView() {
                       }}
                     >
                       <span>{busy ? "Reading..." : "Start Analysing Free"}</span>
-                      <span style={{
+                      <span className="cta-arrow" style={{
                         width: 24, height: 24, borderRadius: "50%", background: "rgba(255,255,255,0.1)",
                         display: "flex", alignItems: "center", justifyContent: "center",
                       }}>
@@ -290,7 +325,7 @@ export function WelcomeView() {
                   </div>
 
                   {/* Product window */}
-                  <div className="shadow-float-l" style={{
+                  <div className="shadow-float-l product-window" style={{
                     background: "#fff", borderRadius: 16, border: "1px solid #E8E6DF",
                     overflow: "hidden", position: "relative", zIndex: 10,
                   }}>
@@ -484,7 +519,7 @@ export function WelcomeView() {
                     border: "1px solid #E8E6DF", cursor: "pointer",
                     display: "flex", alignItems: "center", justifyContent: "space-between", gap: 24,
                   }}
-                  className="shadow-soft"
+                  className="shadow-soft info-banner"
                 >
                   <div style={{ display: "flex", alignItems: "flex-start", gap: 20 }}>
                     <div style={{
@@ -499,11 +534,11 @@ export function WelcomeView() {
                       </svg>
                     </div>
                     <div>
-                      <h3 style={{ fontSize: 18, fontWeight: 700, color: "#0f172a" }}>Steps to get your LinkedIn data</h3>
+                      <h3 className="info-title" style={{ fontSize: 18, fontWeight: 700, color: "#0f172a" }}>Steps to get your LinkedIn data</h3>
                       <p style={{ fontSize: 14, color: "#64748b", marginTop: 4 }}>A simple 2-minute guide to download your official data archive and import here.</p>
                     </div>
                   </div>
-                  <div style={{
+                  <div className="info-arrow" style={{
                     width: 40, height: 40, borderRadius: "50%", background: "#f1f5f9",
                     display: "flex", alignItems: "center", justifyContent: "center", color: "#64748b", flexShrink: 0,
                   }}>
@@ -516,7 +551,7 @@ export function WelcomeView() {
                   background: "#fff", borderRadius: 16, padding: 28,
                   border: "1px solid #E8E6DF", cursor: "pointer",
                   display: "flex", alignItems: "center", justifyContent: "space-between", gap: 24,
-                }} className="shadow-soft">
+                }} className="shadow-soft info-banner">
                   <div style={{ display: "flex", alignItems: "flex-start", gap: 20 }}>
                     <div style={{
                       width: 56, height: 56, borderRadius: 16, background: "#eff6ff", border: "1px solid #dbeafe",
@@ -528,11 +563,11 @@ export function WelcomeView() {
                       </svg>
                     </div>
                     <div>
-                      <h3 style={{ fontSize: 18, fontWeight: 700, color: "#0f172a" }}>Privacy &amp; How it works</h3>
+                      <h3 className="info-title" style={{ fontSize: 18, fontWeight: 700, color: "#0f172a" }}>Privacy &amp; How it works</h3>
                       <p style={{ fontSize: 14, color: "#64748b", marginTop: 4 }}>Runs 100% locally in your browser. No server uploads. No shared database.</p>
                     </div>
                   </div>
-                  <div style={{
+                  <div className="info-arrow" style={{
                     width: 40, height: 40, borderRadius: "50%", background: "#f1f5f9",
                     display: "flex", alignItems: "center", justifyContent: "center", color: "#64748b", flexShrink: 0,
                   }}>
@@ -675,17 +710,17 @@ export function WelcomeView() {
 /* ------------------------------------------------------------------ */
 function TimelineStep({ step, label, children }: { step: string; label: React.ReactNode; children: React.ReactNode }) {
   return (
-    <div style={{
+    <div className="tl-step" style={{
       position: "relative", zIndex: 10, display: "flex", flexDirection: "column",
       alignItems: "center", textAlign: "center", cursor: "pointer",
       width: "25%", padding: "0 4px",
     }}>
-      <div style={{ height: 80, display: "flex", alignItems: "flex-end", justifyContent: "center", marginBottom: 4 }}>
+      <div className="tl-owl" style={{ height: 80, display: "flex", alignItems: "flex-end", justifyContent: "center", marginBottom: 4 }}>
         {children}
       </div>
       {/* Node */}
       <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
-        <div style={{
+        <div className="tl-node" style={{
           width: 20, height: 20, borderRadius: "50%", background: "#114B3A",
           boxShadow: "0 0 0 4px #fff, 0 2px 4px rgba(0,0,0,0.1)",
           display: "flex", alignItems: "center", justifyContent: "center",
@@ -694,13 +729,13 @@ function TimelineStep({ step, label, children }: { step: string; label: React.Re
         </div>
       </div>
       {/* Tag */}
-      <span style={{
+      <span className="tl-tag" style={{
         display: "inline-block", padding: "2px 10px", marginBottom: 6,
         fontSize: 11, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" as const,
         color: "#065f46", background: "#ecfdf5", border: "1px solid rgba(16,185,129,0.8)",
         borderRadius: 9999, fontFamily: "monospace",
       }}>Step {step}</span>
-      <div style={{ fontSize: "clamp(13px, 1.1vw, 16px)", fontWeight: 700, letterSpacing: "-0.01em", color: "#1e293b", lineHeight: 1.3 }}>
+      <div className="tl-label" style={{ fontSize: "clamp(13px, 1.1vw, 16px)", fontWeight: 700, letterSpacing: "-0.01em", color: "#1e293b", lineHeight: 1.3 }}>
         {label}
       </div>
     </div>
