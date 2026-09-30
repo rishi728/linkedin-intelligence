@@ -53,7 +53,7 @@ export function RoleLine({ person, className }: { person: Person; className?: st
     <span className={cx("truncate text-[12px] text-muted", className)}>
       {person.category === NOPRO
         ? "No role data"
-        : `${person.category}${person.roleFamily && person.roleFamily !== person.category ? ` · ${person.roleFamily}` : ""}`}
+        : person.category}
     </span>
   );
 }

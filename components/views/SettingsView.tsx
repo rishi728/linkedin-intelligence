@@ -160,32 +160,6 @@ export function SettingsView() {
                       ))}
                     </div>
                   </div>
-                  <div>
-                    <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-muted">Target role families</p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {settings.goals.roleFamilies.map((f) => (
-                        <button key={f} type="button" onClick={() => toggle(settings.goals.roleFamilies, f, (next) => updateSettings((s) => ({ ...s, goals: { ...s.goals, roleFamilies: next } })))} className="inline-flex items-center gap-1 rounded-md border border-accent bg-accent-soft px-2 py-0.5 text-[12px] text-accent">
-                          {f}
-                          <X size={11} />
-                        </button>
-                      ))}
-                    </div>
-                    <div className="mt-2 max-w-sm">
-                      <Select
-                        value=""
-                        onChange={(e) => e.target.value && toggle(settings.goals.roleFamilies, e.target.value, (next) => updateSettings((s) => ({ ...s, goals: { ...s.goals, roleFamilies: next } })))}
-                      >
-                        <option value="">Add a role family…</option>
-                        {CATS.map((d) => (
-                          <optgroup key={d} label={d}>
-                            {familiesOf(d).map((f) => (
-                              <option key={f} value={f}>{f}</option>
-                            ))}
-                          </optgroup>
-                        ))}
-                      </Select>
-                    </div>
-                  </div>
                 </div>
               </Card>
 

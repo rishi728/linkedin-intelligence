@@ -87,7 +87,6 @@ export function GuidedSearch({
   onShow: (f: Filters) => void;
 }) {
   const [intentId, setIntentId] = useState<string | null>(null);
-  const [role, setRole] = useState<string | null>(null);
   const [who, setWho] = useState<Who | null>(null);
   const [where, setWhere] = useState<Where | null>(null);
   const [rel, setRel] = useState<Rel | null>(null);
@@ -101,32 +100,24 @@ export function GuidedSearch({
     const intents = buildIntents(people, settings);
     const intent = intents.find((i) => i.id === intentId) ?? null;
 
-    const afterArea: Filters = { ...(intent?.filters ?? {}), ...(role ? { roleFamilies: [role] } : {}) };
+    const afterArea: Filters = { ...(intent?.filters ?? {}) };
     const afterWho: Filters = { ...afterArea, ...(who ? whoFilters(who) : {}) };
     const afterWhere: Filters = { ...afterWho, ...(where === "target" ? { targetOnly: true } : {}) };
     const final: Filters = { ...afterWhere, ...(rel ? relFilters(rel) : {}) };
 
     const inArea = intent ? applyFilters(people, intent.filters, settings) : [];
-    const byRole = new Map<string, { fn: string; count: number }>();
-    for (const p of inArea) {
-      if (p.category === NOPRO || !p.roleFamily) continue;
-      const e = byRole.get(p.roleFamily) ?? { fn: p.roleFamily, count: 0 };
-      e.count++;
-      byRole.set(p.roleFamily, e);
-    }
 
     return {
       intent,
       final,
       finalCount: n(final),
       intents,
-      roles: [...byRole.entries()].map(([r, e]) => ({ role: r, ...e })).sort((a, b) => b.count - a.count).slice(0, 10),
       soFar: { area: n(afterArea), who: n(afterWho), where: n(afterWhere), rel: n(final) },
       whoCounts: Object.fromEntries(WHO_OPTIONS.map((o) => [o.id, n({ ...afterArea, ...whoFilters(o.id) })])),
       whereCounts: { all: n(afterWho), target: hasTargets ? n({ ...afterWho, targetOnly: true }) : undefined },
       relCounts: Object.fromEntries(REL_OPTIONS.map((o) => [o.id, n({ ...afterWhere, ...relFilters(o.id) })])),
     };
-  }, [people, settings, intentId, role, who, where, rel, hasTargets]);
+  }, [people, settings, intentId, who, where, rel, hasTargets]);
 
   const { intent } = view;
   const ready = !!intent && !!who && !!where && !!rel;
@@ -148,38 +139,13 @@ export function GuidedSearch({
     <div>
       <button
         type="button"
-        onClick={() => { setIntentId(null); setRole(null); setWho(null); setWhere(null); setRel(null); }}
+        onClick={() => { setIntentId(null); setWho(null); setWhere(null); setRel(null); }}
         className="mb-1 inline-flex items-center gap-1 text-[12px] text-muted transition hover:text-ink"
       >
         <ChevronLeft size={13} /> Start over
       </button>
 
       <StepHeading title={`Looking for: ${intent.label}`} soFar={view.soFar.area} />
-      {view.roles.length > 1 ? (
-        <div className="flex flex-wrap gap-1.5">
-          <button
-            type="button"
-            onClick={() => setRole(null)}
-            className={cx("rounded-md border px-2 py-1 text-[12px] transition", !role ? "border-accent bg-accent-soft/40" : "border-line text-muted hover:text-ink")}
-          >
-            All roles
-          </button>
-          {view.roles.map((r) => (
-            <button
-              key={r.role}
-              type="button"
-              onClick={() => setRole(role === r.role ? null : r.role)}
-              title={r.fn}
-              className={cx(
-                "rounded-md border px-2 py-1 text-[12px] transition",
-                role === r.role ? "border-accent bg-accent-soft/40" : "border-line text-muted hover:border-line-strong hover:text-ink",
-              )}
-            >
-              {r.fn} <span className="tabular text-muted">{r.count}</span>
-            </button>
-          ))}
-        </div>
-      ) : null}
 
       <div className="anim-rise"><StepHeading title="Who do you want to reach?" soFar={view.soFar.who} /></div>
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">

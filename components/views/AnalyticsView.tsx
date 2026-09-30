@@ -11,11 +11,10 @@ import { PageBody, PageHeader } from "@/components/shell/AppShell";
 import { Avatar, Button, Input, Segmented, cx } from "@/components/ui";
 import { useUI, useWorkspace } from "@/components/workspace/store";
 
-type Lens = "area" | "role" | "sector" | "company";
+type Lens = "area" | "sector" | "company";
 
 const LENS_LABEL: Record<Lens, string> = {
   area: "area of work",
-  role: "role",
   sector: "sector",
   company: "company",
 };
@@ -141,10 +140,6 @@ export function AnalyticsView() {
     };
 
     switch (lens) {
-      case "role":
-        return build((p) => p.roleFamily, (k) => k, (k) => ({ roleFamilies: [k] }))
-          .sort((a, b) => b.people.length - a.people.length)
-          .slice(0, 16);
       case "sector":
         return build((p) => p.sector ?? "", (k) => sectorLabel(k), (k) => ({ sectors: [k] }), people)
           .sort((a, b) => b.people.length - a.people.length);
@@ -224,7 +219,6 @@ export function AnalyticsView() {
                     onChange={(v) => { setLens(v); setQ(""); }}
                     options={[
                       { value: "area", label: "Area" },
-                      { value: "role", label: "Role" },
                       { value: "sector", label: "Sector" },
                       { value: "company", label: "Company" },
                     ]}

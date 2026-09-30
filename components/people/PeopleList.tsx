@@ -136,7 +136,7 @@ export function PeopleList({
                   <Checkbox checked={isSelected} onChange={(v) => onSelect(person.id, v, false)} />
                   <button type="button" onClick={() => onOpen(person.id)} className="flex min-w-0 flex-1 items-center gap-2 text-left">
                     <span className="w-[190px] shrink-0 truncate font-medium">{person.name}</span>
-                    <span className="w-[170px] shrink-0 truncate text-muted">{person.roleFamily}</span>
+                    <span className="w-[170px] shrink-0 truncate text-muted">{person.category === NOPRO ? "" : person.category}</span>
                     <span className="min-w-0 flex-1 truncate text-ink-2">{person.company}</span>
                   </button>
                   <span className="shrink-0"><StatusMenu person={person} size="sm" align="right" /></span>
@@ -169,17 +169,8 @@ export function PeopleList({
                   {person.company || "-"}
                   {person.isTarget ? <span className="ml-1 text-[11px] text-accent" title="Target company">★</span> : null}
                 </span>
-                <span className="min-w-0 truncate text-[12px] text-muted" title={`${person.category} · ${person.roleFamily}`}>
-                  {person.category === NOPRO ? (
-                    <span className="text-muted">No role data</span>
-                  ) : (
-                    <>
-                      {person.category}
-                      {person.roleFamily && person.roleFamily !== person.category ? (
-                        <span className="text-muted"> · {person.roleFamily}</span>
-                      ) : null}
-                    </>
-                  )}
+                <span className="min-w-0 truncate text-[12px] text-muted" title={person.category}>
+                  {person.category === NOPRO ? <span className="text-muted">No role data</span> : person.category}
                 </span>
                 <span className="min-w-0"><StatusMenu person={person} /></span>
                 {person.url ? (

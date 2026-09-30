@@ -3,14 +3,13 @@
 import { useMemo, useState } from "react";
 import { Briefcase, Building2, MessageSquare, Search, Send, SlidersHorizontal, Sparkles, Users, X } from "lucide-react";
 import { CATEGORY_ID, CATS } from "@/lib/classifier/categories";
-import { familiesOf } from "@/lib/classifier/search";
 import { SECTORS } from "@/lib/knowledge/sectors";
 import { TAGS } from "@/lib/taxonomy";
 import { applyFilters, AUDIENCES, describeFilters, parseQuery } from "@/lib/workspace/filters";
 import type { Filters, Person, Priority, Settings } from "@/lib/workspace/types";
 import { Button, Checkbox, Input, Menu, MenuItem, MenuLabel, Pill, Select, cx } from "@/components/ui";
 
-type ListKey = "categories" | "roleFamilies" | "bands" | "companies" | "sectors" | "statuses" | "priorities" | "tags" | "audiences";
+type ListKey = "categories" | "bands" | "companies" | "sectors" | "statuses" | "priorities" | "tags" | "audiences";
 
 interface Option {
   value: string;
@@ -98,7 +97,6 @@ export function FilterBar({
     };
     return {
       categories: tally("categories", (p) => CATEGORY_ID[p.category]),
-      roleFamilies: tally("roleFamilies", (p) => p.roleFamily),
       bands: tally("bands", (p) => p.band),
       companies: tally("companies", (p) => p.companyKey),
       sectors: tally("sectors", (p) => p.sector ?? ""),
@@ -173,7 +171,7 @@ export function FilterBar({
         </Menu>
 
         {/* ROLE: bucket, then section, then the detailed roles inside it */}
-        <Menu width={300} trigger={({ toggle }) => <TriggerButton label="Role" icon={Briefcase} active={n("categories", "roleFamilies", "bands")} toggle={toggle} />}>
+        <Menu width={280} trigger={({ toggle }) => <TriggerButton label="Category" icon={Briefcase} active={n("categories", "bands")} toggle={toggle} />}>
           {() => <RolePicker filters={filters} counts={counts} onChange={onChange} />}
         </Menu>
 
@@ -351,61 +349,31 @@ export function FilterBar({
 }
 
 /**
- * The ten categories, then the role families inside whichever one is open, then
- * the confidence bands. Showing every family at once would be a wall of options
- * that mostly do not apply to the category in front of you.
+ * The ten categories, and how sure the classifier was. There is no level below
+ * a category: the role family the classifier works out is kept in the data and
+ * the export, but a filter menu of eighty families was more to read than to use.
  */
 function RolePicker({
   filters, counts, onChange,
 }: {
   filters: Filters;
-  counts: { categories: Map<string, number>; roleFamilies: Map<string, number>; bands: Map<string, number> };
+  counts: { categories: Map<string, number>; bands: Map<string, number> };
   onChange: (f: Filters) => void;
 }) {
-  const [open, setOpen] = useState<string | null>(filters.categories?.[0] ?? null);
-  const label = CATS.find((c) => CATEGORY_ID[c] === open) ?? null;
-
-  const toggleIn = (key: "categories" | "roleFamilies" | "bands", value: string) => {
+  const toggleIn = (key: "categories" | "bands", value: string) => {
     const current = filters[key] ?? [];
     const next = current.includes(value) ? current.filter((v) => v !== value) : [...current, value];
     onChange({ ...filters, [key]: next.length ? next : undefined });
   };
 
-  if (label) {
-    return (
-      <div className="max-h-[320px] overflow-auto py-1 scroll-thin">
-        <button
-          type="button"
-          onClick={() => setOpen(null)}
-          className="flex w-full items-center gap-1.5 px-2 py-1 text-left text-[11.5px] text-muted transition hover:text-ink"
-        >
-          &larr; All categories
-        </button>
-        <MenuLabel>{label}</MenuLabel>
-        <MenuItem selected={filters.categories?.includes(CATEGORY_ID[label])} onClick={() => toggleIn("categories", CATEGORY_ID[label])}>
-          Everyone in {label}
-        </MenuItem>
-        {familiesOf(label).map((f) => (
-          <MenuItem key={f} selected={filters.roleFamilies?.includes(f)} onClick={() => toggleIn("roleFamilies", f)}>
-            <span className="flex w-full items-center gap-2">
-              <span className="flex-1 truncate">{f}</span>
-              <span className="tabular text-[11.5px] text-muted">{counts.roleFamilies.get(f) ?? 0}</span>
-            </span>
-          </MenuItem>
-        ))}
-      </div>
-    );
-  }
-
   return (
-    <div className="max-h-[320px] overflow-auto py-1 scroll-thin">
+    <div className="max-h-[340px] overflow-auto py-1 scroll-thin">
       <MenuLabel>Category</MenuLabel>
       {CATS.map((c) => (
-        <MenuItem key={c} selected={filters.categories?.includes(CATEGORY_ID[c])} onClick={() => setOpen(CATEGORY_ID[c])}>
+        <MenuItem key={c} selected={filters.categories?.includes(CATEGORY_ID[c])} onClick={() => toggleIn("categories", CATEGORY_ID[c])}>
           <span className="flex w-full items-center gap-2">
             <span className="flex-1 truncate">{c}</span>
             <span className="tabular text-[11.5px] text-muted">{counts.categories.get(CATEGORY_ID[c]) ?? 0}</span>
-            <span className="text-muted">&rsaquo;</span>
           </span>
         </MenuItem>
       ))}

@@ -1,3 +1,4 @@
+import { companyContext, isClub } from "../classifier/stage1";
 // The sector side of the knowledge repository.
 //
 // One broad sector per person, read from where they work. It stops here: there
@@ -54,6 +55,8 @@ const RULES: SectorRule[] = [
       "flipkart", "swiggy", "zomato", "paytm", "phonepe", "razorpay", "cred", "zerodha", "meesho",
       "ola", "oyo", "byjus", "unacademy", "postman", "browserstack", "zeta", "groww", "urban company",
       "samsung", "sony", "lg electronics", "xiaomi", "oneplus", "lenovo", "asus", "acer",
+      "texas instruments", "servicenow", "synopsys", "cadence", "aveva", "netradyne", "blue yonder",
+      "sigmoid", "paltech", "profinch", "quantium", "nvidia", "arm", "mediatek", "marvell", "micron",
     ],
     words: [
       "technologies", "technology", "software", "systems", "infotech", "info tech", "it services",
@@ -73,6 +76,8 @@ const RULES: SectorRule[] = [
       "yes bank", "idfc first bank", "indusind bank", "bajaj finance", "bajaj finserv",
       "lic", "hdfc life", "icici prudential", "max life", "tata aia", "policybazaar",
       "visa", "mastercard", "paypal", "american express", "nse", "bse", "moodys", "s and p global",
+      "worldquant", "standard chartered", "bny", "bny mellon", "accordion", "nuvama", "edelweiss",
+      "motilal oswal", "iifl", "chryscapital", "jefferies", "nomura", "citadel", "jane street",
     ],
     words: [
       "bank", "banking", "capital", "asset management", "investments", "investment", "securities",
@@ -112,6 +117,7 @@ const RULES: SectorRule[] = [
       "manufacturing", "industries", "industrial", "engineering works", "steel", "cement",
       "automotive", "auto components", "machinery", "equipments", "equipment", "fabrication",
       "foundry", "plastics", "chemicals", "polymers", "textiles", "mills", "aerospace", "defence systems",
+      "coromandel", "worley", "fertilisers", "fertilizers", "agro", "engineering works",
     ],
   },
   {
@@ -197,7 +203,8 @@ const RULES: SectorRule[] = [
     words: [
       "university", "college", "institute of technology", "school", "schools", "academy",
       "education", "educational", "edtech", "learning", "coaching", "gurukul", "vidyalaya",
-      "polytechnic", "campus", "institute of management",
+      "polytechnic", "campus", "institute of management", "institute of science", "indian institute",
+      "allen career", "infinity learn", "aakash", "fiitjee", "narayana", "sri chaitanya",
     ],
   },
   {
@@ -254,6 +261,21 @@ export interface SectorResult {
  * guessing, so an unrecognised employer stays unclassified instead of becoming
  * a sector the data does not support.
  */
+/**
+ * The classifier already keeps a company list, tuned against real exports. When
+ * this module's finer list does not recognise an employer, fall back to that one
+ * rather than keeping two hand-made lists and missing on both.
+ */
+const FROM_COMPANY_TYPE: Record<string, SectorId> = {
+  "consulting firm": "professional",
+  "finance firm": "financial",
+  "data/AI company": "technology",
+  "academic/research institution": "education",
+  "manufacturing/energy/industrial": "manufacturing",
+  "consumer/FMCG/retail": "consumer",
+  "technology company": "technology",
+};
+
 export function classifySector(company: string): SectorResult {
   const name = normalise(company);
   if (!name) return { sector: null, evidence: "" };
@@ -273,6 +295,18 @@ export function classifySector(company: string): SectorResult {
         return { sector: rule.sector, evidence: `Employer name contains "${word.trim()}"` };
       }
     }
+  }
+
+  // Whatever the classifier's own company list makes of it.
+  const typed = companyContext(company);
+  if (typed.name && FROM_COMPANY_TYPE[typed.name]) {
+    const sector = FROM_COMPANY_TYPE[typed.name];
+    return { sector, evidence: `Employer "${company}" reads as a ${typed.name}` };
+  }
+
+  // A student society or campus team is part of an institution, not a business.
+  if (isClub(company)) {
+    return { sector: "education", evidence: `"${company}" is a campus organisation` };
   }
 
   return { sector: null, evidence: "" };

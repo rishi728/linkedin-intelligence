@@ -6,7 +6,6 @@ import { Building2, Calendar, CheckCircle2, Mail, MessageSquarePlus, Pencil, Rot
 import { addDays, formatDate, relativeDue, todayISO } from "@/lib/workspace/dates";
 import { CHANNELS, OPPORTUNITY_TYPES, RESPONSES } from "@/lib/workspace/defaults";
 import { CATEGORY_ID, CATS, NOPRO } from "@/lib/classifier/categories";
-import { familiesOf } from "@/lib/classifier/search";
 import { sectorLabel } from "@/lib/knowledge/sectors";
 import type { RoleHierarchy } from "@/lib/classifier/corrections";
 import type { Person } from "@/lib/workspace/types";
@@ -58,33 +57,22 @@ function ClassificationEditor({ person, onDone }: { person: Person; onDone: () =
     [people, person.position],
   );
   const [learn, setLearn] = useState(sameTitle > 1);
-  const label = CATS.find((c) => CATEGORY_ID[c] === draft.category) ?? CATS[0];
-  const families = familiesOf(label);
 
   return (
     <div className="space-y-2.5">
-      <div className="grid grid-cols-2 gap-2.5">
-        <Field label="Category">
-          <Select
-            value={draft.category}
-            onChange={(e) => {
-              const next = CATS.find((c) => CATEGORY_ID[c] === e.target.value) ?? CATS[0];
-              setDraft({ category: CATEGORY_ID[next], roleFamily: familiesOf(next)[0] ?? next });
-            }}
-          >
-            {CATS.map((c) => (
-              <option key={c} value={CATEGORY_ID[c]}>{c}</option>
-            ))}
-          </Select>
-        </Field>
-        <Field label="Role family">
-          <Select value={draft.roleFamily} onChange={(e) => setDraft((v) => ({ ...v, roleFamily: e.target.value }))}>
-            {(families.length ? families : [label]).map((f) => (
-              <option key={f} value={f}>{f}</option>
-            ))}
-          </Select>
-        </Field>
-      </div>
+      <Field label="Category">
+        <Select
+          value={draft.category}
+          onChange={(e) => {
+            const next = CATS.find((c) => CATEGORY_ID[c] === e.target.value) ?? CATS[0];
+            setDraft({ category: CATEGORY_ID[next], roleFamily: next });
+          }}
+        >
+          {CATS.map((c) => (
+            <option key={c} value={CATEGORY_ID[c]}>{c}</option>
+          ))}
+        </Select>
+      </Field>
 
       {sameTitle > 1 && person.position ? (
         <Checkbox
@@ -323,9 +311,6 @@ export function PersonPanel() {
               {/* The raw LinkedIn title stays visible above what was made of it. */}
               <Row label="Their title">{person.position || <span className="text-muted">Not given</span>}</Row>
               <Row label="Category">{person.category}</Row>
-              {person.roleFamily && person.roleFamily !== person.category ? (
-                <Row label="Role family">{person.roleFamily}</Row>
-              ) : null}
               {person.secondCategory ? <Row label="Runner-up">{person.secondCategory}</Row> : null}
               {person.cluster ? <Row label="Cluster">{`K-means ${person.cluster} of 10`}</Row> : null}
               <Row label="Sector">
