@@ -145,7 +145,7 @@ export function CompaniesView() {
                     else if (p.history?.messageCount) { score += 15; why.push("you have messaged before"); }
                     if (p.isAlumni) { score += 25; why.push("shares your school"); }
                     if (p.history?.invited === "them") { score += 10; why.push("invited you to connect"); }
-                    if (p.section === "recruitment") { score += 15; why.push("recruits for this company"); }
+                    if (p.roleFamily === "Recruiting / HR") { score += 15; why.push("recruits for this company"); }
                     if (p.email) { score += 5; why.push("email available"); }
                     return { p, score, why };
                   })
@@ -187,7 +187,7 @@ export function CompaniesView() {
                       <Avatar name={p.name} size={26} />
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-[13px] font-medium">{p.name}</span>
-                        <span className="block truncate text-[12px] text-muted">{p.position || p.roleLabel}</span>
+                        <span className="block truncate text-[12px] text-muted">{p.position || p.roleFamily}</span>
                       </span>
                       <StatusMenu person={p} size="sm" align="right" />
                     </button>

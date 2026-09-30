@@ -25,8 +25,6 @@ const SORTS: Array<{ value: SortKey; label: string }> = [
 ];
 
 /** Least certain first, because that is the order worth reviewing in. */
-const CERTAINTY_ORDER = { low: 0, medium: 1, high: 2 };
-
 function sortPeople(people: Person[], key: SortKey): Person[] {
   const copy = [...people];
   switch (key) {
@@ -34,7 +32,7 @@ function sortPeople(people: Person[], key: SortKey): Person[] {
     case "company": return copy.sort((a, b) => (a.company || "zzz").localeCompare(b.company || "zzz") || a.name.localeCompare(b.name));
     case "recent": return copy.sort((a, b) => (b.connectedOn?.getTime() ?? 0) - (a.connectedOn?.getTime() ?? 0));
     case "followup": return copy.sort((a, b) => (a.followUpAt || "9999").localeCompare(b.followUpAt || "9999"));
-    case "confidence": return copy.sort((a, b) => CERTAINTY_ORDER[a.certainty] - CERTAINTY_ORDER[b.certainty] || a.name.localeCompare(b.name));
+    case "confidence": return copy.sort((a, b) => a.confidence - b.confidence || a.name.localeCompare(b.name));
     default:
       return copy.sort((a, b) => PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority] || b.priorityScore - a.priorityScore || a.name.localeCompare(b.name));
   }

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { ExternalLink } from "lucide-react";
-import { bucketLabel, sectionLabel } from "@/lib/knowledge/roles";
+import { NOPRO } from "@/lib/classifier/categories";
 import { sectorLabel } from "@/lib/knowledge/sectors";
 import { formatDate, relativeDue, todayISO } from "@/lib/workspace/dates";
 import type { Person } from "@/lib/workspace/types";
@@ -111,7 +111,7 @@ export function PeopleList({
                       ) : null}
                     </div>
                     <div className="mt-2.5 flex flex-wrap gap-1">
-                      {person.bucket ? <Pill tone="gray">{bucketLabel(person.bucket)}</Pill> : <Pill tone="gray">Role not stated</Pill>}
+                      <Pill tone="gray">{person.category === NOPRO ? "No role data" : person.category}</Pill>
                       {person.sector ? <Pill tone="gray">{sectorLabel(person.sector)}</Pill> : null}
                       <Pill tone={PRIORITY_TONE[person.priority]}>{PRIORITY_LABEL[person.priority]}</Pill>
                       {person.isTarget ? <Pill tone="teal">Target</Pill> : null}
@@ -136,7 +136,7 @@ export function PeopleList({
                   <Checkbox checked={isSelected} onChange={(v) => onSelect(person.id, v, false)} />
                   <button type="button" onClick={() => onOpen(person.id)} className="flex min-w-0 flex-1 items-center gap-2 text-left">
                     <span className="w-[190px] shrink-0 truncate font-medium">{person.name}</span>
-                    <span className="w-[170px] shrink-0 truncate text-muted">{person.roleLabel}</span>
+                    <span className="w-[170px] shrink-0 truncate text-muted">{person.roleFamily}</span>
                     <span className="min-w-0 flex-1 truncate text-ink-2">{person.company}</span>
                   </button>
                   <span className="shrink-0"><StatusMenu person={person} size="sm" align="right" /></span>
@@ -169,14 +169,16 @@ export function PeopleList({
                   {person.company || "-"}
                   {person.isTarget ? <span className="ml-1 text-[11px] text-accent" title="Target company">★</span> : null}
                 </span>
-                <span className="min-w-0 truncate text-[12px] text-muted" title={person.bucket ? `${bucketLabel(person.bucket)} · ${sectionLabel(person.bucket, person.section ?? "")}` : ""}>
-                  {person.bucket ? (
-                    <>
-                      {bucketLabel(person.bucket)}
-                      {person.section ? <span className="text-muted"> · {sectionLabel(person.bucket, person.section)}</span> : null}
-                    </>
+                <span className="min-w-0 truncate text-[12px] text-muted" title={`${person.category} · ${person.roleFamily}`}>
+                  {person.category === NOPRO ? (
+                    <span className="text-muted">No role data</span>
                   ) : (
-                    <span className="text-muted">Role not stated</span>
+                    <>
+                      {person.category}
+                      {person.roleFamily && person.roleFamily !== person.category ? (
+                        <span className="text-muted"> · {person.roleFamily}</span>
+                      ) : null}
+                    </>
                   )}
                 </span>
                 <span className="min-w-0"><StatusMenu person={person} /></span>

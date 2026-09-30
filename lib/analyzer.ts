@@ -1,5 +1,5 @@
 import Papa from "papaparse";
-import { classify, type Basis, type Confidence } from "./classifier";
+import { classify, type Basis, type Confidence } from "./phrases";
 import {
   CATEGORY_IDS, SENIORITY_LEVELS, TAG_IDS,
   type CategoryId, type Seniority, type TagId,

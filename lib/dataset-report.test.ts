@@ -49,7 +49,7 @@ it.skipIf(!existsSync(CSV))("writes a classification report for the real dataset
     if (!title) continue;
     const p = people.find((x) => x.r.position.trim() === title)!;
     L.push(
-      `${String(n).padStart(4)}  ${title.slice(0, 42).padEnd(42)} → ${p.c.role.slice(0, 30).padEnd(30)} | ${domainLabel(p.c.domain).slice(0, 20).padEnd(20)} | ${functionLabel(p.c.fn).slice(0, 26).padEnd(26)} | ${p.c.confidence}`,
+      `${String(n).padStart(4)}  ${title.slice(0, 42).padEnd(42)} → ${p.c.role.slice(0, 30).padEnd(30)} | ${p.c.domain} | ${functionLabel(p.c.fn).slice(0, 26).padEnd(26)} | ${p.c.confidence}`,
     );
   }
 
@@ -85,7 +85,7 @@ it.skipIf(!existsSync(CSV))("walks the off-campus workflow on the real dataset",
   const companies = groupCompanies(all, settings).map((c) => ({ key: c.key, name: c.name }));
   // Targets a student would actually pick: the biggest employers of the people
   // they're looking for, rather than the biggest employers overall.
-  const SUPPLY_CHAIN = { sections: ["supply-chain", "procurement-sourcing", "logistics-planning"] };
+  const SUPPLY_CHAIN = { roleFamilies: ["Operations / Supply Chain"] };
   const supplyChain = applyFilters(all, SUPPLY_CHAIN, settings);
   const byCompany = new Map<string, number>();
   for (const p of supplyChain) if (p.company) byCompany.set(p.company, (byCompany.get(p.company) ?? 0) + 1);
@@ -137,10 +137,10 @@ it.skipIf(!existsSync(CSV))("walks the off-campus workflow on the real dataset",
 
   // Conversation history really is used.
   const spoken = applyFilters(people, parseQuery("people i've spoken to in operations", companies).filters, settings);
-  expect(spoken.every((p) => p.bucket === "operations-and-supply-chain")).toBe(true);
+  expect(spoken.every((p) => p.category === "Operations & Supply Chain")).toBe(true);
 
   // A dead end is always one click from results.
-  const dead = { ...fresh, roles: ["Role That Does Not Exist"] };
+  const dead = { ...fresh, roleFamilies: ["Family That Does Not Exist"] };
   expect(n(dead)).toBe(0);
   expect(broaden(dead, settings)!.filters.roles).toBeUndefined();
 

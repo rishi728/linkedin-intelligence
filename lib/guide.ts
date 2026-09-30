@@ -44,7 +44,7 @@ export const TOURS: Tour[] = [
     steps: [
       {
         title: "Everyone you know, filtered",
-        body: "Role opens the seventeen areas, then the six sections inside one, then the roles inside that. Counts next to each option reflect the filters you have already picked.",
+        body: "Role opens the ten categories, then the role families inside one, and how sure the classifier was. Counts next to each option reflect the filters you have already picked.",
       },
       {
         title: "Change a status without leaving",
@@ -74,7 +74,7 @@ export const TOURS: Tour[] = [
       },
       {
         title: "Look at it four ways",
-        body: "Area, Role, Sector and Company all rebuild the same view, so you can find where the openings actually are.",
+        body: "Category, Role family, Sector and Company all rebuild the same view, so you can find where the openings actually are.",
       },
     ],
   },
@@ -92,7 +92,7 @@ export const TOURS: Tour[] = [
     steps: [
       {
         title: "Fix a job title once",
-        body: "These are the people whose job title named no occupation, or one the repository could not place with confidence. Correcting one can teach a rule that applies to everyone with the same title.",
+        body: "These are the people the classifier is least sure about: a low score, a title that named no function, or a title that disagreed with its cluster. Correcting one can teach a rule that applies to everyone with the same title.",
       },
     ],
   },

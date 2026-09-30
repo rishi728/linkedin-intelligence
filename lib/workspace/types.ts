@@ -1,8 +1,8 @@
-import type { Confidence } from "../knowledge/classify";
+import type { Band } from "../classifier/categories";
 import type { SectorId } from "../knowledge/sectors";
 import type { ContactHistory } from "../archive";
-import type { Basis } from "../classifier";
-import type { ClassificationSource, CustomRule, RoleHierarchy } from "../knowledge/classify";
+import type { Basis } from "../phrases";
+import type { ClassificationSource, CustomRule, RoleHierarchy } from "../classifier/corrections";
 import type { TagId } from "../taxonomy";
 
 export type Priority = "high" | "medium" | "low";
@@ -72,10 +72,10 @@ export type AudienceId = "peers" | "alumni" | "managers" | "directors" | "founde
 
 export interface Goals {
   opportunityTypes: string[];
-  /** Role buckets from the knowledge repository. */
-  buckets: string[];
-  /** Sections inside those buckets. */
-  sections: string[];
+  /** Categories the user is aiming at, by id. */
+  categories: string[];
+  /** Role families inside those categories. */
+  roleFamilies: string[];
   audiences: AudienceId[];
 }
 
@@ -208,11 +208,13 @@ export interface Filters {
   /** Conversation history from the archive. */
   history?: "messaged" | "replied" | "no-reply" | "never" | "they-invited";
   pastCompanies?: string[];
-  /** Role buckets from the knowledge repository. */
-  buckets?: string[];
-  /** Sections inside a bucket. */
-  sections?: string[];
-  /** Broad sectors. */
+  /** One of the ten categories, by id. */
+  categories?: string[];
+  /** Role families inside a category. */
+  roleFamilies?: string[];
+  /** Confidence bands. */
+  bands?: string[];
+  /** Broad sectors of the employer. */
   sectors?: string[];
   /** People in this user-made list. */
   listId?: string;
@@ -269,17 +271,26 @@ export interface Person {
   isFounder: boolean;
   isAlumni: boolean;
   duplicateOf: string | null;
-  // ---- the knowledge repository's view of this person ---------------------
-  /** One of the seventeen role buckets, or null when the title says nothing. */
-  bucket: string | null;
-  section: string | null;
-  roleId: string | null;
-  /** The detailed role's label, ready to show. */
-  roleLabel: string;
+  // ---- the classifier's view of this person --------------------------------
+  /** One of the ten categories, or "No Professional Information". */
+  category: string;
+  /** The function inside that category, or the generic family when there is none. */
+  roleFamily: string;
+  /** 0.20 to 0.97. Never 1 for a real classification. */
+  confidence: number;
+  band: Band;
+  /** The runner-up, when it scored close enough to be worth naming. */
+  secondCategory: string | null;
+  /** How this classification was reached, in the classifier's own words. */
+  method: string;
+  /** 1 to 10: the seeded centroid this person's title and employer sit nearest. */
+  cluster: number | null;
+  /** The title disagreed with a confident cluster. */
+  conflict: boolean;
+  /** The title named no function, so company and colleagues decided it. */
+  genericInference: boolean;
+  /** The employer's broad sector, which is about the company, not the person. */
   sector: SectorId | null;
-  /** How sure the repository is, and what convinced it. */
-  certainty: Confidence;
-  evidence: string[];
   /** Lower-cased text used by search. */
   haystack: string;
 }

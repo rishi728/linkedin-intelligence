@@ -24,10 +24,10 @@ describe("networking focus", () => {
     const { people, settings } = sample();
     settings.focus = { goals: ["job"], direction: "", confirmedAt: "x" };
     const f = focusFilters(settings);
-    expect(f.buckets).toContain("people-and-talent");
+    expect(f.categories).toContain("business");
     const matched = applyFilters(people, f, settings);
     expect(matched.length).toBeGreaterThan(0);
-    expect(matched.every((p) => p.bucket === "people-and-talent")).toBe(true);
+    expect(matched.every((p) => p.category === "Business & Consulting")).toBe(true);
   });
 
   it("widens rather than narrows when several goals are picked", () => {
@@ -41,10 +41,10 @@ describe("networking focus", () => {
 
   it("never overrides areas the user named themselves", () => {
     const { settings } = sample();
-    settings.goals.buckets = ["finance-and-investment"];
+    settings.goals.categories = ["finance"];
     settings.focus = { goals: ["job"], direction: "", confirmedAt: "x" };
     const f = focusFilters(settings);
     // The user's own area wins; the goal does not widen past it.
-    expect(f.buckets).toEqual(["finance-and-investment"]);
+    expect(f.categories).toEqual(["finance"]);
   });
 });

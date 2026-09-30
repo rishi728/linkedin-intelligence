@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { ArrowRight, Check, ChevronLeft } from "lucide-react";
-import { roleLabel } from "@/lib/knowledge/roles";
+import { NOPRO } from "@/lib/classifier/categories";
 import { applyFilters, buildIntents } from "@/lib/workspace/filters";
 import type { AudienceId, Filters, Person, Settings } from "@/lib/workspace/types";
 import { Button, cx } from "@/components/ui";
@@ -101,7 +101,7 @@ export function GuidedSearch({
     const intents = buildIntents(people, settings);
     const intent = intents.find((i) => i.id === intentId) ?? null;
 
-    const afterArea: Filters = { ...(intent?.filters ?? {}), ...(role ? { roles: [role] } : {}) };
+    const afterArea: Filters = { ...(intent?.filters ?? {}), ...(role ? { roleFamilies: [role] } : {}) };
     const afterWho: Filters = { ...afterArea, ...(who ? whoFilters(who) : {}) };
     const afterWhere: Filters = { ...afterWho, ...(where === "target" ? { targetOnly: true } : {}) };
     const final: Filters = { ...afterWhere, ...(rel ? relFilters(rel) : {}) };
@@ -109,10 +109,10 @@ export function GuidedSearch({
     const inArea = intent ? applyFilters(people, intent.filters, settings) : [];
     const byRole = new Map<string, { fn: string; count: number }>();
     for (const p of inArea) {
-      if (!p.roleId) continue;
-      const e = byRole.get(p.roleId) ?? { fn: roleLabel(p.roleId), count: 0 };
+      if (p.category === NOPRO || !p.roleFamily) continue;
+      const e = byRole.get(p.roleFamily) ?? { fn: p.roleFamily, count: 0 };
       e.count++;
-      byRole.set(p.roleId, e);
+      byRole.set(p.roleFamily, e);
     }
 
     return {

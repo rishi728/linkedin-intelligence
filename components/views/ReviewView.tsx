@@ -3,8 +3,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check, ChevronRight, ListChecks, SkipForward, Undo2 } from "lucide-react";
-import { matchRolesInText, type RoleHierarchy } from "@/lib/knowledge/classify";
-import { ROLE_BUCKETS, ROLE_PATH, bucketLabel, roleLabel, sectionLabel } from "@/lib/knowledge/roles";
+import { CATEGORY_ID, CATS, NOPRO } from "@/lib/classifier/categories";
+import { ROLE_FAMILIES, familiesOf, matchCategoriesInText } from "@/lib/classifier/search";
+import type { RoleHierarchy } from "@/lib/classifier/corrections";
 import type { Person } from "@/lib/workspace/types";
 import { PageBody, PageHeader } from "@/components/shell/AppShell";
 import { Avatar, Button, Card, Checkbox, EmptyState, Field, Meter, Pill, Select, cx } from "@/components/ui";
@@ -15,27 +16,35 @@ interface Suggestion {
   hierarchy: RoleHierarchy;
 }
 
-/** The most common places a person like this belongs, so there is always something to press. */
-const FALLBACK_ROLES = [
-  "software-engineer", "data-analyst", "product-manager", "management-consultant",
-  "business-development-manager", "operations-manager", "recruiter", "finance-manager",
+/** The families most people end up in, so there is always something to press. */
+const FALLBACK = [
+  "Software Engineering",
+  "Core Engineering",
+  "Data Science & Analytics",
+  "Product Management",
+  "Consulting / Strategy",
+  "Finance / Investment",
+  "Operations / Supply Chain",
+  "Sales / Marketing",
 ];
 
-function push(out: Suggestion[], roleId: string, label?: string) {
-  const path = ROLE_PATH.get(roleId);
-  if (!path || out.some((s) => s.hierarchy.roleId === roleId)) return;
+function push(out: Suggestion[], family: string, label?: string) {
+  const entry = ROLE_FAMILIES.find((f) => f.family === family);
+  if (!entry || out.some((s) => s.hierarchy.roleFamily === family)) return;
   out.push({
-    label: label ?? `${path.roleLabel} · ${path.sectionLabel}`,
-    hierarchy: { bucket: path.bucketId, section: path.sectionId, roleId: path.roleId },
+    label: label ?? `${family} \u00b7 ${entry.category}`,
+    hierarchy: { category: CATEGORY_ID[entry.category], roleFamily: family },
   });
 }
 
 function suggestionsFor(person: Person): Suggestion[] {
   const out: Suggestion[] = [];
-  if (person.roleId) push(out, person.roleId, `Keep: ${roleLabel(person.roleId)}`);
+  if (person.category !== NOPRO && person.roleFamily) push(out, person.roleFamily, `Keep: ${person.roleFamily}`);
   // Anything the title hints at, including matches that lost to something else.
-  for (const roleId of matchRolesInText(person.position).roles.slice(0, 5)) push(out, roleId);
-  for (const roleId of FALLBACK_ROLES) if (out.length < 8) push(out, roleId);
+  for (const f of matchCategoriesInText(person.position).roleFamilies.slice(0, 5)) push(out, f);
+  // Then the families inside the runner-up category, which is the likeliest fix.
+  if (person.secondCategory) for (const f of familiesOf(person.secondCategory).slice(0, 3)) push(out, f);
+  for (const f of FALLBACK) if (out.length < 8) push(out, f);
   return out.slice(0, 8);
 }
 
@@ -46,11 +55,11 @@ export function ReviewView() {
   const [index, setIndex] = useState(0);
   const [learn, setLearn] = useState(true);
   const [done, setDone] = useState<string[]>([]);
-  const [custom, setCustom] = useState<{ bucket: string; section: string } | null>(null);
+  const [custom, setCustom] = useState<{ category: string; roleFamily: string } | null>(null);
 
   const queue = useMemo(
     () => people
-      .filter((p) => (p.needsReview || !p.bucket) && p.classSource === "repository" && !done.includes(p.id))
+      .filter((p) => p.needsReview && p.category !== NOPRO && p.classSource === "classifier" && !done.includes(p.id))
       .sort((a, b) => b.priorityScore - a.priorityScore || (b.position ? 1 : 0) - (a.position ? 1 : 0)),
     [people, done],
   );
@@ -67,7 +76,7 @@ export function ReviewView() {
     setDone((d) => [...d, person.id]);
     setCustom(null);
     toast(
-      learn && sameTitle > 1 && person.position ? `Saved for ${n} people titled “${person.position}”` : `${person.name}: ${roleLabel(s.hierarchy.roleId)}`,
+      learn && sameTitle > 1 && person.position ? `Saved for ${n} people titled “${person.position}”` : `${person.name}: ${s.hierarchy.roleFamily}`,
       { label: "Undo", run: () => setDone((d) => d.filter((x) => x !== person.id)) },
     );
   };
@@ -81,7 +90,7 @@ export function ReviewView() {
 
   const markUnknown = () => {
     if (!person) return;
-    updateRecord(person.id, { classification: { bucket: "", section: "", roleId: "" } }, { kind: "classification", text: "Marked as no role information" });
+    updateRecord(person.id, { classification: { category: CATEGORY_ID[NOPRO], roleFamily: NOPRO } }, { kind: "classification", text: "Marked as no role information" });
     setDone((d) => [...d, person.id]);
   };
 
@@ -153,22 +162,22 @@ export function ReviewView() {
                   <p className="text-[12.5px] text-muted">{person.company || "No company in the export"}</p>
                 </div>
                 <div className="text-right">
-                  <Pill tone={!person.bucket ? "gray" : person.certainty === "medium" ? "blue" : "amber"}>
-                    {person.bucket ? `${person.certainty[0].toUpperCase()}${person.certainty.slice(1)} confidence` : "Role not stated"}
+                  <Pill tone={person.band === "High" ? "green" : person.band === "Medium" ? "blue" : "amber"}>
+                    {`${person.band} confidence \u00b7 ${person.confidence}`}
                   </Pill>
                   {person.priorityScore > 0 ? <p className="mt-1 text-[11px] text-muted">Priority {person.priority}</p> : null}
                 </div>
               </div>
 
-              {person.evidence.length ? (
-                <p className="mt-3 rounded-lg bg-subtle px-3 py-2 text-[12px] text-ink-2">{person.evidence.join(" · ")}</p>
+              {person.method ? (
+                <p className="mt-3 rounded-lg bg-subtle px-3 py-2 text-[12px] text-ink-2">{person.method}</p>
               ) : null}
 
               <p className="mb-2 mt-4 text-[11px] font-medium uppercase tracking-wide text-muted">Where does this person belong?</p>
               <div className="space-y-1.5">
                 {suggestions.map((s, i) => (
                   <button
-                    key={s.hierarchy.roleId}
+                    key={s.hierarchy.roleFamily}
                     type="button"
                     onClick={() => accept(s)}
                     className={cx(
@@ -178,45 +187,39 @@ export function ReviewView() {
                   >
                     <kbd className="rounded border border-line bg-panel px-1.5 text-[11px] text-muted">{i + 1}</kbd>
                     <span className="flex-1 truncate">{s.label}</span>
-                    <span className="text-[11.5px] text-muted">{bucketLabel(s.hierarchy.bucket)}</span>
+                    <span className="text-[11.5px] text-muted">{CATS.find((c) => CATEGORY_ID[c] === s.hierarchy.category)}</span>
                     <ChevronRight size={13} className="text-faint" />
                   </button>
                 ))}
               </div>
 
               <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                <Field label="Or choose a role area">
+                <Field label="Or choose a category">
                   <Select
-                    value={custom?.bucket ?? ""}
+                    value={custom?.category ?? ""}
                     onChange={(e) => {
-                      const b = ROLE_BUCKETS.find((x) => x.id === e.target.value);
-                      setCustom(b ? { bucket: b.id, section: b.sections[0].id } : null);
+                      const c = CATS.find((x) => CATEGORY_ID[x] === e.target.value);
+                      setCustom(c ? { category: CATEGORY_ID[c], roleFamily: familiesOf(c)[0] ?? c } : null);
                     }}
                   >
                     <option value="">-</option>
-                    {ROLE_BUCKETS.map((b) => (
-                      <option key={b.id} value={b.id}>{b.label}</option>
+                    {CATS.map((c) => (
+                      <option key={c} value={CATEGORY_ID[c]}>{c}</option>
                     ))}
                   </Select>
                 </Field>
                 {custom ? (
-                  <Field label="Section">
+                  <Field label="Role family">
                     <div className="flex gap-2">
-                      <Select value={custom.section} onChange={(e) => setCustom({ ...custom, section: e.target.value })}>
-                        {ROLE_BUCKETS.find((b) => b.id === custom.bucket)!.sections.map((x) => (
-                          <option key={x.id} value={x.id}>{x.label}</option>
+                      <Select value={custom.roleFamily} onChange={(e) => setCustom({ ...custom, roleFamily: e.target.value })}>
+                        {familiesOf(CATS.find((c) => CATEGORY_ID[c] === custom.category) ?? CATS[0]).map((f) => (
+                          <option key={f} value={f}>{f}</option>
                         ))}
                       </Select>
                       <Button
                         variant="primary"
                         icon={Check}
-                        onClick={() => {
-                          const section = ROLE_BUCKETS.find((b) => b.id === custom.bucket)!.sections.find((x) => x.id === custom.section)!;
-                          accept({
-                            label: sectionLabel(custom.bucket, custom.section),
-                            hierarchy: { bucket: custom.bucket, section: custom.section, roleId: section.roles[0].id },
-                          });
-                        }}
+                        onClick={() => accept({ label: custom.roleFamily, hierarchy: custom })}
                       >
                         Set
                       </Button>

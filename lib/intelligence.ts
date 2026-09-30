@@ -5,7 +5,7 @@
 //   2. Custom rules learned from edits     (this file, `rules`)
 //   3. Automatic: role dictionary in context of the category classifier and employer
 
-import { addEntry, classify, matchPhrases, type PhraseIndex } from "./classifier";
+import { addEntry, classify, matchPhrases, type PhraseIndex } from "./phrases";
 import { CATEGORY_DEFAULTS, DOMAINS, INDUSTRY_BY_COMPANY_CATEGORY } from "./roles";
 import type { CategoryId, Seniority, TagId } from "./taxonomy";
 import { cleanField, splitSegments, tokenize } from "./text";

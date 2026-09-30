@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { bucketLabel } from "@/lib/knowledge/roles";
+import { CATEGORY_ID, NOPRO } from "@/lib/classifier/categories";
 import { SECTOR_LABEL, type SectorId } from "@/lib/knowledge/sectors";
 import type { Filters, Person } from "@/lib/workspace/types";
 import { cx } from "@/components/ui";
@@ -135,13 +135,13 @@ function Bars({ rows, max, onPick }: { rows: Slice[]; max: number; onPick: (s: S
 export function NetworkShape({ people, onExplore }: { people: Person[]; onExplore: (f: Filters) => void }) {
   const areas = useMemo<Slice[]>(() => {
     const m = new Map<string, number>();
-    for (const p of people) if (p.bucket) m.set(p.bucket, (m.get(p.bucket) ?? 0) + 1);
+    for (const p of people) if (p.category !== NOPRO) m.set(p.category, (m.get(p.category) ?? 0) + 1);
     const sorted = [...m.entries()].sort((a, b) => b[1] - a[1]);
-    const top = sorted.slice(0, 7).map(([id, count]) => ({
-      key: id,
-      label: bucketLabel(id),
+    const top = sorted.slice(0, 7).map(([label, count]) => ({
+      key: label,
+      label,
       count,
-      filters: { buckets: [id] } as Filters,
+      filters: { categories: [CATEGORY_ID[label]] } as Filters,
     }));
     const rest = sorted.slice(7).reduce((n, [, c]) => n + c, 0);
     if (rest > 0) {
@@ -149,7 +149,7 @@ export function NetworkShape({ people, onExplore }: { people: Person[]; onExplor
         key: "rest",
         label: "Everything else",
         count: rest,
-        filters: { buckets: sorted.slice(7).map(([id]) => id) } as Filters,
+        filters: { categories: sorted.slice(7).map(([label]) => CATEGORY_ID[label]) } as Filters,
       });
     }
     return top;

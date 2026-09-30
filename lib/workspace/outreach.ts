@@ -1,8 +1,8 @@
 // Research links and message templates. Nothing here sends anything:
 // research opens a search the user asked for; messages are copied by the user.
 
-import { sectionLabel } from "../knowledge/roles";
 import type { Person, Settings } from "./types";
+import { NOPRO } from "../classifier/categories";
 
 const google = (q: string) => `https://www.google.com/search?q=${encodeURIComponent(q)}`;
 
@@ -18,16 +18,16 @@ export const RESEARCH_ACTIONS: Array<{ kind: ResearchKind; label: string; needs:
   { kind: "linkedin-people", label: "Others in this role on LinkedIn", needs: "company" },
 ];
 
-export function researchUrl(kind: ResearchKind, p: Pick<Person, "name" | "company" | "roleLabel" | "position">): string {
+export function researchUrl(kind: ResearchKind, p: Pick<Person, "name" | "company" | "roleFamily" | "position">): string {
   const company = p.company ? `"${p.company}"` : "";
   switch (kind) {
     case "person": return google(`"${p.name}" ${company}`.trim());
     case "company": return google(`${company} company`);
-    case "company-role": return google(`${company} "${p.roleLabel || p.position}"`);
+    case "company-role": return google(`${company} "${p.roleFamily || p.position}"`);
     case "careers": return google(`${company} careers jobs openings`);
     case "news": return `https://news.google.com/search?q=${encodeURIComponent(p.company)}`;
     case "linkedin-company": return `https://www.linkedin.com/search/results/companies/?keywords=${encodeURIComponent(p.company)}`;
-    case "linkedin-people": return `https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent(`${p.company} ${p.roleLabel || p.position}`)}`;
+    case "linkedin-people": return `https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent(`${p.company} ${p.roleFamily || p.position}`)}`;
   }
 }
 
@@ -59,12 +59,12 @@ export function shortenHeadline(raw: string, max = 70): string {
   return first.length <= max ? first : first.slice(0, max).replace(/[\s,;:-]+\S*$/, "");
 }
 
-export function readableRole(p: Pick<Person, "position" | "roleLabel">): string {
+export function readableRole(p: Pick<Person, "position" | "roleFamily">): string {
   const raw = (p.position ?? "").trim();
-  if (!raw) return p.roleLabel;
+  if (!raw) return p.roleFamily;
   const firstSegment = raw.split(/\s*[|•·;]\s*/)[0].trim();
   if (firstSegment && firstSegment.length <= 60) return firstSegment;
-  return p.roleLabel;
+  return p.roleFamily;
 }
 
 export function templateVars(p: Person, settings: Settings, overrides: Partial<TemplateVars> = {}): TemplateVars {
@@ -79,8 +79,8 @@ export function templateVars(p: Person, settings: Settings, overrides: Partial<T
     common_context: p.personalization.common,
     my_name: settings.profile.name,
     my_background: shortenHeadline(settings.profile.background),
-    // Only from the repository; when it does not know, the placeholder stays visible.
-    area: p.bucket && p.section ? sectionLabel(p.bucket, p.section) : "",
+    // Only from the classifier; when it does not know, the placeholder stays visible.
+    area: p.genericInference || p.category === NOPRO ? "" : p.roleFamily,
     opportunity: settings.goals.opportunityTypes.includes("Internship")
       ? "internship"
       : settings.goals.opportunityTypes.includes("Full-time")

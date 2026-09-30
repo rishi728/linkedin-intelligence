@@ -10,8 +10,8 @@ export interface FocusGoalDef {
   id: FocusGoalId;
   label: string;
   hint: string;
-  /** Role buckets this goal makes relevant, on top of whatever the user targets. */
-  buckets: string[];
+  /** Role categories this goal makes relevant, on top of whatever the user targets. */
+  categories: string[];
   audiences: AudienceId[];
 }
 
@@ -20,21 +20,21 @@ export const FOCUS_GOALS: FocusGoalDef[] = [
     id: "research",
     label: "Research opportunities",
     hint: "Researchers, professors, collaborators and lab positions.",
-    buckets: ["research-and-science", "education-and-academia", "data-and-ai"],
+    categories: ["education", "data"],
     audiences: [],
   },
   {
     id: "job",
     label: "Internship or full-time",
     hint: "Roles, the teams behind them, and the people who hire.",
-    buckets: ["people-and-talent"],
+    categories: ["business"],
     audiences: ["recruiters", "founders"],
   },
   {
     id: "networking",
     label: "Networking",
     hint: "Meet interesting people and build professional relationships.",
-    buckets: [],
+    categories: [],
     audiences: ["alumni", "founders"],
   },
 ];
@@ -55,19 +55,19 @@ export function focusFilters(settings: Settings): Filters {
   const { goals } = settings;
   const chosen = (settings.focus?.goals ?? []).map((g) => FOCUS_MAP.get(g)).filter(Boolean) as FocusGoalDef[];
 
-  const buckets = [...new Set(chosen.flatMap((g) => g.buckets))];
+  const categories = [...new Set(chosen.flatMap((g) => g.categories))];
   const implied = [...new Set(chosen.flatMap((g) => g.audiences))];
 
   const f: Filters = {};
-  if (goals.buckets.length) f.buckets = goals.buckets;
-  if (goals.sections.length) f.sections = goals.sections;
+  if (goals.categories.length) f.categories = goals.categories;
+  if (goals.roleFamilies.length) f.roleFamilies = goals.roleFamilies;
   if (goals.audiences.length) f.audiences = goals.audiences;
 
   // Goals only widen, and only along one axis. Filters are combined with AND, so
   // asking for both the categories and the audiences a goal implies would return
   // the people in both at once, which is far narrower than the goal means.
-  const named = goals.buckets.length + goals.sections.length > 0;
-  if (!named && buckets.length) f.buckets = buckets;
+  const named = goals.categories.length + goals.roleFamilies.length > 0;
+  if (!named && categories.length) f.categories = categories;
   else if (!named && !goals.audiences.length && implied.length) f.audiences = implied;
   return f;
 }

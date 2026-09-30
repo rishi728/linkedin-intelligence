@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { classify } from "./classifier";
+import { classify } from "./phrases";
 import type { CategoryId, Seniority, TagId } from "./taxonomy";
 
 type Case = [position: string, company: string, expected: CategoryId];

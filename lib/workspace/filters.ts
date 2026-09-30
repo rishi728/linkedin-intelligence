@@ -1,5 +1,5 @@
-import { matchRolesInText } from "../knowledge/classify";
-import { bucketLabel, roleLabel, sectionLabel } from "../knowledge/roles";
+import { CATEGORY_ID, CATS, NOPRO } from "../classifier/categories";
+import { matchCategoriesInText } from "../classifier/search";
 import { sectorLabel, type SectorId } from "../knowledge/sectors";
 import { tokenize } from "../text";
 import { daysBetween, todayISO, toISODate } from "./dates";
@@ -11,7 +11,7 @@ import type { AudienceId, Filters, HealthIssue, Person, Priority, Settings } fro
 export const AUDIENCES: Array<{ id: AudienceId; label: string; hint: string; test: (p: Person) => boolean }> = [
   { id: "alumni", label: "Alumni", hint: "People at your schools or their clubs (set schools in Settings)", test: (p) => p.isAlumni },
   { id: "founders", label: "Founders", hint: "Founders and co-founders", test: (p) => p.isFounder },
-  { id: "recruiters", label: "Recruiters", hint: "Recruiters and talent acquisition", test: (p) => p.section === "recruitment" },
+  { id: "recruiters", label: "Recruiters", hint: "Recruiters and talent acquisition", test: (p) => p.roleFamily === "Recruiting / HR" },
 ];
 
 // ---------------------------------------------------------------------------
@@ -58,24 +58,24 @@ export function resolveIntent(intent: Intent, settings: Settings): Filters {
  * the areas they actually know people in, then the goals that have someone behind them.
  */
 export function buildIntents(people: Person[], settings: Settings): Array<Intent & { count: number }> {
-  const byBucket = new Map<string, { count: number; sections: Map<string, number> }>();
+  const byCategory = new Map<string, { count: number; families: Map<string, number> }>();
   for (const p of people) {
-    if (!p.bucket) continue;
-    const e = byBucket.get(p.bucket) ?? { count: 0, sections: new Map() };
+    if (p.category === NOPRO) continue;
+    const e = byCategory.get(p.category) ?? { count: 0, families: new Map() };
     e.count++;
-    if (p.section) e.sections.set(p.section, (e.sections.get(p.section) ?? 0) + 1);
-    byBucket.set(p.bucket, e);
+    if (p.roleFamily) e.families.set(p.roleFamily, (e.families.get(p.roleFamily) ?? 0) + 1);
+    byCategory.set(p.category, e);
   }
 
-  const areas = [...byBucket.entries()]
+  const areas = [...byCategory.entries()]
     .sort((a, b) => b[1].count - a[1].count)
     .filter(([, e]) => e.count >= 3)
     .slice(0, 9)
-    .map(([id, e]) => ({
-      id: `area:${id}`,
-      label: bucketLabel(id),
-      hint: [...e.sections.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3).map(([x]) => sectionLabel(id, x)).join(" · "),
-      filters: { buckets: [id] } as Filters,
+    .map(([label, e]) => ({
+      id: `area:${CATEGORY_ID[label]}`,
+      label,
+      hint: [...e.families.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3).map(([x]) => x).join(" · "),
+      filters: { categories: [CATEGORY_ID[label]] } as Filters,
       count: e.count,
     }));
 
@@ -113,7 +113,7 @@ export function matchesHealth(p: Person, issue: HealthIssue): boolean {
     case "missing-company": return !p.company;
     case "missing-email": return !p.email;
     case "missing-linkedin": return !p.url;
-    case "unclassified": return !p.bucket;
+    case "unclassified": return p.category === NOPRO;
     case "low-confidence": return p.needsReview;
     case "manual": return p.classSource === "manual";
   }
@@ -129,12 +129,12 @@ export function applyFilters(people: Person[], f: Filters, settings: Settings, t
     : null;
 
   return people.filter((p) => {
-    if (has(f.buckets) || has(f.sections)) {
-      const inDomain = has(f.buckets) && !!p.bucket && f.buckets.includes(p.bucket);
-      const inFn = has(f.sections) && !!p.section && f.sections.includes(p.section);
+    if (has(f.categories) || has(f.roleFamilies)) {
+      const inDomain = has(f.categories) && f.categories.includes(CATEGORY_ID[p.category]);
+      const inFn = has(f.roleFamilies) && f.roleFamilies.includes(p.roleFamily);
       if (!inDomain && !inFn) return false;
     }
-    if (has(f.roles) && (!p.roleId || !f.roles.includes(p.roleId))) return false;
+    if (has(f.bands) && !f.bands.includes(p.band)) return false;
     if (companies && !companies.has(p.companyKey)) return false;
     if (has(f.locations) && !f.locations.some((l) => p.location.toLowerCase().includes(l.toLowerCase()))) return false;
     if (f.connectedAfter && (!p.connectedOn || p.connectedOn < new Date(f.connectedAfter))) return false;
@@ -159,8 +159,6 @@ export function applyFilters(people: Person[], f: Filters, settings: Settings, t
       if (f.history === "they-invited" && h?.invited !== "them") return false;
     }
     if (listMembers && !listMembers.has(p.id)) return false;
-    if (has(f.buckets) && (!p.bucket || !f.buckets.includes(p.bucket))) return false;
-    if (has(f.sections) && (!p.section || !f.sections.includes(p.section))) return false;
     if (has(f.sectors) && (!p.sector || !f.sectors.includes(p.sector))) return false;
     if (has(f.pastCompanies) && !f.pastCompanies.some((c) => p.pastCompanies.some((x) => x.toLowerCase().includes(c.toLowerCase())))) return false;
     if (f.connectedWithinDays !== undefined) {
@@ -357,12 +355,11 @@ export function parseQuery(
 
   // Roles, sections and buckets, read straight out of the knowledge repository
   // so search can never know a role the rest of the product does not.
-  const named = matchRolesInText(rest);
-  if (named.roles.length) filters.roles = named.roles;
-  if (named.sections.length) filters.sections = named.sections;
-  if (named.buckets.length) filters.buckets = named.buckets;
+  const named = matchCategoriesInText(rest);
+  if (named.roleFamilies.length) filters.roleFamilies = named.roleFamilies;
+  if (named.categories.length) filters.categories = named.categories;
   if (named.understood.length) understood.push(...named.understood);
-  if (named.roles.length || named.sections.length || named.buckets.length) rest = ` ${named.rest} `;
+  if (named.roleFamilies.length || named.categories.length) rest = ` ${named.rest} `;
 
   const leftover = rest
     .split(" ")
@@ -381,7 +378,9 @@ export function describeFilters(f: Filters, settings: Settings): Array<{ key: ke
     if (!has(values)) return;
     out.push({ key, label: values.length <= 2 ? values.map(fmt).join(", ") : `${fmt(values[0])} +${values.length - 1} ${noun}` });
   };
-  list("roles", f.roles, (v) => roleLabel(v) || v, "roles");
+  list("categories", f.categories, (v) => CATS.find((c) => CATEGORY_ID[c] === v) ?? v, "categories");
+  list("roleFamilies", f.roleFamilies, (v) => v, "role families");
+  list("bands", f.bands, (v) => `${v} confidence`, "bands");
   list("companies", f.companies, (v) => v.replace(/\b\w/g, (c) => c.toUpperCase()), "companies");
   list("locations", f.locations, (v) => v, "locations");
   list("statuses", f.statuses, (v) => settings.statuses.find((s) => s.id === v)?.label ?? v, "statuses");
@@ -398,7 +397,6 @@ export function describeFilters(f: Filters, settings: Settings): Array<{ key: ke
   if (f.followUp) out.push({ key: "followUp", label: { overdue: "Follow-up overdue", scheduled: "Follow-up scheduled", none: "No follow-up" }[f.followUp] });
   if (f.health) out.push({ key: "health", label: HEALTH_LABELS[f.health] });
   if (f.history) out.push({ key: "history", label: HISTORY_LABELS[f.history] });
-  list("buckets", f.buckets, (v) => bucketLabel(v), "role areas");
   list("sectors", f.sectors, (v) => sectorLabel(v), "sectors");
   if (f.listId) out.push({ key: "listId", label: settings.lists?.find((l) => l.id === f.listId)?.name ?? "List" });
   list("pastCompanies", f.pastCompanies, (v) => `Ex-${v}`, "past companies");
@@ -413,9 +411,9 @@ export function describeFilters(f: Filters, settings: Settings): Array<{ key: ke
  */
 export function broaden(f: Filters, settings: Settings): { filters: Filters; removed: string } | null {
   const order: Array<keyof Filters> = [
-    "roles", "audiences", "statuses", "history", "followUp", "hasEmail", "hasLinkedIn",
+    "roleFamilies", "bands", "audiences", "statuses", "history", "followUp", "hasEmail", "hasLinkedIn",
     "tags", "needsReview", "dormant", "connectedWithinDays", "connectedAfter", "connectedBefore",
-    "targetOnly", "inPipeline", "companies", "pastCompanies", "buckets", "sections", "sectors", "listId", "q",
+    "targetOnly", "inPipeline", "companies", "pastCompanies", "categories", "sectors", "listId", "q",
   ];
   const described = describeFilters(f, settings);
   for (const key of order) {

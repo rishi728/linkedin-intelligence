@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Check, X } from "lucide-react";
-import { bucketLabel } from "@/lib/knowledge/roles";
+import { NOPRO } from "@/lib/classifier/categories";
 import { FOCUS_GOALS } from "@/lib/workspace/focus";
 import type { FocusGoalId } from "@/lib/workspace/types";
 import { Mascot } from "@/components/shell/Mascot";
@@ -33,8 +33,8 @@ export function Setup() {
   const areas = useMemo(() => {
     const m = new Map<string, number>();
     for (const p of people) {
-      if (!p.bucket) continue;
-      m.set(p.bucket, (m.get(p.bucket) ?? 0) + 1);
+      if (p.category === NOPRO) continue;
+      m.set(p.category, (m.get(p.category) ?? 0) + 1);
     }
     return [...m.entries()].sort((a, b) => b[1] - a[1]).slice(0, 4);
   }, [people]);
@@ -142,7 +142,7 @@ export function Setup() {
                         Your network is concentrated in
                       </dt>
                       <dd className="text-[15px]">
-                        {areas.map(([d, n]) => `${bucketLabel(d)} (${n.toLocaleString()})`).join(" · ")}
+                        {areas.map(([d, n]) => `${d} (${n.toLocaleString()})`).join(" · ")}
                       </dd>
                     </div>
                   ) : null}

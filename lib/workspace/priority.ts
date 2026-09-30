@@ -1,8 +1,8 @@
 // Transparent, rule-based priority. It scores how well someone matches what the
 // user said they're looking for, never how likely they are to help.
 
-import { bucketLabel, sectionLabel } from "../knowledge/roles";
 import type { Person, Priority, Settings } from "./types";
+import { CATEGORY_ID, NOPRO } from "../classifier/categories";
 
 export interface PriorityResult {
   score: number;
@@ -10,7 +10,7 @@ export interface PriorityResult {
   reasons: string[];
 }
 
-type Scorable = Pick<Person, "bucket" | "section" | "company" | "isTarget" | "isAlumni" | "email" | "url" | "systemTags" | "certainty" | "history">;
+type Scorable = Pick<Person, "category" | "roleFamily" | "company" | "isTarget" | "isAlumni" | "email" | "url" | "systemTags" | "confidence" | "history">;
 
 export function scorePriority(p: Scorable, settings: Settings): PriorityResult {
   const { goals } = settings;
@@ -18,14 +18,14 @@ export function scorePriority(p: Scorable, settings: Settings): PriorityResult {
   const reasons: string[] = [];
   let score = 0;
 
-  if (!p.bucket) return { score: 0, level: "low", reasons: ["No role information to match against your goals"] };
+  if (p.category === NOPRO) return { score: 0, level: "low", reasons: ["No role information to match against your goals"] };
 
-  if (p.section && goals.sections.includes(p.section)) {
+  if (goals.roleFamilies.includes(p.roleFamily)) {
     score += w.functionMatch;
-    reasons.push(`Works in ${sectionLabel(p.bucket, p.section)}, one of your target areas`);
-  } else if (goals.buckets.includes(p.bucket)) {
+    reasons.push(`Works in ${p.roleFamily}, one of your target areas`);
+  } else if (goals.categories.includes(CATEGORY_ID[p.category])) {
     score += w.domainMatch;
-    reasons.push(`Works in ${bucketLabel(p.bucket)}, one of your target areas`);
+    reasons.push(`Works in ${p.category}, one of your target areas`);
   }
 
   if (p.isTarget) {
@@ -35,7 +35,7 @@ export function scorePriority(p: Scorable, settings: Settings): PriorityResult {
 
 
   const wantsJobs = goals.opportunityTypes.some((t) => ["Internship", "Full-time", "Referral"].includes(t));
-  if (wantsJobs && p.section === "recruitment") {
+  if (wantsJobs && p.roleFamily === "Recruiting / HR") {
     score += w.recruiter;
     reasons.push("Recruiter, relevant for internships, jobs and referrals");
   }
@@ -58,7 +58,7 @@ export function scorePriority(p: Scorable, settings: Settings): PriorityResult {
     score += w.hasEmail;
     reasons.push("Email address available");
   }
-  if (p.certainty !== "high") {
+  if (p.confidence < 0.6) {
     score -= 5;
     reasons.push("Role is uncertain, review before reaching out");
   }
@@ -70,5 +70,5 @@ export function scorePriority(p: Scorable, settings: Settings): PriorityResult {
 
 export function hasGoals(settings: Settings): boolean {
   const g = settings.goals;
-  return g.buckets.length + g.sections.length > 0 || settings.targetCompanies.length > 0;
+  return g.categories.length + g.roleFamilies.length > 0 || settings.targetCompanies.length > 0;
 }

@@ -10,6 +10,7 @@ import type { HealthIssue } from "@/lib/workspace/types";
 import { PageBody, PageHeader } from "@/components/shell/AppShell";
 import { Button, Card, CardTitle, Meter, Pill } from "@/components/ui";
 import { useUI, useWorkspace } from "@/components/workspace/store";
+import { NOPRO } from "@/lib/classifier/categories";
 
 const DESCRIPTIONS: Record<HealthIssue, string> = {
   unclassified: "No job title and no recognisable employer, so there is nothing to classify. Open them to set a role yourself.",
@@ -33,8 +34,8 @@ export function HealthView() {
     router.push("/people");
   };
 
-  const classified = people.filter((p) => p.bucket).length;
-  const specific = people.filter((p) => p.certainty === "high").length;
+  const classified = people.filter((p) => p.category !== NOPRO).length;
+  const specific = people.filter((p) => p.band === "High").length;
 
   return (
     <>
@@ -45,14 +46,14 @@ export function HealthView() {
             <div>
               <p className="flex items-center gap-2 text-[13.5px] font-semibold"><ShieldCheck size={15} className="text-accent" />Classification quality</p>
               <p className="mt-1 text-[12.5px] text-muted">
-                {classified.toLocaleString()} of {people.length.toLocaleString()} connections have a role ({Math.round((classified / Math.max(1, people.length)) * 100)}%), and {specific.toLocaleString()} of those were clear enough to be sure about.
+                {classified.toLocaleString()} of {people.length.toLocaleString()} connections have a role ({Math.round((classified / Math.max(1, people.length)) * 100)}%), and {specific.toLocaleString()} of those came out in the high confidence band.
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Pill tone="green">{people.filter((p) => p.classSource === "repository" && p.certainty === "high").length.toLocaleString()} clear</Pill>
-              <Pill tone="blue">{people.filter((p) => p.classSource === "repository" && p.certainty === "medium").length.toLocaleString()} likely</Pill>
-              <Pill tone="amber">{people.filter((p) => p.classSource === "repository" && p.certainty === "low").length.toLocaleString()} job titles unclear</Pill>
-              <Pill tone="teal">{people.filter((p) => p.classSource !== "repository").length.toLocaleString()} yours</Pill>
+              <Pill tone="green">{people.filter((p) => p.band === "High").length.toLocaleString()} high</Pill>
+              <Pill tone="blue">{people.filter((p) => p.band === "Medium").length.toLocaleString()} medium</Pill>
+              <Pill tone="amber">{people.filter((p) => p.needsReview).length.toLocaleString()} need review</Pill>
+              <Pill tone="teal">{people.filter((p) => p.classSource !== "classifier").length.toLocaleString()} yours</Pill>
             </div>
           </div>
           <div className="mt-3">

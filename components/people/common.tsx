@@ -1,7 +1,7 @@
 "use client";
 
 import { ExternalLink, Search } from "lucide-react";
-import { bucketLabel, sectionLabel } from "@/lib/knowledge/roles";
+import { NOPRO } from "@/lib/classifier/categories";
 import { RESEARCH_ACTIONS, researchUrl } from "@/lib/workspace/outreach";
 import type { Person, Priority, Settings, Tone } from "@/lib/workspace/types";
 import { Avatar, Button, Dot, Menu, MenuItem, MenuLabel, Pill, cx } from "@/components/ui";
@@ -32,17 +32,18 @@ export function PriorityBadge({ person }: { person: Person }) {
   );
 }
 
-export function ConfidenceBadge({ person }: { person: Person; showPercent?: boolean }) {
-  if (!person.bucket) return <Pill tone="gray" title={person.evidence.join(" · ")}>Role unclear</Pill>;
+export function ConfidenceBadge({ person, showPercent = true }: { person: Person; showPercent?: boolean }) {
+  if (person.category === NOPRO) return <Pill tone="gray">No role data</Pill>;
   if (person.classSource === "manual") return <Pill tone="teal">Set by you</Pill>;
   if (person.classSource === "rule") return <Pill tone="teal">Your rule</Pill>;
-  const tone: Tone = person.certainty === "high" ? "green" : person.certainty === "medium" ? "blue" : "amber";
+  const tone: Tone = person.band === "High" ? "green" : person.band === "Medium" ? "blue" : "amber";
   // The label is about how well the job title could be read, never about the
-  // person, so it says exactly that.
-  const title = `${person.certainty[0].toUpperCase()}${person.certainty.slice(1)} confidence. ${person.evidence.join(" · ")}`;
+  // person, so the tooltip says which signals decided it.
+  const title = `${person.method}. Confidence ${person.confidence}.${person.secondCategory ? ` Runner-up: ${person.secondCategory}.` : ""}`;
   return (
     <Pill tone={tone} title={title}>
-      {person.certainty === "high" ? "Clear" : person.certainty === "medium" ? "Likely" : "Uncertain"}
+      {person.band}
+      {showPercent ? ` ${person.confidence}` : ""}
     </Pill>
   );
 }
@@ -50,9 +51,9 @@ export function ConfidenceBadge({ person }: { person: Person; showPercent?: bool
 export function RoleLine({ person, className }: { person: Person; className?: string }) {
   return (
     <span className={cx("truncate text-[12px] text-muted", className)}>
-      {person.bucket
-        ? `${bucketLabel(person.bucket)}${person.section ? ` · ${sectionLabel(person.bucket, person.section)}` : ""}`
-        : "Role not stated"}
+      {person.category === NOPRO
+        ? "No role data"
+        : `${person.category}${person.roleFamily && person.roleFamily !== person.category ? ` · ${person.roleFamily}` : ""}`}
     </span>
   );
 }

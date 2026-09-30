@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Search } from "lucide-react";
-import { bucketLabel, roleLabel } from "@/lib/knowledge/roles";
+import { CATEGORY_ID, NOPRO } from "@/lib/classifier/categories";
 import { sectorLabel } from "@/lib/knowledge/sectors";
 import { groupCompanies } from "@/lib/workspace/insights";
 import type { Filters, Person } from "@/lib/workspace/types";
@@ -127,7 +127,7 @@ export function AnalyticsView() {
     router.push("/people");
   };
 
-  const known = useMemo(() => people.filter((p) => p.bucket), [people]);
+  const known = useMemo(() => people.filter((p) => p.category !== NOPRO), [people]);
 
   const groups: Group[] = useMemo(() => {
     const build = (key: (p: Person) => string, label: (k: string) => string, filters: (k: string) => Filters, source = known) => {
@@ -142,7 +142,7 @@ export function AnalyticsView() {
 
     switch (lens) {
       case "role":
-        return build((p) => p.roleId ?? "", (k) => roleLabel(k), (k) => ({ roles: [k] }))
+        return build((p) => p.roleFamily, (k) => k, (k) => ({ roleFamilies: [k] }))
           .sort((a, b) => b.people.length - a.people.length)
           .slice(0, 16);
       case "sector":
@@ -153,7 +153,7 @@ export function AnalyticsView() {
           .slice(0, 16)
           .map((c) => ({ key: c.key, label: c.name, people: c.people, filters: { companies: [c.key] } as Filters }));
       default:
-        return build((p) => p.bucket ?? "", bucketLabel, (k) => ({ buckets: [k] })).sort((a, b) => b.people.length - a.people.length);
+        return build((p) => p.category, (k) => k, (k) => ({ categories: [CATEGORY_ID[k]] })).sort((a, b) => b.people.length - a.people.length);
     }
   }, [known, people, settings, lens]);
 
@@ -166,8 +166,8 @@ export function AnalyticsView() {
   const companies = useMemo(() => groupCompanies(people, settings).slice(0, 8), [people, settings]);
 
   const founders = useMemo(() => people.filter((p) => p.isFounder), [people]);
-  const unclear = useMemo(() => people.filter((p) => !p.bucket), [people]);
-  const recruiters = useMemo(() => people.filter((p) => p.section === "recruitment"), [people]);
+  const unclear = useMemo(() => people.filter((p) => p.needsReview), [people]);
+  const recruiters = useMemo(() => people.filter((p) => p.roleFamily === "Recruiting / HR"), [people]);
   const spokenTo = useMemo(() => people.filter((p) => p.history?.messageCount), [people]);
 
   /** Where the most people sit that you have never contacted. Computed, not judged. */
@@ -198,7 +198,7 @@ export function AnalyticsView() {
           {/* ---- snapshot, as numbers you can walk through ------------------ */}
           <section className="grid grid-cols-2 gap-x-8 gap-y-5 border-b border-line pb-6 lg:grid-cols-4">
             {[
-              { n: unclear.length, label: "Role unclear", hint: "Titles that name no job", f: { health: "unclassified" } as Filters },
+              { n: unclear.length, label: "Need review", hint: "Low confidence or a conflict", f: { needsReview: true } as Filters },
               { n: founders.length, label: "Founders", hint: `${founders.filter((p) => p.status === "not_contacted").length.toLocaleString()} not contacted`, f: { audiences: ["founders"] } as Filters },
               { n: recruiters.length, label: "Recruiters", hint: "Can point you at openings", f: { audiences: ["recruiters"] } as Filters },
               { n: spokenTo.length, label: "Already spoken to", hint: spokenTo.length ? "From your message history" : "Add your archive to fill this in", f: { history: "messaged" } as Filters },
@@ -288,7 +288,7 @@ export function AnalyticsView() {
                         <span className="min-w-0 flex-1">
                           <span className="block truncate text-[13px] font-medium group-hover:text-accent">{p.name}</span>
                           <span className="block truncate text-[11.5px] text-muted">
-                            {p.roleLabel}{p.company ? ` · ${p.company}` : ""}
+                            {p.roleFamily}{p.company ? ` · ${p.company}` : ""}
                           </span>
                         </span>
                       </button>

@@ -1,7 +1,7 @@
 // Excel outreach tracker. Built in the browser with ExcelJS (loaded on demand).
 
 import type { Workbook, Worksheet } from "exceljs";
-import { bucketLabel, sectionLabel } from "./knowledge/roles";
+
 import { sectorLabel } from "./knowledge/sectors";
 import { CHANNELS, OPPORTUNITY_TYPES } from "./workspace/defaults";
 import { parseISODate } from "./workspace/dates";
@@ -21,9 +21,9 @@ export const EXPORT_COLUMNS: ExportColumn[] = [
   { key: "name", label: "Name", width: 24, get: (p) => p.name },
   { key: "company", label: "Company", width: 26, get: (p) => p.company },
   { key: "position", label: "Position", width: 36, kind: "wrap", get: (p) => p.position },
-  { key: "bucket", label: "Role area", width: 26, get: (p) => bucketLabel(p.bucket ?? "") },
-  { key: "section", label: "Section", width: 26, get: (p) => sectionLabel(p.bucket ?? "", p.section ?? "") },
-  { key: "role", label: "Role", width: 26, get: (p) => p.roleLabel },
+  { key: "category", label: "Category", width: 28, get: (p) => p.category },
+  { key: "roleFamily", label: "Role Family", width: 26, get: (p) => p.roleFamily },
+  { key: "second", label: "Second Category", width: 26, get: (p) => p.secondCategory ?? "" },
   { key: "sector", label: "Sector", width: 28, get: (p) => sectorLabel(p.sector) },
   { key: "location", label: "Location", width: 16, get: (p) => p.location },
   { key: "email", label: "Email", width: 26, get: (p) => p.email },
@@ -47,12 +47,15 @@ export const EXPORT_COLUMNS: ExportColumn[] = [
     ].filter(Boolean).join("\n"),
   },
   { key: "connected", label: "Connected On", width: 14, kind: "date", get: (p) => p.connectedOn },
-  { key: "confidence", label: "Classification Confidence", width: 14, get: (p) => (p.bucket ? p.certainty[0].toUpperCase() + p.certainty.slice(1) : "") },
+  { key: "confidence", label: "Classification Confidence", width: 14, get: (p) => String(p.confidence) },
+  { key: "band", label: "Band", width: 10, kind: "list", get: (p) => p.band },
+  { key: "method", label: "Classification Method", width: 34, kind: "wrap", get: (p) => p.method },
+  { key: "cluster", label: "KMeans Cluster K10", width: 12, get: (p) => (p.cluster === null ? "" : String(p.cluster)) },
   { key: "tags", label: "Tags", width: 24, get: (p) => p.tags.join(", ") },
 ];
 
 export const DEFAULT_EXPORT_COLUMNS = [
-  "name", "company", "position", "bucket", "section", "role", "sector", "location", "email", "linkedin",
+  "name", "company", "position", "category", "roleFamily", "second", "confidence", "band", "method", "sector", "location", "email", "linkedin",
   "status", "priority", "contacted", "followup", "notes", "personalization", "nextAction",
 ];
 
@@ -193,7 +196,7 @@ function fillSummary(s: Worksheet, tracker: Worksheet, people: Person[], setting
   };
   table("B", 6, "Status", count((p) => settings.statuses.find((x) => x.id === p.status)?.label ?? p.status));
   table("E", 6, "Priority", count((p) => p.priority[0].toUpperCase() + p.priority.slice(1)));
-  table("B", 24, "Role area", count((p) => bucketLabel(p.bucket ?? "")));
+  table("B", 24, "Category", count((p) => p.category));
   table("E", 24, "Top companies", count((p) => p.company || "-").slice(0, 15));
 }
 

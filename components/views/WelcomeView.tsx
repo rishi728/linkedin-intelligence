@@ -25,7 +25,7 @@ const UNLOCKS = [
 ];
 
 const FEATURES = [
-  { icon: Users, title: "Understand who you know", body: "Every connection sorted into domain, function, role and seniority, with a confidence score you can correct." },
+  { icon: Users, title: "Understand who you know", body: "Every connection sorted into one of ten professional categories and a role family, with a confidence score you can correct." },
   { icon: Search, title: "Find the right people", body: "Ask for “senior people in supply chain” or use guided search to build a shortlist in seconds." },
   { icon: KanbanSquare, title: "Run your outreach", body: "Track conversations on a board, prepare personalised messages, and never lose a thread." },
   { icon: Bell, title: "Never miss a follow-up", body: "Reminders are scheduled for you when you mark someone as contacted." },

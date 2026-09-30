@@ -1,4 +1,3 @@
-import { bucketLabel, sectionLabel } from "../knowledge/roles";
 import { sectorLabel } from "../knowledge/sectors";
 import { companyMatches } from "./build";
 import { dueBucket, todayISO, type DueBucket } from "./dates";
@@ -42,9 +41,9 @@ export function groupCompanies(people: Person[], settings: Settings): CompanyGro
       count: list.length,
       isTarget: companyMatches(key, settings.targetCompanies),
       sector: tally(list.map((p) => sectorLabel(p.sector)))[0][0],
-      domains: tally(list.map((p) => bucketLabel(p.bucket ?? ""))),
-      roles: tally(list.map((p) => p.roleLabel).filter(Boolean)),
-      sections: tally(list.map((p) => sectionLabel(p.bucket ?? "", p.section ?? "")).filter(Boolean)),
+      domains: tally(list.map((p) => p.category)),
+      roles: tally(list.map((p) => p.roleFamily).filter(Boolean)),
+      sections: tally(list.map((p) => p.roleFamily).filter(Boolean)),
       contacted: list.filter((p) => p.status !== "not_contacted").length,
       highPriority: list.filter((p) => p.priority === "high").length,
       people: list,

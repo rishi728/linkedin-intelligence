@@ -5,9 +5,10 @@ import { usePathname } from "next/navigation";
 import { Building2, Calendar, CheckCircle2, Mail, MessageSquarePlus, Pencil, RotateCcw, X } from "lucide-react";
 import { addDays, formatDate, relativeDue, todayISO } from "@/lib/workspace/dates";
 import { CHANNELS, OPPORTUNITY_TYPES, RESPONSES } from "@/lib/workspace/defaults";
-import { ROLE_BUCKETS, bucketLabel, roleLabel, sectionLabel } from "@/lib/knowledge/roles";
+import { CATEGORY_ID, CATS, NOPRO } from "@/lib/classifier/categories";
+import { familiesOf } from "@/lib/classifier/search";
 import { sectorLabel } from "@/lib/knowledge/sectors";
-import type { RoleHierarchy } from "@/lib/knowledge/classify";
+import type { RoleHierarchy } from "@/lib/classifier/corrections";
 import type { Person } from "@/lib/workspace/types";
 import { useUI, useWorkspace } from "@/components/workspace/store";
 import { Avatar, Button, Checkbox, Field, IconButton, Input, Meter, Pill, Select, Sheet, Textarea, cx } from "@/components/ui";
@@ -49,51 +50,37 @@ function ClassificationEditor({ person, onDone }: { person: Person; onDone: () =
   const { setClassification, people } = useWorkspace();
   const { toast } = useUI();
   const [draft, setDraft] = useState<RoleHierarchy>({
-    bucket: person.bucket ?? ROLE_BUCKETS[0].id,
-    section: person.section ?? ROLE_BUCKETS[0].sections[0].id,
-    roleId: person.roleId ?? ROLE_BUCKETS[0].sections[0].roles[0].id,
+    category: CATEGORY_ID[person.category] ?? CATEGORY_ID[CATS[0]],
+    roleFamily: person.roleFamily,
   });
   const sameTitle = useMemo(
     () => (person.position ? people.filter((p) => p.position.toLowerCase() === person.position.toLowerCase()).length : 1),
     [people, person.position],
   );
   const [learn, setLearn] = useState(sameTitle > 1);
-  const bucket = ROLE_BUCKETS.find((b) => b.id === draft.bucket) ?? ROLE_BUCKETS[0];
-  const section = bucket.sections.find((x) => x.id === draft.section) ?? bucket.sections[0];
+  const label = CATS.find((c) => CATEGORY_ID[c] === draft.category) ?? CATS[0];
+  const families = familiesOf(label);
 
   return (
     <div className="space-y-2.5">
       <div className="grid grid-cols-2 gap-2.5">
-        <Field label="Role area">
+        <Field label="Category">
           <Select
-            value={draft.bucket}
+            value={draft.category}
             onChange={(e) => {
-              const b = ROLE_BUCKETS.find((x) => x.id === e.target.value)!;
-              setDraft({ bucket: b.id, section: b.sections[0].id, roleId: b.sections[0].roles[0].id });
+              const next = CATS.find((c) => CATEGORY_ID[c] === e.target.value) ?? CATS[0];
+              setDraft({ category: CATEGORY_ID[next], roleFamily: familiesOf(next)[0] ?? next });
             }}
           >
-            {ROLE_BUCKETS.map((b) => (
-              <option key={b.id} value={b.id}>{b.label}</option>
+            {CATS.map((c) => (
+              <option key={c} value={CATEGORY_ID[c]}>{c}</option>
             ))}
           </Select>
         </Field>
-        <Field label="Section">
-          <Select
-            value={section.id}
-            onChange={(e) => {
-              const x = bucket.sections.find((y) => y.id === e.target.value)!;
-              setDraft((v) => ({ ...v, section: x.id, roleId: x.roles[0].id }));
-            }}
-          >
-            {bucket.sections.map((x) => (
-              <option key={x.id} value={x.id}>{x.label}</option>
-            ))}
-          </Select>
-        </Field>
-        <Field label="Role" className="col-span-2">
-          <Select value={draft.roleId} onChange={(e) => setDraft((v) => ({ ...v, roleId: e.target.value }))}>
-            {section.roles.map((x) => (
-              <option key={x.id} value={x.id}>{x.label}</option>
+        <Field label="Role family">
+          <Select value={draft.roleFamily} onChange={(e) => setDraft((v) => ({ ...v, roleFamily: e.target.value }))}>
+            {(families.length ? families : [label]).map((f) => (
+              <option key={f} value={f}>{f}</option>
             ))}
           </Select>
         </Field>
@@ -321,7 +308,7 @@ export function PersonPanel() {
           action={
             editing ? null : (
               <div className="flex gap-1">
-                {person.classSource !== "repository" ? (
+                {person.classSource !== "classifier" ? (
                   <IconButton label="Reset to automatic" icon={RotateCcw} onClick={() => { resetClassification(person.id); toast("Back to the automatic classification."); }} />
                 ) : null}
                 <IconButton label="Edit classification" icon={Pencil} onClick={() => setEditing(true)} />
@@ -335,16 +322,19 @@ export function PersonPanel() {
             <div className="space-y-1">
               {/* The raw LinkedIn title stays visible above what was made of it. */}
               <Row label="Their title">{person.position || <span className="text-muted">Not given</span>}</Row>
-              <Row label="Role area">{person.bucket ? bucketLabel(person.bucket) : <span className="text-muted">Not stated</span>}</Row>
-              {person.bucket && person.section ? <Row label="Section">{sectionLabel(person.bucket, person.section)}</Row> : null}
-              {person.roleId ? <Row label="Role">{roleLabel(person.roleId)}</Row> : null}
+              <Row label="Category">{person.category}</Row>
+              {person.roleFamily && person.roleFamily !== person.category ? (
+                <Row label="Role family">{person.roleFamily}</Row>
+              ) : null}
+              {person.secondCategory ? <Row label="Runner-up">{person.secondCategory}</Row> : null}
+              {person.cluster ? <Row label="Cluster">{`K-means ${person.cluster} of 10`}</Row> : null}
               <Row label="Sector">
                 {person.sector ? sectorLabel(person.sector) : <span className="text-muted">Employer not recognised</span>}
               </Row>
               <div className="mt-2 flex items-center gap-2">
                 <ConfidenceBadge person={person} />
               </div>
-              {person.evidence.length ? <p className="mt-1.5 text-[11.5px] text-muted">{person.evidence.join(" · ")}</p> : null}
+              <p className="mt-1.5 text-[11.5px] text-muted">{person.method}</p>
             </div>
           )}
         </Section>

@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import {
   BarChart3, Bell, Building2, Cloud, Compass, Home, ListChecks, Plus, Search, Send,
-  Menu as MenuIcon, Settings as SettingsIcon, Sparkles, Stethoscope, Users, X,
+  Menu as MenuIcon, Settings as SettingsIcon, Stethoscope, Users, X,
 } from "lucide-react";
 import { followUpBuckets } from "@/lib/workspace/insights";
 import { CommandPalette } from "@/components/shell/CommandPalette";
@@ -29,7 +29,6 @@ const NAV: Array<{ section?: string; href: string; label: string; icon: typeof H
   { href: "/people", label: "People", icon: Users },
   { section: "Conversations", href: "/outreach", label: "Outreach", icon: Send },
   { section: "Understand", href: "/analytics", label: "Network", icon: BarChart3 },
-  { href: "/intelligence", label: "Intelligence", icon: Sparkles },
   { href: "/companies", label: "Companies", icon: Building2 },
   { section: "Keep it clean", href: "/review", label: "Review & improve", icon: ListChecks },
   { href: "/health", label: "Data health", icon: Stethoscope },
@@ -70,7 +69,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const buckets = followUpBuckets(people, settings);
   const due = buckets.overdue.length + buckets.today.length;
   const inPipeline = people.filter((p) => p.status !== "not_contacted").length;
-  const toReview = people.filter((p) => p.needsReview && p.classSource === "repository").length;
+  const toReview = people.filter((p) => p.needsReview && p.classSource === "classifier").length;
 
   const counts: Record<string, number | undefined> = {
     "/people": people.length,

@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Download, Plus, Trash2, Upload, X } from "lucide-react";
 import { CsvFormatError } from "@/lib/analyzer";
-import { ROLE_BUCKETS, bucketLabel, roleLabel, sectionLabel } from "@/lib/knowledge/roles";
+import { CATEGORY_ID, CATS } from "@/lib/classifier/categories";
+import { ROLE_FAMILIES, familiesOf } from "@/lib/classifier/search";
 import { DOMAINS } from "@/lib/roles";
 import { OPPORTUNITY_TYPES, PURPOSES, CHANNELS, defaultSettings } from "@/lib/workspace/defaults";
 import { groupCompanies } from "@/lib/workspace/insights";
@@ -19,7 +20,7 @@ import { DEFAULT_WEIGHTS } from "@/lib/workspace/defaults";
 import { addDays, formatDate, todayISO } from "@/lib/workspace/dates";
 import { useUI, useWorkspace } from "@/components/workspace/store";
 
-type Tab = "goals" | "targets" | "pipeline" | "outreach" | "templates" | "rules" | "model" | "data";
+type Tab = "goals" | "targets" | "pipeline" | "outreach" | "templates" | "rules" | "data";
 
 const TONES: Tone[] = ["gray", "blue", "violet", "amber", "orange", "teal", "green", "slate", "red"];
 
@@ -37,7 +38,6 @@ function Chip({ active, onClick, children }: { active: boolean; onClick: () => v
 
 export function SettingsView() {
   const {
-    aiSettings, lastRun, updateAiSettings,
     people, settings, updateSettings, deleteRule, deleteSegment, toggleTarget, importCsv, exportBackup, importBackup,
     resetWorkspace, dataset, snapshots, restoreSnapshot, savedAt,
   } = useWorkspace();
@@ -83,7 +83,6 @@ export function SettingsView() {
               { value: "outreach", label: "Outreach" },
               { value: "templates", label: "Templates" },
               { value: "rules", label: "Rules" },
-              { value: "model", label: "Model" },
               { value: "data", label: "Data" },
             ]}
           />
@@ -152,21 +151,21 @@ export function SettingsView() {
                     </div>
                   </div>
                   <div>
-                    <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-muted">Target role areas</p>
+                    <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-muted">Target categories</p>
                     <div className="flex flex-wrap gap-2">
-                      {ROLE_BUCKETS.map((d) => (
-                        <Chip key={d.id} active={settings.goals.buckets.includes(d.id)} onClick={() => toggle(settings.goals.buckets, d.id, (next) => updateSettings((s) => ({ ...s, goals: { ...s.goals, buckets: next } })))}>
-                          {d.label}
+                      {CATS.map((d) => (
+                        <Chip key={d} active={settings.goals.categories.includes(CATEGORY_ID[d])} onClick={() => toggle(settings.goals.categories, CATEGORY_ID[d], (next) => updateSettings((s) => ({ ...s, goals: { ...s.goals, categories: next } })))}>
+                          {d}
                         </Chip>
                       ))}
                     </div>
                   </div>
                   <div>
-                    <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-muted">Target sections</p>
+                    <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-muted">Target role families</p>
                     <div className="flex flex-wrap gap-1.5">
-                      {settings.goals.sections.map((f) => (
-                        <button key={f} type="button" onClick={() => toggle(settings.goals.sections, f, (next) => updateSettings((s) => ({ ...s, goals: { ...s.goals, sections: next } })))} className="inline-flex items-center gap-1 rounded-md border border-accent bg-accent-soft px-2 py-0.5 text-[12px] text-accent">
-                          {sectionLabel(ROLE_BUCKETS.find((b) => b.sections.some((x) => x.id === f))?.id ?? "", f)}
+                      {settings.goals.roleFamilies.map((f) => (
+                        <button key={f} type="button" onClick={() => toggle(settings.goals.roleFamilies, f, (next) => updateSettings((s) => ({ ...s, goals: { ...s.goals, roleFamilies: next } })))} className="inline-flex items-center gap-1 rounded-md border border-accent bg-accent-soft px-2 py-0.5 text-[12px] text-accent">
+                          {f}
                           <X size={11} />
                         </button>
                       ))}
@@ -174,13 +173,13 @@ export function SettingsView() {
                     <div className="mt-2 max-w-sm">
                       <Select
                         value=""
-                        onChange={(e) => e.target.value && toggle(settings.goals.sections, e.target.value, (next) => updateSettings((s) => ({ ...s, goals: { ...s.goals, sections: next } })))}
+                        onChange={(e) => e.target.value && toggle(settings.goals.roleFamilies, e.target.value, (next) => updateSettings((s) => ({ ...s, goals: { ...s.goals, roleFamilies: next } })))}
                       >
-                        <option value="">Add a section…</option>
-                        {ROLE_BUCKETS.map((d) => (
-                          <optgroup key={d.id} label={d.label}>
-                            {d.sections.map((f) => (
-                              <option key={f.id} value={f.id}>{f.label}</option>
+                        <option value="">Add a role family…</option>
+                        {CATS.map((d) => (
+                          <optgroup key={d} label={d}>
+                            {familiesOf(d).map((f) => (
+                              <option key={f} value={f}>{f}</option>
                             ))}
                           </optgroup>
                         ))}
@@ -471,12 +470,12 @@ export function SettingsView() {
                   </p>
                 ) : (
                   settings.rules.map((r) => {
-                    const affected = people.filter((p) => p.classSource === "rule" && p.evidence[0]?.includes(r.example)).length;
+                    const affected = people.filter((p) => p.classSource === "rule" && p.method.includes(r.example)).length;
                     return (
                       <div key={r.id} className="flex flex-wrap items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-hover">
                         <span className="truncate text-[12.5px] font-medium">“{r.example}”</span>
                         <span className="text-[12px] text-muted">
-                          → {[r.set.bucket && bucketLabel(r.set.bucket), r.set.section && sectionLabel(r.set.bucket ?? "", r.set.section), r.set.roleId && roleLabel(r.set.roleId)].filter(Boolean).join(" · ")}
+                          → {[r.set.category && CATS.find((c) => CATEGORY_ID[c] === r.set.category), r.set.roleFamily].filter(Boolean).join(" · ")}
                         </span>
                         <span className="tabular ml-auto text-[12px] text-muted">{affected} people</span>
                         <Button size="sm" variant="ghost" icon={Trash2} onClick={() => { deleteRule(r.id); toast("Rule deleted."); }}>Delete</Button>
@@ -484,53 +483,6 @@ export function SettingsView() {
                     );
                   })
                 )}
-              </div>
-            </Card>
-          ) : null}
-
-          {tab === "model" ? (
-            <Card>
-              <CardTitle hint="Used only for titles the repository cannot place">Language model</CardTitle>
-              <div className="space-y-4 p-4">
-                <p className="max-w-[68ch] text-[12.5px] leading-relaxed text-muted">
-                  Everything in this product works without this. The repository classifies most of your network on this
-                  device, and it stays that way. A model is only asked about the titles it could not place, at most nine
-                  requests for the whole network, and every answer is checked against the repository before it is kept.
-                </p>
-
-                <Field label="OpenRouter API key" hint="Stored in this browser only. It is never put in a backup file.">
-                  <Input
-                    type="password"
-                    autoComplete="off"
-                    spellCheck={false}
-                    value={aiSettings.apiKey}
-                    onChange={(e) => updateAiSettings({ apiKey: e.target.value.trim() })}
-                    placeholder="sk-or-..."
-                  />
-                </Field>
-
-                <Field label="Model" hint="Any model id OpenRouter accepts. Nothing in the code assumes a particular one.">
-                  <Input
-                    value={aiSettings.model}
-                    onChange={(e) => updateAiSettings({ model: e.target.value.trim() })}
-                    placeholder="anthropic/claude-3.5-haiku"
-                  />
-                </Field>
-
-                <div className="rounded-lg border border-line bg-subtle p-3">
-                  <p className="text-[12.5px] font-medium">What is sent</p>
-                  <p className="mt-0.5 text-[12px] leading-relaxed text-muted">
-                    A job title and an employer name, once per distinct combination, for the people the repository could
-                    not place. Never names, never profile links, never email addresses, never your notes or messages.
-                  </p>
-                </div>
-
-                {lastRun ? (
-                  <p className="text-[12px] text-muted">
-                    Last run used {lastRun.requestsUsed} of 9 requests and placed{" "}
-                    {lastRun.aiClassifications.toLocaleString()} people.
-                  </p>
-                ) : null}
               </div>
             </Card>
           ) : null}
