@@ -25,7 +25,10 @@ export function WelcomeView() {
   const [walkthroughOpen, setWalkthroughOpen] = useState(false);
 
   useEffect(() => {
-    if (ready && dataset && !showModal) router.replace("/home");
+    if (ready && dataset && !showModal) {
+      const stayOnLanding = new URLSearchParams(window.location.search).has("welcome");
+      if (!stayOnLanding) router.replace("/home");
+    }
   }, [ready, dataset, router, showModal]);
 
   const handle = async (file: File | undefined) => {
@@ -278,7 +281,7 @@ export function WelcomeView() {
                   <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 12, paddingTop: 16 }}>
                     <button
                       className="cta-main"
-                      onClick={() => inputRef.current?.click()}
+                      onClick={() => document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth", block: "center" })}
                       style={{
                         display: "flex", alignItems: "center", gap: 12,
                         padding: "14px 24px", borderRadius: 9999, border: "none",
@@ -606,7 +609,11 @@ export function WelcomeView() {
                     Stays in this browser
                   </p>
                   <button
-                    onClick={() => { loadSample(); router.push("/home"); }}
+                    onClick={() => {
+                      loadSample();
+                      updateSettings((s: any) => ({ ...s, focus: { ...s.focus, confirmedAt: new Date().toISOString() } }));
+                      router.push("/home");
+                    }}
                     style={{
                       padding: "6px 14px", borderRadius: 8, fontSize: 13, fontWeight: 500,
                       background: "#F4F3EE", color: "#334155", border: "1px solid #E8E6DF",
@@ -624,6 +631,7 @@ export function WelcomeView() {
               </div>
             </div>
           </section>
+          <WalkthroughSection walkthroughOpen={walkthroughOpen} setWalkthroughOpen={setWalkthroughOpen} />
           </div>
           )}
           {activeTab === "privacy" && (
@@ -707,6 +715,12 @@ function ExportModal({
       ...s,
       profile: { ...s.profile, name: editName, background: editBg, schools: editSchools },
     }));
+  };
+
+  const confirmAndFinish = () => {
+    if (modalTab === "edit") saveEdits();
+    updateSettings((s: any) => ({ ...s, focus: { ...s.focus, confirmedAt: new Date().toISOString() } }));
+    onConfirm();
   };
 
   const tabActive = "padding: 0 12px 8px; borderBottom: 2px solid #114B3A; color: #114B3A; fontWeight: 600;";
@@ -901,10 +915,7 @@ function ExportModal({
           <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <button
-                onClick={() => {
-                  if (modalTab === "edit") saveEdits();
-                  onConfirm();
-                }}
+                onClick={confirmAndFinish}
                 style={{
                   padding: "8px 20px", borderRadius: 12, background: "#0F2D24",
                   color: "#fff", fontSize: 12, fontWeight: 600, border: "none",
@@ -922,7 +933,7 @@ function ExportModal({
               >Add or change</button>
             </div>
             <button
-              onClick={onConfirm}
+              onClick={confirmAndFinish}
               style={{
                 fontSize: 12, fontWeight: 500, color: "#065f46",
                 textDecoration: "underline", textUnderlineOffset: 4,
@@ -1076,98 +1087,106 @@ function PrivacyTabContent({ walkthroughOpen, setWalkthroughOpen }: { walkthroug
         </div>
       </section>
 
-      {/* Data Export Walkthrough */}
-      <section style={{ padding: "48px 0 64px" }}>
-        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 48px" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "4fr 8fr", gap: 20, alignItems: "flex-start" }}>
-            <button
-              onClick={() => setWalkthroughOpen(!walkthroughOpen)}
-              style={{
-                width: "100%", textAlign: "left", cursor: "pointer",
-                background: walkthroughOpen ? "#FDFCF9" : "#fff",
-                borderRadius: 16, padding: "16px 20px",
-                border: walkthroughOpen ? "1px solid #059669" : "1px solid #E8E6DF",
-                boxShadow: walkthroughOpen ? "0 0 0 2px rgba(16,185,129,0.2)" : "0 1px 2px rgba(0,0,0,0.04)",
-                transition: "all 0.2s", fontFamily: "inherit",
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-                  <div style={{
-                    width: 40, height: 40, borderRadius: 12, background: "#EBF6F1",
-                    display: "flex", alignItems: "center", justifyContent: "center", color: "#0C2D22",
-                    flexShrink: 0, position: "relative",
-                  }}>
-                    <svg style={{ width: 20, height: 20 }} fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-                      <path d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                    {walkthroughOpen && <span style={{ position: "absolute", top: -4, right: -4, width: 10, height: 10, background: "#10B981", borderRadius: "50%", border: "2px solid #fff" }} />}
-                  </div>
-                  <div>
-                    <h4 style={{ fontSize: 14, fontWeight: 700, color: "#0f172a" }}>Steps to get your LinkedIn data</h4>
-                    <p style={{ fontSize: 12, color: walkthroughOpen ? "#047857" : "#64748b", marginTop: 2, fontWeight: walkthroughOpen ? 500 : 400 }}>
-                      {walkthroughOpen ? "Showing 4 actionable steps" : "Click to view 4 quick actionable steps"}
-                    </p>
-                  </div>
-                </div>
-                <div style={{
-                  width: 32, height: 32, borderRadius: "50%",
-                  border: walkthroughOpen ? "1px solid #059669" : "1px solid #E8E6DF",
-                  background: walkthroughOpen ? "#ecfdf5" : "transparent",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  color: walkthroughOpen ? "#047857" : "#a8a29e", flexShrink: 0,
-                }}>
-                  <svg style={{ width: 14, height: 14, transition: "transform 0.3s", transform: walkthroughOpen ? "rotate(90deg)" : "none" }} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                    <path d="m8.25 4.5 7.5 7.5-7.5 7.5" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </div>
-              </div>
-            </button>
-
-            {walkthroughOpen && (
-              <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #E8E6DF", padding: 24, boxShadow: "0 1px 3px rgba(0,0,0,0.04)", position: "relative", overflow: "hidden" }}>
-                <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 12, paddingBottom: 16, marginBottom: 16, borderBottom: "1px solid #E8E6DF" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 24, height: 24, borderRadius: "50%", background: "#d1fae5", color: "#065f46", fontSize: 12, fontWeight: 700, fontFamily: "monospace" }}>4</span>
-                    <h3 style={{ fontSize: 15, fontWeight: 700, color: "#0C2D22" }}>Official LinkedIn Data Export Guide</h3>
-                    <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 4, background: "#EBF6F1", color: "#0C2D22", fontWeight: 500 }}>~1 min</span>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                    <a href="https://www.linkedin.com/mypreferences/d/download-my-data" target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: "#047857", fontWeight: 500, textDecoration: "underline", display: "inline-flex", alignItems: "center", gap: 4 }}>
-                      Open LinkedIn Settings
-                      <svg style={{ width: 12, height: 12, fill: "none", stroke: "currentColor", strokeWidth: 2 }} viewBox="0 0 24 24"><path d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                    </a>
-                    <button onClick={() => setWalkthroughOpen(false)} style={{ color: "#a8a29e", cursor: "pointer", padding: 4, borderRadius: 6, border: "none", background: "none", fontFamily: "inherit" }}>
-                      <svg style={{ width: 16, height: 16, fill: "none", stroke: "currentColor", strokeWidth: 2 }} viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                    </button>
-                  </div>
-                </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-                  {[
-                    { n: 1, title: "'Me' icon → Settings & Privacy", desc: "Click your profile avatar at the top right of LinkedIn, then select Settings & Privacy." },
-                    { n: 2, title: "Data Privacy → Get a copy of your data", desc: "In the left sidebar, select Data Privacy and look under How LinkedIn uses your data." },
-                    { n: 3, title: "Select 'Connections' & Request", desc: 'Pick "Want something in particular?", tick Connections, and press Request archive.' },
-                    { n: 4, title: "Download email & unzip CSV", desc: "LinkedIn emails you in ~10 mins. Download the zip and drag your Connections.csv right here.", last: true },
-                  ].map((s) => (
-                    <div key={s.n} style={{ borderRadius: 12, background: "#FAF8F5", border: "1px solid rgba(232,230,223,0.8)", padding: 14, display: "flex", gap: 12 }}>
-                      <div style={{ width: 24, height: 24, borderRadius: "50%", background: s.last ? "#059669" : "#0C2D22", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, fontFamily: "monospace", flexShrink: 0, marginTop: 2 }}>{s.n}</div>
-                      <div>
-                        <h4 style={{ fontSize: 12, fontWeight: 700, color: "#0f172a", lineHeight: 1.4 }}>{s.title}</h4>
-                        <p style={{ fontSize: 11, color: "#57534e", marginTop: 4, lineHeight: 1.5 }}>{s.desc}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <div style={{ marginTop: 16, paddingTop: 12, borderTop: "1px solid #E8E6DF", display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: "#065f46", fontWeight: 500 }}>
-                  <svg style={{ width: 14, height: 14, color: "#059669", fill: "none", stroke: "currentColor", strokeWidth: 2.5 }} viewBox="0 0 24 24"><path d="m4.5 12.75 6 6 9-13.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                  Official LinkedIn feature. No bots or scrapers involved.
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
+      <WalkthroughSection walkthroughOpen={walkthroughOpen} setWalkthroughOpen={setWalkthroughOpen} />
     </>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Walkthrough section (shared by Home + Privacy tabs)                */
+/* ------------------------------------------------------------------ */
+function WalkthroughSection({ walkthroughOpen, setWalkthroughOpen }: { walkthroughOpen: boolean; setWalkthroughOpen: (v: boolean) => void }) {
+  return (
+    <section style={{ padding: "48px 0 64px" }}>
+      <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 48px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "4fr 8fr", gap: 20, alignItems: "flex-start" }}>
+          <button
+            onClick={() => setWalkthroughOpen(!walkthroughOpen)}
+            style={{
+              width: "100%", textAlign: "left", cursor: "pointer",
+              background: walkthroughOpen ? "#FDFCF9" : "#fff",
+              borderRadius: 16, padding: "16px 20px",
+              border: walkthroughOpen ? "1px solid #059669" : "1px solid #E8E6DF",
+              boxShadow: walkthroughOpen ? "0 0 0 2px rgba(16,185,129,0.2)" : "0 1px 2px rgba(0,0,0,0.04)",
+              transition: "all 0.2s", fontFamily: "inherit",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                <div style={{
+                  width: 40, height: 40, borderRadius: 12, background: "#EBF6F1",
+                  display: "flex", alignItems: "center", justifyContent: "center", color: "#0C2D22",
+                  flexShrink: 0, position: "relative",
+                }}>
+                  <svg style={{ width: 20, height: 20 }} fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+                    <path d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  {walkthroughOpen && <span style={{ position: "absolute", top: -4, right: -4, width: 10, height: 10, background: "#10B981", borderRadius: "50%", border: "2px solid #fff" }} />}
+                </div>
+                <div>
+                  <h4 style={{ fontSize: 14, fontWeight: 700, color: "#0f172a" }}>Steps to get your LinkedIn data</h4>
+                  <p style={{ fontSize: 12, color: walkthroughOpen ? "#047857" : "#64748b", marginTop: 2, fontWeight: walkthroughOpen ? 500 : 400 }}>
+                    {walkthroughOpen ? "Showing 4 actionable steps" : "Click to view 4 quick actionable steps"}
+                  </p>
+                </div>
+              </div>
+              <div style={{
+                width: 32, height: 32, borderRadius: "50%",
+                border: walkthroughOpen ? "1px solid #059669" : "1px solid #E8E6DF",
+                background: walkthroughOpen ? "#ecfdf5" : "transparent",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                color: walkthroughOpen ? "#047857" : "#a8a29e", flexShrink: 0,
+              }}>
+                <svg style={{ width: 14, height: 14, transition: "transform 0.3s", transform: walkthroughOpen ? "rotate(90deg)" : "none" }} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="m8.25 4.5 7.5 7.5-7.5 7.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+            </div>
+          </button>
+
+          {walkthroughOpen && (
+            <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #E8E6DF", padding: 24, boxShadow: "0 1px 3px rgba(0,0,0,0.04)", position: "relative", overflow: "hidden" }}>
+              <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 12, paddingBottom: 16, marginBottom: 16, borderBottom: "1px solid #E8E6DF" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 24, height: 24, borderRadius: "50%", background: "#d1fae5", color: "#065f46", fontSize: 12, fontWeight: 700, fontFamily: "monospace" }}>4</span>
+                  <h3 style={{ fontSize: 15, fontWeight: 700, color: "#0C2D22" }}>Official LinkedIn Data Export Guide</h3>
+                  <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 4, background: "#EBF6F1", color: "#0C2D22", fontWeight: 500 }}>~1 min</span>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <a href="https://www.linkedin.com/mypreferences/d/download-my-data" target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: "#047857", fontWeight: 500, textDecoration: "underline", display: "inline-flex", alignItems: "center", gap: 4 }}>
+                    Open LinkedIn Settings
+                    <svg style={{ width: 12, height: 12, fill: "none", stroke: "currentColor", strokeWidth: 2 }} viewBox="0 0 24 24"><path d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                  </a>
+                  <button onClick={() => setWalkthroughOpen(false)} style={{ color: "#a8a29e", cursor: "pointer", padding: 4, borderRadius: 6, border: "none", background: "none", fontFamily: "inherit" }}>
+                    <svg style={{ width: 16, height: 16, fill: "none", stroke: "currentColor", strokeWidth: 2 }} viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                  </button>
+                </div>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+                {[
+                  { n: 1, title: "'Me' icon → Settings & Privacy", desc: "Click your profile avatar at the top right of LinkedIn, then select Settings & Privacy." },
+                  { n: 2, title: "Data Privacy → Get a copy of your data", desc: "In the left sidebar, select Data Privacy and look under How LinkedIn uses your data." },
+                  { n: 3, title: "Select 'Connections' & Request", desc: 'Pick "Want something in particular?", tick Connections, and press Request archive.' },
+                  { n: 4, title: "Download email & unzip CSV", desc: "LinkedIn emails you in ~10 mins. Download the zip and drag your Connections.csv right here.", last: true },
+                ].map((s: any) => (
+                  <div key={s.n} style={{ borderRadius: 12, background: "#FAF8F5", border: "1px solid rgba(232,230,223,0.8)", padding: 14, display: "flex", gap: 12 }}>
+                    <div style={{ width: 24, height: 24, borderRadius: "50%", background: s.last ? "#059669" : "#0C2D22", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, fontFamily: "monospace", flexShrink: 0, marginTop: 2 }}>{s.n}</div>
+                    <div>
+                      <h4 style={{ fontSize: 12, fontWeight: 700, color: "#0f172a", lineHeight: 1.4 }}>{s.title}</h4>
+                      <p style={{ fontSize: 11, color: "#57534e", marginTop: 4, lineHeight: 1.5 }}>{s.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ marginTop: 16, paddingTop: 12, borderTop: "1px solid #E8E6DF", display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: "#065f46", fontWeight: 500 }}>
+                <svg style={{ width: 14, height: 14, color: "#059669", fill: "none", stroke: "currentColor", strokeWidth: 2.5 }} viewBox="0 0 24 24"><path d="m4.5 12.75 6 6 9-13.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                Official LinkedIn feature. No bots or scrapers involved.
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
   );
 }
 

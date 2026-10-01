@@ -190,6 +190,10 @@ export function AppShell({ children }: { children: ReactNode }) {
             <Cloud size={11} className="text-[var(--t-green)]" />
             {savedAt ? `Saved locally · ${savedRelative(savedAt)}` : "Saved locally"}
           </p>
+          <Link href="/?welcome" prefetch={false} className="flex items-center gap-1.5 px-2 pt-1 text-[11px] text-muted transition hover:text-ink">
+            <Home size={11} />
+            Back to landing page
+          </Link>
           <BackupNudge />
         </div>
       </aside>
