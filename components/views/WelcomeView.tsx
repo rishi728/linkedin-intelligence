@@ -13,16 +13,18 @@ import { useWorkspace } from "@/components/workspace/store";
 /* ------------------------------------------------------------------ */
 
 export function WelcomeView() {
-  const { ready, dataset, importCsv, importArchive, loadSample } = useWorkspace();
+  const { ready, dataset, people, settings, updateSettings, importCsv, importArchive, loadSample } = useWorkspace();
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [modalTab, setModalTab] = useState<"summary" | "edit">("summary");
 
   useEffect(() => {
-    if (ready && dataset) router.replace("/home");
-  }, [ready, dataset, router]);
+    if (ready && dataset && !showModal) router.replace("/home");
+  }, [ready, dataset, router, showModal]);
 
   const handle = async (file: File | undefined) => {
     if (!file) return;
@@ -43,7 +45,8 @@ export function WelcomeView() {
         const { total } = importCsv(await file.text(), file.name);
         if (!total) throw new CsvFormatError("That file has no connections in it.");
       }
-      router.push("/home");
+      setShowModal(true);
+      setBusy(false);
     } catch (e) {
       setError(
         e instanceof CsvFormatError || e instanceof ZipError
@@ -198,7 +201,7 @@ export function WelcomeView() {
             <nav style={{ display: "flex", alignItems: "center", gap: 32, fontSize: 14, fontWeight: 500, color: "#64748b" }}>
               <a href="#how-it-works" style={{ color: "inherit", textDecoration: "none" }}>How it works</a>
               <a href="#network-preview" style={{ color: "inherit", textDecoration: "none" }}>Demo</a>
-              <a href="#privacy" style={{ color: "inherit", textDecoration: "none", display: "flex", alignItems: "center", gap: 6 }}>
+              <a href="/privacy" style={{ color: "inherit", textDecoration: "none", display: "flex", alignItems: "center", gap: 6 }}>
                 <span className="anim-pulse" style={{ width: 8, height: 8, borderRadius: "50%", background: "#22c55e", display: "inline-block" }} />
                 Privacy First
               </a>
@@ -701,7 +704,285 @@ export function WelcomeView() {
           </div>
         </footer>
       </div>
+
+      {/* ==================== EXPORT MODAL ==================== */}
+      {showModal && <ExportModal
+        settings={settings}
+        people={people}
+        modalTab={modalTab}
+        setModalTab={setModalTab}
+        updateSettings={updateSettings}
+        onConfirm={() => { setShowModal(false); router.push("/home"); }}
+      />}
     </>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Export confirmation modal                                          */
+/* ------------------------------------------------------------------ */
+function ExportModal({
+  settings, people, modalTab, setModalTab, updateSettings, onConfirm,
+}: {
+  settings: { profile: { name: string; background: string; schools: string[] } };
+  people: { category?: string }[];
+  modalTab: "summary" | "edit";
+  setModalTab: (t: "summary" | "edit") => void;
+  updateSettings: (fn: (s: any) => any) => void;
+  onConfirm: () => void;
+}) {
+  const [editName, setEditName] = useState(settings.profile.name);
+  const [editBg, setEditBg] = useState(settings.profile.background);
+  const [editSchools, setEditSchools] = useState(settings.profile.schools);
+  const [newSchool, setNewSchool] = useState("");
+
+  const categoryCounts = new Map<string, number>();
+  for (const p of people) {
+    if (p.category) categoryCounts.set(p.category, (categoryCounts.get(p.category) ?? 0) + 1);
+  }
+  const topCategories = [...categoryCounts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 4);
+
+  const saveEdits = () => {
+    updateSettings((s: any) => ({
+      ...s,
+      profile: { ...s.profile, name: editName, background: editBg, schools: editSchools },
+    }));
+  };
+
+  const tabActive = "padding: 0 12px 8px; borderBottom: 2px solid #114B3A; color: #114B3A; fontWeight: 600;";
+  const tabInactive = "padding: 0 12px 8px; color: #94a3b8; fontWeight: 600; cursor: pointer;";
+
+  return (
+    <div style={{
+      position: "fixed", inset: 0, zIndex: 50,
+      display: "flex", alignItems: "center", justifyContent: "center",
+      padding: 24, overflowY: "auto",
+      background: "rgba(28,25,23,0.4)", backdropFilter: "blur(8px)",
+    }}>
+      <div style={{
+        position: "relative", width: "100%", maxWidth: 672,
+        background: "#fff", borderRadius: 24, border: "1px solid rgba(214,211,199,0.9)",
+        boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)",
+        overflow: "hidden", padding: "24px 40px 32px",
+      }}>
+        {/* Close button */}
+        <button
+          onClick={onConfirm}
+          style={{
+            position: "absolute", top: 20, right: 20, zIndex: 20,
+            width: 36, height: 36, borderRadius: "50%", background: "#f5f5f4",
+            border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+            color: "#78716c", fontFamily: "inherit",
+          }}
+        >
+          <svg style={{ width: 16, height: 16, stroke: "currentColor", strokeWidth: 2, fill: "none" }} viewBox="0 0 24 24">
+            <line x1="18" x2="6" y1="6" y2="18" /><line x1="6" x2="18" y1="6" y2="18" />
+          </svg>
+        </button>
+
+        {/* Owl mascot badge */}
+        <div style={{ position: "absolute", top: -12, right: 32, display: "flex", flexDirection: "column", alignItems: "center", pointerEvents: "none", userSelect: "none" }}>
+          <div style={{ position: "relative", marginBottom: 4 }}>
+            <div style={{
+              background: "#ecfdf5", border: "1px solid rgba(167,243,208,0.8)",
+              color: "#065f46", fontSize: 11, fontWeight: 500,
+              padding: "4px 10px", borderRadius: 9999, whiteSpace: "nowrap" as const,
+              boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
+            }}>Archive parsed!</div>
+          </div>
+          <div style={{ width: 64, height: 64 }}>
+            <img
+              alt="Inspector Owl Mascot"
+              src="https://lh3.googleusercontent.com/aida/AEtjO1UY91Kw-C8aDDOQbSY0SoXF3GkpkHKNCORY6mY0BYEMThqetM8CH6y88MsU3ZG8TrjGiXAJhpu9S-34dHri-z03tE3uBpUZUKGlMvcPsg8L4Y29evZ3xHzEz8JYQiBP75C9mSYO6x2oweSYh0gbeBkM-AMEYLRywoTNbUD4VGQhq0XFuW-0AzKqeHlkr6BDx2jkqulkJNPySHWEZlgIcd7xAydbINIOdBiF05YBbiEXvCArsVhnVe3hHFg"
+              style={{ width: "100%", height: "100%", objectFit: "contain" }}
+            />
+          </div>
+        </div>
+
+        {/* Header */}
+        <div style={{ paddingRight: 96, marginBottom: 24 }}>
+          <h2 className="font-serif" style={{ fontSize: "clamp(28px, 3vw, 36px)", fontWeight: 700, color: "#0f172a", letterSpacing: "-0.02em", lineHeight: 1.15, marginBottom: 8 }}>
+            Here is what I understand about you.
+          </h2>
+          <p style={{ fontSize: 14, color: "#94a3b8", lineHeight: 1.5 }}>Read from your own export. Only what was actually in the files.</p>
+        </div>
+
+        {/* Tabs */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, borderBottom: "1px solid #e7e5e4", marginBottom: 24, paddingBottom: 8, fontSize: 12, fontWeight: 600 }}>
+          <button
+            onClick={() => setModalTab("summary")}
+            style={{
+              padding: "0 12px 8px", border: "none", background: "none", cursor: "pointer",
+              fontFamily: "inherit", fontSize: 12, fontWeight: 600,
+              borderBottom: modalTab === "summary" ? "2px solid #114B3A" : "2px solid transparent",
+              color: modalTab === "summary" ? "#114B3A" : "#94a3b8",
+            }}
+          >Summary View</button>
+          <button
+            onClick={() => setModalTab("edit")}
+            style={{
+              padding: "0 12px 8px", border: "none", background: "none", cursor: "pointer",
+              fontFamily: "inherit", fontSize: 12, fontWeight: 600,
+              borderBottom: modalTab === "edit" ? "2px solid #114B3A" : "2px solid transparent",
+              color: modalTab === "edit" ? "#114B3A" : "#94a3b8",
+            }}
+          >Edit Fields</button>
+        </div>
+
+        {/* Summary tab */}
+        {modalTab === "summary" && (
+          <div style={{ borderLeft: "2px solid #6ee7b7", paddingLeft: 16, paddingTop: 4, paddingBottom: 4, marginBottom: 32, display: "flex", flexDirection: "column", gap: 20 }}>
+            {settings.profile.background && (
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" as const, color: "#94a3b8", marginBottom: 4, fontFamily: "monospace" }}>Currently</div>
+                <p style={{ fontSize: 14, color: "#1e293b", lineHeight: 1.5 }}>{settings.profile.background}</p>
+              </div>
+            )}
+            {settings.profile.schools.length > 0 && (
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" as const, color: "#94a3b8", marginBottom: 4, fontFamily: "monospace" }}>Studied At</div>
+                <p style={{ fontSize: 14, color: "#1e293b", lineHeight: 1.5 }}>{settings.profile.schools.join(" · ")}</p>
+              </div>
+            )}
+            {topCategories.length > 0 && (
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" as const, color: "#94a3b8", marginBottom: 6, fontFamily: "monospace" }}>Your Network is Concentrated In</div>
+                <p style={{ fontSize: 14, color: "#1e293b", lineHeight: 1.5 }}>
+                  {topCategories.map(([cat, count]) => `${cat} (${count})`).join(" · ")}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Edit tab */}
+        {modalTab === "edit" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 16, marginBottom: 32 }}>
+            <div>
+              <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#334155", marginBottom: 4 }}>Your name</label>
+              <input
+                type="text"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                style={{
+                  width: "100%", padding: "8px 14px", fontSize: 14, color: "#1e293b",
+                  border: "1px solid #e7e5e4", borderRadius: 12, background: "rgba(245,245,244,0.5)",
+                  fontFamily: "inherit", outline: "none",
+                }}
+              />
+            </div>
+            <div>
+              <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#334155", marginBottom: 4 }}>What you do right now</label>
+              <input
+                type="text"
+                value={editBg}
+                onChange={(e) => setEditBg(e.target.value)}
+                style={{
+                  width: "100%", padding: "8px 14px", fontSize: 14, color: "#1e293b",
+                  border: "1px solid #e7e5e4", borderRadius: 12, background: "rgba(245,245,244,0.5)",
+                  fontFamily: "inherit", outline: "none",
+                }}
+              />
+            </div>
+            <div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+                <label style={{ fontSize: 12, fontWeight: 600, color: "#334155" }}>Schools and colleges</label>
+                <span style={{ fontSize: 11, color: "#94a3b8" }}>Connections from these count as alumni.</span>
+              </div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 8 }}>
+                {editSchools.map((s, i) => (
+                  <span key={i} style={{
+                    display: "inline-flex", alignItems: "center", gap: 6,
+                    padding: "4px 12px", background: "#f5f5f4", border: "1px solid #e7e5e4",
+                    borderRadius: 8, fontSize: 12, color: "#334155", fontWeight: 500,
+                  }}>
+                    {s}
+                    <button
+                      onClick={() => setEditSchools(editSchools.filter((_, j) => j !== i))}
+                      style={{ color: "#94a3b8", cursor: "pointer", border: "none", background: "none", padding: 0, fontFamily: "inherit", fontSize: 14 }}
+                    >&times;</button>
+                  </span>
+                ))}
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <input
+                  type="text"
+                  value={newSchool}
+                  onChange={(e) => setNewSchool(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && newSchool.trim()) {
+                      setEditSchools([...editSchools, newSchool.trim()]);
+                      setNewSchool("");
+                    }
+                  }}
+                  placeholder="Add a school"
+                  style={{
+                    flexGrow: 1, padding: "6px 14px", fontSize: 12, color: "#1e293b",
+                    border: "1px solid #e7e5e4", borderRadius: 12,
+                    fontFamily: "inherit", outline: "none",
+                  }}
+                />
+                <button
+                  onClick={() => { if (newSchool.trim()) { setEditSchools([...editSchools, newSchool.trim()]); setNewSchool(""); } }}
+                  style={{
+                    padding: "6px 16px", fontSize: 12, fontWeight: 600,
+                    border: "1px solid #e7e5e4", borderRadius: 12, background: "#fff",
+                    color: "#334155", cursor: "pointer", fontFamily: "inherit",
+                  }}
+                >Add</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Footer */}
+        <div style={{ paddingTop: 16, borderTop: "1px solid #f5f5f4" }}>
+          <div style={{ fontSize: 12, fontWeight: 500, color: "#1e293b", marginBottom: 12 }}>Anything I should add or change?</div>
+          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <button
+                onClick={() => {
+                  if (modalTab === "edit") saveEdits();
+                  onConfirm();
+                }}
+                style={{
+                  padding: "8px 20px", borderRadius: 12, background: "#0F2D24",
+                  color: "#fff", fontSize: 12, fontWeight: 600, border: "none",
+                  cursor: "pointer", fontFamily: "inherit",
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+                }}
+              >Looks right</button>
+              <button
+                onClick={() => setModalTab("edit")}
+                style={{
+                  padding: "8px 16px", borderRadius: 12, border: "1px solid #d6d3d1",
+                  color: "#334155", fontSize: 12, fontWeight: 500,
+                  background: "none", cursor: "pointer", fontFamily: "inherit",
+                }}
+              >Add or change</button>
+            </div>
+            <button
+              onClick={onConfirm}
+              style={{
+                fontSize: 12, fontWeight: 500, color: "#065f46",
+                textDecoration: "underline", textUnderlineOffset: 4,
+                border: "none", background: "none", cursor: "pointer",
+                fontFamily: "inherit", display: "flex", alignItems: "center", gap: 4,
+              }}
+            >
+              Skip setup & go straight to analysis &rarr;
+            </button>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 24 }}>
+            <div style={{ width: 20, height: 6, borderRadius: 9999, background: "#0F2D24" }} />
+            <div style={{ width: 6, height: 6, borderRadius: 9999, background: "#d6d3d1" }} />
+            <div style={{ width: 6, height: 6, borderRadius: 9999, background: "#d6d3d1" }} />
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
