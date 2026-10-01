@@ -79,7 +79,7 @@ function columnLetter(n: number): string {
 export async function buildTrackerWorkbook(people: Person[], settings: Settings, options: ExportOptions): Promise<ArrayBuffer> {
   const { default: ExcelJS } = await import("exceljs");
   const wb: Workbook = new ExcelJS.Workbook();
-  wb.creator = "LinkedIn Intelligence";
+  wb.creator = "NesT";
   wb.created = new Date();
 
   const columns = options.columns.map((k) => EXPORT_COLUMNS.find((c) => c.key === k)).filter((c): c is ExportColumn => !!c);

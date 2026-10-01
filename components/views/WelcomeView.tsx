@@ -186,20 +186,7 @@ export function WelcomeView() {
           <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 48px", height: 80, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             {/* Logo */}
             <a href="#" style={{ display: "flex", alignItems: "center", gap: 14, textDecoration: "none" }}>
-              <div style={{
-                width: 40, height: 40, borderRadius: 12, overflow: "hidden",
-                border: "1px solid rgba(17,75,58,0.25)", background: "#0F2D24",
-                display: "flex", alignItems: "center", justifyContent: "center", padding: 2, flexShrink: 0,
-              }}>
-                <img
-                  alt="LinkedIn Intelligence Logo"
-                  src="https://lh3.googleusercontent.com/aida/AEtjO1Vdy72nGrnjvXhgOjXXvQfyDWhG-2vr4ynAeRy7vPxp-0uUv4DAtVHP1qBSgSGkXOsYuTdr-79oUF2cDh5v6gpYU9HR6tbOOTIKY_53M3YeTGvBFyjRWbzj35LrnkElvS39rh1M7-JAzjWJFsROQR76EokpWy5kT0lUIRxJTPtwhk4DpVbxbEwTQAcuL-EMQGfx4AMlujhF1FHB6hkK2m9vS-VFCS0gYzhp1uAgeiE2A6z4j9XwewZ2pw"
-                  style={{ width: 36, height: 36, objectFit: "contain", borderRadius: 12 }}
-                />
-              </div>
-              <span className="font-serif" style={{ fontSize: 24, fontWeight: 700, letterSpacing: "-0.02em", color: "#0C2D22" }}>
-                LinkedIn <span style={{ fontStyle: "italic", fontWeight: 400, color: "#114B3A" }}>Intelligence</span>
-              </span>
+              <img src="/nest-logo.webp" alt="NesT" style={{ height: 44, objectFit: "contain" }} />
             </a>
 
             {/* Nav tabs */}
@@ -262,17 +249,7 @@ export function WelcomeView() {
               <div style={{ display: "grid", gridTemplateColumns: "7fr 5fr", gap: 48, alignItems: "center", marginBottom: 64 }}>
                 {/* Left: headline */}
                 <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-                  <h1 className="font-serif" style={{
-                    fontSize: "clamp(48px, 5vw, 72px)", fontWeight: 700,
-                    letterSpacing: "-0.02em", color: "#0C2D22", lineHeight: 1.08,
-                  }}>
-                    LinkedIn <br />
-                    <span style={{
-                      fontStyle: "italic", fontWeight: 400, color: "#114B3A",
-                      textDecoration: "underline", textDecorationColor: "rgba(17,75,58,0.3)",
-                      textDecorationStyle: "wavy" as const, textUnderlineOffset: 8,
-                    }}>Intelligence</span>
-                  </h1>
+                  <img src="/nest-logo.webp" alt="NesT - Network Engagement & Signal Tracker" style={{ maxWidth: 420, width: "100%" }} />
                   <p style={{ fontSize: "clamp(18px, 1.6vw, 24px)", color: "#64748b", fontWeight: 300, maxWidth: 560, lineHeight: 1.6 }}>
                     Turn your LinkedIn connections into meaningful career and business opportunities.
                   </p>
@@ -571,8 +548,8 @@ export function WelcomeView() {
                           <line x1="12" x2="12" y1="3" y2="15" />
                         </svg>
                       </div>
-                      <p style={{ marginTop: 12, fontSize: 16, fontWeight: 600, color: "#0f172a" }}>Drop your LinkedIn export here</p>
-                      <p style={{ marginTop: 4, fontSize: 13, color: "#94a3b8" }}>the whole .zip, or just Connections.csv</p>
+                      <p style={{ marginTop: 12, fontSize: 16, fontWeight: 600, color: "#0f172a" }}>Drop the whole .zip here</p>
+                      <p style={{ marginTop: 4, fontSize: 13, color: "#94a3b8" }}>Basic data (Connections) comes in ~10 min. The full archive takes 1-2 days but gives richer insights.</p>
                       <button style={{
                         marginTop: 16, padding: "10px 20px", borderRadius: 9999,
                         background: "#0C2D22", color: "#fff", fontSize: 14, fontWeight: 600,
@@ -932,17 +909,6 @@ function ExportModal({
                 }}
               >Add or change</button>
             </div>
-            <button
-              onClick={confirmAndFinish}
-              style={{
-                fontSize: 12, fontWeight: 500, color: "#065f46",
-                textDecoration: "underline", textUnderlineOffset: 4,
-                border: "none", background: "none", cursor: "pointer",
-                fontFamily: "inherit", display: "flex", alignItems: "center", gap: 4,
-              }}
-            >
-              Skip setup & go straight to analysis &rarr;
-            </button>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 24 }}>
             <div style={{ width: 20, height: 6, borderRadius: 9999, background: "#0F2D24" }} />
@@ -1166,8 +1132,8 @@ function WalkthroughSection({ walkthroughOpen, setWalkthroughOpen }: { walkthrou
                 {[
                   { n: 1, title: "'Me' icon → Settings & Privacy", desc: "Click your profile avatar at the top right of LinkedIn, then select Settings & Privacy." },
                   { n: 2, title: "Data Privacy → Get a copy of your data", desc: "In the left sidebar, select Data Privacy and look under How LinkedIn uses your data." },
-                  { n: 3, title: "Select 'Connections' & Request", desc: 'Pick "Want something in particular?", tick Connections, and press Request archive.' },
-                  { n: 4, title: "Download email & unzip CSV", desc: "LinkedIn emails you in ~10 mins. Download the zip and drag your Connections.csv right here.", last: true },
+                  { n: 3, title: "Request your archive", desc: 'Pick "Want something in particular?", tick Connections (quick, ~10 min), or Download larger data archive for the full export (takes 1-2 days). Both work.' },
+                  { n: 4, title: "Drop the whole .zip here", desc: "When LinkedIn emails you, download the zip and drop it straight into the drop zone above. No need to unzip. The full archive gives richer data, but the quick export works fine to start.", last: true },
                 ].map((s: any) => (
                   <div key={s.n} style={{ borderRadius: 12, background: "#FAF8F5", border: "1px solid rgba(232,230,223,0.8)", padding: 14, display: "flex", gap: 12 }}>
                     <div style={{ width: 24, height: 24, borderRadius: "50%", background: s.last ? "#059669" : "#0C2D22", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, fontFamily: "monospace", flexShrink: 0, marginTop: 2 }}>{s.n}</div>

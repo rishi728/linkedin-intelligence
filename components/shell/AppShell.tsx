@@ -91,7 +91,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <aside data-open={navOpen} className="nav-drawer flex w-[228px] shrink-0 flex-col border-r border-line bg-sidebar">
         <div className="flex h-12 items-center gap-2 px-4">
           <Logo size={22} className="shrink-0 text-accent" />
-          <span className="truncate text-[13.5px] font-semibold tracking-tight">LinkedIn Intelligence</span>
+          <span className="truncate text-[13.5px] font-semibold tracking-tight">NesT</span>
         </div>
 
         <div className="px-2 pb-2">
@@ -209,7 +209,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           >
             <MenuIcon size={17} />
           </button>
-          <span className="text-[13px] font-semibold tracking-tight">LinkedIn Intelligence</span>
+          <span className="text-[13px] font-semibold tracking-tight">NesT</span>
         </div>
         {children}
       </main>
