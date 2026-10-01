@@ -453,11 +453,13 @@ export function HomeView() {
             </span>
           </div>
           <div style={{ fontSize: 11, fontWeight: 600, color: "#94a3b8" }}>Everyone in your network</div>
-          <div style={{ fontSize: 42, fontWeight: 800, color: "#0f172a", letterSpacing: "-0.03em", marginTop: 2, fontVariantNumeric: "tabular-nums" }}>
-            {people.length.toLocaleString()}
+          <div style={{ position: "relative", zIndex: 0 }}>
+            <div style={{ fontSize: 42, fontWeight: 800, color: "#0f172a", letterSpacing: "-0.03em", marginTop: 2, fontVariantNumeric: "tabular-nums", position: "relative", zIndex: 1 }}>
+              {people.length.toLocaleString()}
+            </div>
+            <div style={{ marginTop: -14 }}><NestCradle /></div>
           </div>
-          <NestCradle />
-          <div style={{ fontSize: 11, fontWeight: 600, color: "#059669", marginTop: 4 }}>All synced profiles</div>
+          <div style={{ fontSize: 11, fontWeight: 600, color: "#059669", marginTop: 0 }}>All synced profiles</div>
         </button>
 
         {/* People to Contact */}
@@ -487,11 +489,13 @@ export function HomeView() {
             </span>
           </div>
           <div style={{ fontSize: 11, fontWeight: 600, color: "#94a3b8" }}>{focused ? "Match your focus, not yet contacted" : "Not yet contacted"}</div>
-          <div style={{ fontSize: 42, fontWeight: 800, color: "#0f172a", letterSpacing: "-0.03em", marginTop: 2, fontVariantNumeric: "tabular-nums" }}>
-            {toContact.toLocaleString()}
+          <div style={{ position: "relative", zIndex: 0 }}>
+            <div style={{ fontSize: 42, fontWeight: 800, color: "#0f172a", letterSpacing: "-0.03em", marginTop: 2, fontVariantNumeric: "tabular-nums", position: "relative", zIndex: 1 }}>
+              {toContact.toLocaleString()}
+            </div>
+            <div style={{ marginTop: -14 }}><NestCradle /></div>
           </div>
-          <NestCradle />
-          <div style={{ fontSize: 11, fontWeight: 600, color: "#EA580C", marginTop: 4 }}>High outreach potential</div>
+          <div style={{ fontSize: 11, fontWeight: 600, color: "#EA580C", marginTop: 0 }}>High outreach potential</div>
         </button>
 
         {/* Have Replied */}
@@ -521,11 +525,13 @@ export function HomeView() {
             </span>
           </div>
           <div style={{ fontSize: 11, fontWeight: 600, color: "#94a3b8" }}>{archive ? "From your message history" : "Add your archive to fill this in"}</div>
-          <div style={{ fontSize: 42, fontWeight: 800, color: "#0f172a", letterSpacing: "-0.03em", marginTop: 2, fontVariantNumeric: "tabular-nums" }}>
-            {replied.toLocaleString()}
+          <div style={{ position: "relative", zIndex: 0 }}>
+            <div style={{ fontSize: 42, fontWeight: 800, color: "#0f172a", letterSpacing: "-0.03em", marginTop: 2, fontVariantNumeric: "tabular-nums", position: "relative", zIndex: 1 }}>
+              {replied.toLocaleString()}
+            </div>
+            <div style={{ marginTop: -14 }}><NestCradle /></div>
           </div>
-          <NestCradle />
-          <div style={{ fontSize: 11, fontWeight: 600, color: "#059669", marginTop: 4 }}>Active conversations</div>
+          <div style={{ fontSize: 11, fontWeight: 600, color: "#059669", marginTop: 0 }}>Active conversations</div>
         </button>
       </div>
 
