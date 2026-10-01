@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { memo, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight } from "lucide-react";
 import { applyFilters } from "@/lib/workspace/filters";
@@ -13,54 +13,101 @@ import { ArchiveImport } from "@/components/workspace/ArchiveImport";
 import { NetworkShape } from "@/components/home/NetworkShape";
 import { useUI, useWorkspace } from "@/components/workspace/store";
 
-function WavingOwl() {
+const WavingOwl = memo(function WavingOwl() {
   return (
-    <svg width="72" height="72" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <ellipse cx="60" cy="95" rx="25" ry="6" fill="#D4C9A8" opacity="0.3" />
-      <ellipse cx="60" cy="72" rx="28" ry="32" fill="#8B7355" />
-      <ellipse cx="60" cy="72" rx="22" ry="26" fill="#A0895C" />
-      <ellipse cx="60" cy="75" rx="16" ry="18" fill="#F5E6C8" />
-      <ellipse cx="50" cy="58" rx="10" ry="11" fill="#F5E6C8" />
-      <ellipse cx="70" cy="58" rx="10" ry="11" fill="#F5E6C8" />
-      <circle cx="50" cy="57" r="5" fill="white" />
-      <circle cx="70" cy="57" r="5" fill="white" />
-      <circle cx="51" cy="57" r="2.5" fill="#1a1a2e" />
-      <circle cx="71" cy="57" r="2.5" fill="#1a1a2e" />
-      <circle cx="51.8" cy="56.2" r="0.8" fill="white" />
-      <circle cx="71.8" cy="56.2" r="0.8" fill="white" />
-      <path d="M57 64 L60 68 L63 64" fill="#E8A020" stroke="#D4901A" strokeWidth="0.5" />
-      <path d="M45 45 Q42 30 35 28" stroke="#8B7355" strokeWidth="3" strokeLinecap="round" fill="none" />
-      <path d="M75 45 Q78 30 85 28" stroke="#8B7355" strokeWidth="3" strokeLinecap="round" fill="none" />
-      <g style={{ transformOrigin: "30px 50px" }} className="animate-wave">
-        <path d="M32 62 Q22 55 18 45 Q16 40 20 38 Q24 36 26 40 Q28 44 32 48" fill="#8B7355" />
-        <path d="M20 38 Q18 32 22 28" stroke="#8B7355" strokeWidth="2" strokeLinecap="round" fill="none" />
-        <path d="M24 36 Q22 30 26 26" stroke="#8B7355" strokeWidth="2" strokeLinecap="round" fill="none" />
-        <path d="M26 40 Q28 34 30 32" stroke="#8B7355" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+    <svg width="96" height="96" viewBox="0 0 340 320" xmlns="http://www.w3.org/2000/svg" fill="none">
+      <defs>
+        <filter id="nest-owl-shadow" x="-10%" y="-10%" width="120%" height="120%"><feDropShadow dx="0" dy="4" stdDeviation="6" floodColor="#0f2d24" floodOpacity="0.12" /></filter>
+        <linearGradient id="nest-straw-grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#D99B4B" /><stop offset="50%" stopColor="#C28230" /><stop offset="100%" stopColor="#9C5E19" /></linearGradient>
+        <linearGradient id="emerald-signal-grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#34D399" /><stop offset="100%" stopColor="#059669" /></linearGradient>
+      </defs>
+      <g filter="url(#nest-owl-shadow)">
+        <path d="M 45 220 C 50 270 120 295 170 295 C 220 295 290 270 295 220 C 265 242 205 252 170 252 C 135 252 75 242 45 220 Z" fill="url(#nest-straw-grad)" stroke="#231F1C" strokeLinejoin="round" strokeWidth="3" />
+        <path d="M 35 235 Q 60 238 85 244" stroke="#8C4E15" strokeLinecap="round" strokeWidth="3" />
+        <path d="M 40 250 Q 80 260 120 268" stroke="#783F0E" strokeLinecap="round" strokeWidth="3.5" />
+        <path d="M 220 268 Q 260 260 300 250" stroke="#783F0E" strokeLinecap="round" strokeWidth="3.5" />
+        <path d="M 255 235 Q 280 238 305 235" stroke="#8C4E15" strokeLinecap="round" strokeWidth="3" />
+        <path d="M 110 278 Q 170 292 230 278" stroke="#5E2F09" strokeLinecap="round" strokeWidth="3.5" />
+        <path d="M 75 260 Q 170 282 265 260" stroke="#B45309" strokeLinecap="round" strokeWidth="2.5" />
+        <circle cx="260" cy="235" r="9" fill="url(#emerald-signal-grad)" stroke="#16120E" strokeWidth="2" />
+        <circle cx="260" cy="235" r="3.5" fill="#FFFFFF" />
+        <path d="M 252 222 C 262 218 274 220 280 228" fill="none" stroke="#10B981" strokeLinecap="round" strokeWidth="2" />
+        <path d="M 155 245 L 170 262 L 185 245 Z" fill="#D3A26B" stroke="#231F1C" strokeWidth="2.5" />
+        <path d="M 105 130 C 95 170 108 240 170 242 C 232 240 245 170 235 130 C 230 100 215 95 170 95 C 125 95 110 100 105 130 Z" fill="#E8C396" stroke="#231F1C" strokeLinejoin="round" strokeWidth="3.5" />
+        <path d="M 125 135 C 120 165 130 230 170 232 C 210 230 220 165 215 135 C 210 115 195 108 170 108 C 145 108 130 115 125 135 Z" fill="#FFF8EE" stroke="#231F1C" strokeWidth="2.5" />
+        <path d="M 152 145 Q 160 152 168 145 Q 176 152 184 145" fill="none" stroke="#D3A26B" strokeLinecap="round" strokeWidth="2.5" />
+        <path d="M 146 162 Q 156 170 166 162 Q 176 170 186 162 Q 194 170 200 162" fill="none" stroke="#D3A26B" strokeLinecap="round" strokeWidth="2.5" />
+        <path d="M 152 180 Q 162 188 172 180 Q 182 188 192 180" fill="none" stroke="#D3A26B" strokeLinecap="round" strokeWidth="2.5" />
+        <path d="M 108 135 C 92 148 85 180 98 210 C 105 212 118 208 122 195 C 126 170 125 150 120 135 Z" fill="#DFB27D" stroke="#231F1C" strokeLinejoin="round" strokeWidth="3" />
+        <g className="animate-wave-wing">
+          <path d="M 230 135 C 255 125 285 95 305 60 C 295 75 280 92 268 98 C 292 72 312 48 316 32 C 314 24 304 26 292 45 C 280 62 268 82 254 94 C 275 62 290 44 288 32 C 284 25 274 30 262 52 C 248 78 236 108 226 135 Z" fill="#DFB27D" stroke="#231F1C" strokeLinejoin="round" strokeWidth="3.5" />
+          <path d="M 318 18 C 326 26 328 38 325 50" fill="none" opacity="0.8" stroke="#10B981" strokeDasharray="3 4" strokeLinecap="round" strokeWidth="2.5" />
+          <path d="M 328 28 C 334 35 335 44 332 54" fill="none" opacity="0.7" stroke="#F59E0B" strokeLinecap="round" strokeWidth="2" />
+        </g>
+        <path d="M 80 215 Q 170 238 260 215 Q 268 230 255 242 Q 170 260 85 242 Q 72 230 80 215 Z" fill="#DF9F48" stroke="#231F1C" strokeWidth="2.5" />
+        <path d="M 100 225 Q 170 245 240 226" stroke="#9C5E19" strokeLinecap="round" strokeWidth="2" />
+        <path d="M 120 235 Q 170 248 220 236" opacity="0.7" stroke="#FFE4B5" strokeLinecap="round" strokeWidth="1.8" />
+        <g fill="#F29339" stroke="#231F1C" strokeLinejoin="round" strokeWidth="2.2">
+          <ellipse cx="140" cy="222" rx="5" ry="7" transform="rotate(-10 140 222)" />
+          <ellipse cx="148" cy="223" rx="5" ry="7.5" />
+          <ellipse cx="156" cy="222" rx="5" ry="7" transform="rotate(10 156 222)" />
+          <ellipse cx="184" cy="222" rx="5" ry="7" transform="rotate(-10 184 222)" />
+          <ellipse cx="192" cy="223" rx="5" ry="7.5" />
+          <ellipse cx="200" cy="222" rx="5" ry="7" transform="rotate(10 200 222)" />
+        </g>
+        <g>
+          <path d="M 102 75 C 92 55 100 30 116 25 C 125 35 128 45 130 55 C 142 45 160 40 180 42 C 195 42 208 48 216 58 C 220 45 228 32 240 28 C 248 40 246 60 236 80 C 250 105 248 135 230 155 C 205 175 135 175 108 150 C 95 128 94 98 102 75 Z" fill="#E8C396" stroke="#231F1C" strokeLinejoin="round" strokeWidth="3.5" />
+          <path d="M 168 38 C 165 25 172 18 176 12 C 178 20 177 28 175 35" fill="#DFB27D" stroke="#231F1C" strokeLinejoin="round" strokeWidth="2.5" />
+          <path d="M 158 40 C 152 30 155 22 160 16 C 163 25 163 32 162 39" fill="#DFB27D" stroke="#231F1C" strokeLinejoin="round" strokeWidth="2.5" />
+          <circle cx="138" cy="100" r="32" fill="#FFFFFF" stroke="#231F1C" strokeWidth="6" />
+          <circle cx="198" cy="98" r="32" fill="#FFFFFF" stroke="#231F1C" strokeWidth="6" />
+          <path d="M 168 98 L 171 98" stroke="#231F1C" strokeLinecap="round" strokeWidth="7" />
+          <path d="M 106 102 L 96 106" stroke="#231F1C" strokeLinecap="round" strokeWidth="5" />
+          <path d="M 230 98 L 242 100" stroke="#231F1C" strokeLinecap="round" strokeWidth="5" />
+          <circle cx="140" cy="100" r="15" fill="#1A1817" />
+          <circle cx="136" cy="94" r="5.5" fill="#FFFFFF" />
+          <circle cx="144" cy="104" r="2.5" fill="#FFFFFF" />
+          <circle cx="196" cy="98" r="15" fill="#1A1817" />
+          <circle cx="192" cy="92" r="5.5" fill="#FFFFFF" />
+          <circle cx="200" cy="102" r="2.5" fill="#FFFFFF" />
+          <path d="M 118 66 Q 136 58 152 66" fill="none" stroke="#231F1C" strokeLinecap="round" strokeWidth="3" />
+          <path d="M 184 64 Q 202 56 218 64" fill="none" stroke="#231F1C" strokeLinecap="round" strokeWidth="3" />
+          <ellipse cx="114" cy="126" rx="8" ry="5" fill="#F4B5A4" opacity="0.65" />
+          <ellipse cx="220" cy="123" rx="8" ry="5" fill="#F4B5A4" opacity="0.65" />
+          <polygon points="169,101 160,115 178,115" fill="#F29339" stroke="#231F1C" strokeLinejoin="round" strokeWidth="2.5" />
+          <path d="M 162 115 Q 169 125 176 115 Z" fill="#D9534F" stroke="#231F1C" strokeWidth="1.8" />
+        </g>
       </g>
-      <path d="M48 88 Q50 95 52 88" stroke="#A0895C" strokeWidth="1" fill="none" />
-      <path d="M56 90 Q58 97 60 90" stroke="#A0895C" strokeWidth="1" fill="none" />
-      <path d="M64 88 Q66 95 68 88" stroke="#A0895C" strokeWidth="1" fill="none" />
       <style>{`
-        @keyframes wave { 0%,100% { transform: rotate(0deg); } 25% { transform: rotate(-15deg); } 50% { transform: rotate(10deg); } 75% { transform: rotate(-10deg); } }
-        .animate-wave { animation: wave 1.5s ease-in-out infinite; }
+        @keyframes wave-wing { 0%,100% { transform: rotate(0deg); } 15% { transform: rotate(-8deg); } 30% { transform: rotate(5deg); } 45% { transform: rotate(-6deg); } 60% { transform: rotate(3deg); } }
+        .animate-wave-wing { transform-origin: 230px 135px; animation: wave-wing 2s ease-in-out infinite; }
       `}</style>
     </svg>
   );
-}
+});
 
-function NestCradle({ color }: { color: string }) {
+const NestCradle = memo(function NestCradle() {
   return (
-    <svg width="100%" height="24" viewBox="0 0 200 24" preserveAspectRatio="none" style={{ display: "block", marginTop: 4 }}>
-      <path d="M10,20 Q20,4 40,8 Q60,12 80,6 Q100,0 120,6 Q140,12 160,8 Q180,4 190,20" fill="none" stroke={color} strokeWidth="2" opacity="0.3" />
-      <path d="M20,22 Q40,8 60,12 Q80,16 100,8 Q120,4 140,12 Q160,16 180,22" fill="none" stroke={color} strokeWidth="1.5" opacity="0.2" />
-      <path d="M30,22 Q50,12 70,14 Q90,16 110,10 Q130,6 150,14 Q170,18 185,22" fill="none" stroke={color} strokeWidth="1" opacity="0.15" />
+    <svg className="w-full" style={{ height: 40, overflow: "visible", display: "block", marginTop: 4 }} viewBox="0 0 320 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="160" cy="38" rx="140" ry="7" fill="#0F2D24" fillOpacity="0.07" />
+      <path d="M 20 20 C 60 44 260 44 300 20 C 275 36 200 42 160 42 C 120 42 45 36 20 20 Z" fill="#E8C396" fillOpacity="0.55" stroke="#C28230" strokeWidth="1.8" />
+      <path d="M 35 24 Q 160 46 285 24" stroke="#9C5E19" strokeWidth="2" strokeLinecap="round" />
+      <path d="M 50 29 Q 160 48 270 29" stroke="#783F0E" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M 80 18 Q 120 38 175 32" stroke="#B45309" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M 155 33 Q 210 39 250 20" stroke="#8C4E15" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M 25 20 L 10 15" stroke="#C28230" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M 295 20 L 310 16" stroke="#C28230" strokeWidth="1.5" strokeLinecap="round" />
+      <circle cx="282" cy="23" r="5.5" fill="#10B981" stroke="#0F2D24" strokeWidth="1.5" />
+      <circle cx="282" cy="23" r="2" fill="#FFFFFF" />
+      <path d="M 275 15 C 283 12 291 16 294 21" stroke="#10B981" strokeWidth="1.3" strokeLinecap="round" fill="none" />
     </svg>
   );
-}
+});
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 function ActivityChart({ people }: { people: ReturnType<typeof useWorkspace>["people"] }) {
+  const router = useRouter();
   const [range, setRange] = useState<"12" | "6" | "all">("12");
 
   const { connByMonth, msgByMonth, months, peak } = useMemo(() => {
@@ -157,7 +204,7 @@ function ActivityChart({ people }: { people: ReturnType<typeof useWorkspace>["pe
     <div style={{
       marginBottom: 28, padding: "22px 24px", borderRadius: 20,
       border: "1px solid #E8E6DF", background: "#fff",
-      boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+      boxShadow: "0 2px 8px rgba(0,0,0,0.04)", overflow: "hidden",
     }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginBottom: 18 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -268,7 +315,7 @@ function ActivityChart({ people }: { people: ReturnType<typeof useWorkspace>["pe
           )}
         </div>
         <button
-          onClick={() => {}}
+          onClick={() => router.push("/analytics")}
           style={{
             display: "flex", alignItems: "center", gap: 4,
             fontSize: 12, fontWeight: 600, color: "#059669",
@@ -406,11 +453,11 @@ export function HomeView() {
               +{Math.min(people.length, 48)} this mo
             </span>
           </div>
-          <div style={{ fontSize: 11, color: "#94a3b8" }}>Everyone in your network</div>
+          <div style={{ fontSize: 11, fontWeight: 600, color: "#94a3b8" }}>Everyone in your network</div>
           <div style={{ fontSize: 42, fontWeight: 800, color: "#0f172a", letterSpacing: "-0.03em", marginTop: 2, fontVariantNumeric: "tabular-nums" }}>
             {people.length.toLocaleString()}
           </div>
-          <NestCradle color="#0D9488" />
+          <NestCradle />
           <div style={{ fontSize: 11, fontWeight: 600, color: "#059669", marginTop: 4 }}>All synced profiles</div>
         </button>
 
@@ -440,11 +487,11 @@ export function HomeView() {
               {unreachedPct}% unreached
             </span>
           </div>
-          <div style={{ fontSize: 11, color: "#94a3b8" }}>{focused ? "Match your focus, not yet contacted" : "Not yet contacted"}</div>
+          <div style={{ fontSize: 11, fontWeight: 600, color: "#94a3b8" }}>{focused ? "Match your focus, not yet contacted" : "Not yet contacted"}</div>
           <div style={{ fontSize: 42, fontWeight: 800, color: "#0f172a", letterSpacing: "-0.03em", marginTop: 2, fontVariantNumeric: "tabular-nums" }}>
             {toContact.toLocaleString()}
           </div>
-          <NestCradle color="#F97316" />
+          <NestCradle />
           <div style={{ fontSize: 11, fontWeight: 600, color: "#EA580C", marginTop: 4 }}>High outreach potential</div>
         </button>
 
@@ -474,11 +521,11 @@ export function HomeView() {
               {responsePct}% response
             </span>
           </div>
-          <div style={{ fontSize: 11, color: "#94a3b8" }}>{archive ? "From your message history" : "Add your archive to fill this in"}</div>
+          <div style={{ fontSize: 11, fontWeight: 600, color: "#94a3b8" }}>{archive ? "From your message history" : "Add your archive to fill this in"}</div>
           <div style={{ fontSize: 42, fontWeight: 800, color: "#0f172a", letterSpacing: "-0.03em", marginTop: 2, fontVariantNumeric: "tabular-nums" }}>
             {replied.toLocaleString()}
           </div>
-          <NestCradle color="#3B82F6" />
+          <NestCradle />
           <div style={{ fontSize: 11, fontWeight: 600, color: "#059669", marginTop: 4 }}>Active conversations</div>
         </button>
       </div>

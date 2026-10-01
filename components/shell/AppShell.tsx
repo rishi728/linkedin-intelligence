@@ -114,6 +114,17 @@ export function AppShell({ children }: { children: ReactNode }) {
             Volume: &gt;{Math.floor(people.length / 1000) * 1000} (High Activity!)
           </span>
         )}
+        <div className="hidden md:flex">
+          <BackupNudge />
+        </div>
+        <Link
+          href="/settings"
+          prefetch={false}
+          className="hidden items-center gap-1.5 rounded-full border border-[#E8E6DF] px-3 py-1.5 text-[11px] font-medium text-[#64748b] transition hover:bg-[#f1f0eb] hover:text-[#0f172a] md:flex"
+        >
+          <SettingsIcon size={12} />
+          Settings
+        </Link>
         <Link
           href="/?welcome"
           prefetch={false}
@@ -233,7 +244,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </aside>
 
       {/* ============ MAIN ============ */}
-      <main className="min-h-0 flex-1 overflow-auto pb-16 md:pb-0">
+      <main className="min-h-0 flex-1 overflow-auto pb-20">
         {children}
       </main>
 
