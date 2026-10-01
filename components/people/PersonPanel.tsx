@@ -291,39 +291,6 @@ export function PersonPanel() {
           </Section>
         ) : null}
 
-        <Section
-          title="Classification"
-          action={
-            editing ? null : (
-              <div className="flex gap-1">
-                {person.classSource !== "classifier" ? (
-                  <IconButton label="Reset to automatic" icon={RotateCcw} onClick={() => { resetClassification(person.id); toast("Back to the automatic classification."); }} />
-                ) : null}
-                <IconButton label="Edit classification" icon={Pencil} onClick={() => setEditing(true)} />
-              </div>
-            )
-          }
-        >
-          {editing ? (
-            <ClassificationEditor person={person} onDone={() => setEditing(false)} />
-          ) : (
-            <div className="space-y-1">
-              {/* The raw LinkedIn title stays visible above what was made of it. */}
-              <Row label="Their title">{person.position || <span className="text-muted">Not given</span>}</Row>
-              <Row label="Category">{person.category}</Row>
-              {person.secondCategory ? <Row label="Runner-up">{person.secondCategory}</Row> : null}
-              {person.cluster ? <Row label="Cluster">{`K-means ${person.cluster} of 10`}</Row> : null}
-              <Row label="Sector">
-                {person.sector ? sectorLabel(person.sector) : <span className="text-muted">Employer not recognised</span>}
-              </Row>
-              <div className="mt-2 flex items-center gap-2">
-                <ConfidenceBadge person={person} />
-              </div>
-              <p className="mt-1.5 text-[11.5px] text-muted">{person.method}</p>
-            </div>
-          )}
-        </Section>
-
         <Section title="Outreach">
           <div className="grid grid-cols-2 gap-2.5">
             <Field label="Status">

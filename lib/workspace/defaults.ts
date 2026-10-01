@@ -23,32 +23,16 @@ export const RESPONSES = ["No response yet", "Positive", "Neutral", "Declined", 
 
 export const DEFAULT_TEMPLATES: Template[] = [
   {
-    id: "referral-linkedin", name: "Referral request", purpose: "Referral", channel: "LinkedIn",
-    body: "Hi {{first_name}}, I came across your work as {{role}} at {{company}}. {{reason}} I'm {{my_background}} and am applying for {{ask}}. Would you be open to referring me, or pointing me to the right person? Happy to share my resume. Thank you!",
+    id: "explore-connect", name: "Explore / Connect", purpose: "Introduction", channel: "LinkedIn",
+    body: "Hi {{first_name}},\n\nI came across your profile while exploring [industry/role/company] and found your journey from [specific detail] to {{role}} really interesting.\n\nI'm currently [your role/year] at [college/company], working on [area/project], and I'm trying to learn more about [specific field/role].\n\nI'd love to connect and, if you're open to it, hear a little about your experience in [specific area] -- especially [specific question/topic].\n\nWould be great to connect!\n\nBest,\n{{my_name}}",
   },
   {
-    id: "advice-linkedin", name: "Quick advice", purpose: "Advice", channel: "LinkedIn",
-    body: "Hi {{first_name}}, I'm {{my_background}}. {{reason}} Given your experience as {{role}} at {{company}}, could I ask you {{ask}}? Even a few lines would help a lot.",
+    id: "job-internship", name: "Job / Internship Opportunity", purpose: "Job", channel: "LinkedIn",
+    body: "Hi {{first_name}},\n\nI'm [your role/year] at [college/company], currently looking for opportunities in [role/field].\n\nI came across {{company}} and was particularly interested in [specific project/product/team/area]. My experience in [skill/area] includes [1-2 relevant achievements or projects], and I believe it aligns well with the kind of work your team is doing.\n\nI wanted to reach out and ask if there are any [internship/full-time] opportunities in [role/team] currently or coming up.\n\nI'd be happy to share my resume or any additional details if useful.\n\nThanks for your time!\n\nBest,\n{{my_name}}",
   },
   {
-    id: "mentorship-email", name: "Mentorship", purpose: "Mentorship", channel: "Email",
-    body: "Hi {{first_name}},\n\nI'm {{my_name}}, {{my_background}}. {{reason}}\n\n{{common_context}}\n\nI'd really value your perspective on {{ask}}. Would you be open to a 15-minute call in the next couple of weeks?\n\nThanks so much,\n{{my_name}}",
-  },
-  {
-    id: "intro-linkedin", name: "Introduction", purpose: "Introduction", channel: "LinkedIn",
-    body: "Hi {{first_name}}, great to be connected. {{common_context}} I'm {{my_background}} and {{reason}} Would you be open to {{ask}}?",
-  },
-  {
-    id: "internship-email", name: "Internship enquiry", purpose: "Internship", channel: "Email",
-    body: "Hi {{first_name}},\n\nI'm {{my_name}}, {{my_background}}. {{reason}}\n\nI'm exploring {{ask}} at {{company}} and would love to learn whether your team takes interns, or who I should speak to.\n\nThank you for your time,\n{{my_name}}",
-  },
-  {
-    id: "job-linkedin", name: "Job opportunity", purpose: "Job", channel: "LinkedIn",
-    body: "Hi {{first_name}}, I noticed you're {{role}} at {{company}}. {{reason}} I'm {{my_background}} and am interested in {{ask}}. Could I ask how your team hires, or whether there's someone I should reach out to?",
-  },
-  {
-    id: "networking-linkedin", name: "Catch up / networking", purpose: "Networking", channel: "LinkedIn",
-    body: "Hi {{first_name}}, hope you're doing well! {{common_context}} I'd love to hear what you're working on at {{company}}. {{ask}}",
+    id: "referral-linkedin", name: "Referral", purpose: "Referral", channel: "LinkedIn",
+    body: "Hi {{first_name}},\n\nHope you're doing well!\n\nI'm [your role/year] at [college/company] and recently came across the [Role Name] opportunity at {{company}}. The role caught my attention because of its focus on [specific responsibility/area].\n\nI've worked on [relevant project/experience] and have experience with [2-3 relevant skills], so I feel the opportunity aligns closely with my background.\n\nSince you're currently at {{company}}, I wanted to ask if you'd be comfortable referring me for the role. I completely understand if you'd prefer to know more about my background first.\n\nI can share my resume and the job link for reference.\n\nThanks a lot for considering it!\n\nBest,\n{{my_name}}",
   },
 ];
 
