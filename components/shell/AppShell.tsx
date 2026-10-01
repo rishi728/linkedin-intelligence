@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import {
-  BarChart3, Bell, Building2, Cloud, Compass, Home, ListChecks, Plus, Search, Send,
+  BarChart3, Building2, Cloud, Compass, Home, ListChecks, Plus, Search, Send,
   Menu as MenuIcon, Settings as SettingsIcon, Stethoscope, Users, X,
 } from "lucide-react";
 import { followUpBuckets } from "@/lib/workspace/insights";
@@ -21,9 +21,7 @@ import { BackupNudge } from "@/components/shell/BackupNudge";
 import { Button, Spinner, cx } from "@/components/ui";
 import { useUI, useWorkspace } from "@/components/workspace/store";
 
-// Grouped so the shape of the product is visible at a glance: find someone,
-// talk to them, understand the whole, keep it clean.
-const NAV: Array<{ section?: string; href: string; label: string; icon: typeof Home }> = [
+const SIDEBAR_NAV: Array<{ section?: string; href: string; label: string; icon: typeof Home }> = [
   { href: "/home", label: "Home", icon: Home },
   { section: "Discover", href: "/find", label: "Find people", icon: Search },
   { href: "/people", label: "People", icon: Users },
@@ -34,24 +32,31 @@ const NAV: Array<{ section?: string; href: string; label: string; icon: typeof H
   { href: "/health", label: "Data health", icon: Stethoscope },
 ];
 
+const BOTTOM_NAV: Array<{ href: string; label: string; icon: typeof Home; countKey?: string }> = [
+  { href: "/home", label: "Home", icon: Home },
+  { href: "/find", label: "Find people", icon: Search },
+  { href: "/outreach", label: "Outreach", icon: Send },
+  { href: "/people", label: "My data", icon: Users },
+  { href: "/health", label: "Data health", icon: Stethoscope },
+  { href: "/review", label: "Data review", icon: ListChecks, countKey: "/review" },
+];
+
 export function AppShell({ children }: { children: ReactNode }) {
   const { ready, dataset, people, settings, savedAt } = useWorkspace();
   const { setPeopleFilters, toasts, dismissToast } = useUI();
   const pathname = usePathname();
   const router = useRouter();
   const [addOpen, setAddOpen] = useState(false);
-  const [navOpen, setNavOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (ready && !dataset) router.replace("/");
   }, [ready, dataset, router]);
 
-  // Close the drawer when the route changes, without an effect: the compiler
-  // rejects setState inside one, and this is the pattern used elsewhere here.
   const [navPath, setNavPath] = useState(pathname);
   if (navPath !== pathname) {
     setNavPath(pathname);
-    if (navOpen) setNavOpen(false);
+    if (sidebarOpen) setSidebarOpen(false);
   }
 
   if (!ready || !dataset) {
@@ -62,8 +67,6 @@ export function AppShell({ children }: { children: ReactNode }) {
     );
   }
 
-  // The one-time setup owns the whole screen: Home should already know what the
-  // user is after by the time they first see it.
   if (!settings.focus.confirmedAt && people.length > 0) return <Setup />;
 
   const buckets = followUpBuckets(people, settings);
@@ -78,119 +81,150 @@ export function AppShell({ children }: { children: ReactNode }) {
   };
 
   return (
-    <div className="flex h-full">
-      {navOpen ? (
+    <div className="flex h-full flex-col bg-[#FAFAF5]">
+      {/* ============ TOP BAR ============ */}
+      <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center gap-3 border-b border-[#E8E6DF] bg-white/90 px-4 backdrop-blur-md">
         <button
           type="button"
-          aria-label="Close navigation"
-          onClick={() => setNavOpen(false)}
-          className="fixed inset-0 z-40 bg-black/25 md:hidden"
-        />
-      ) : null}
-
-      <aside data-open={navOpen} className="nav-drawer flex w-[228px] shrink-0 flex-col border-r border-line bg-sidebar">
-        <div className="flex h-12 items-center gap-2 px-4">
-          <Logo size={22} className="shrink-0 text-accent" />
-          <span className="truncate text-[13.5px] font-semibold tracking-tight">NesT</span>
-        </div>
-
-        <div className="px-2 pb-2">
+          aria-label="Open menu"
+          onClick={() => setSidebarOpen(true)}
+          className="grid size-8 place-items-center rounded-lg text-[#64748b] transition hover:bg-[#f1f0eb] md:hidden"
+        >
+          <MenuIcon size={18} />
+        </button>
+        <Link href="/home" className="flex items-center gap-2" prefetch={false}>
+          <Logo size={28} />
+        </Link>
+        <span className="hidden items-center gap-1.5 rounded-full bg-[#ecfdf5] px-2.5 py-1 text-[11px] font-medium text-[#065f46] sm:flex">
+          <span className="size-1.5 rounded-full bg-[#10B981]" />
+          {people.length.toLocaleString()} conn. synced
+        </span>
+        <div className="mx-auto hidden max-w-xs flex-1 md:block">
           <button
             type="button"
             onClick={() => document.dispatchEvent(new CustomEvent("li:open-search"))}
-            className="flex h-8 w-full items-center gap-2 rounded-lg border border-line bg-panel px-2 text-[12.5px] text-muted transition hover:border-line-strong hover:text-ink"
+            className="flex h-8 w-full items-center gap-2 rounded-full border border-[#E8E6DF] bg-[#FAFAF5] px-3 text-[12.5px] text-[#94a3b8] transition hover:border-[#d6d3c7]"
           >
-            <Search size={14} />
-            <span className="flex-1 text-left">Search everything</span>
-            <kbd className="rounded border border-line px-1 text-[10.5px] text-faint">⌘K</kbd>
+            <Search size={13} />
+            Search connections, companies...
           </button>
         </div>
+        {people.length >= 5000 && (
+          <span className="hidden items-center gap-1.5 rounded-full bg-[#FEF3C7] px-2.5 py-1 text-[11px] font-semibold text-[#92400e] md:flex">
+            Volume: &gt;{Math.floor(people.length / 1000) * 1000} (High Activity!)
+          </span>
+        )}
+        <Link
+          href="/?welcome"
+          prefetch={false}
+          className="hidden items-center gap-1.5 rounded-full border border-[#E8E6DF] px-3 py-1.5 text-[11px] font-medium text-[#64748b] transition hover:bg-[#f1f0eb] hover:text-[#0f172a] md:flex"
+        >
+          <Home size={12} />
+          Main site
+        </Link>
+        <button
+          type="button"
+          onClick={() => document.dispatchEvent(new CustomEvent("li:open-search"))}
+          className="grid size-8 place-items-center rounded-lg text-[#64748b] transition hover:bg-[#f1f0eb] md:hidden"
+        >
+          <Search size={17} />
+        </button>
+      </header>
 
-        <nav className="flex-1 overflow-auto px-2 pb-3 scroll-thin">
-          {NAV.map((item) => {
+      {/* ============ SIDEBAR DRAWER (mobile + desktop) ============ */}
+      {sidebarOpen && (
+        <button
+          type="button"
+          aria-label="Close navigation"
+          onClick={() => setSidebarOpen(false)}
+          className="fixed inset-0 z-50 bg-black/25"
+        />
+      )}
+      <aside
+        data-open={sidebarOpen}
+        className={cx(
+          "fixed left-0 top-0 z-50 flex h-full w-[260px] flex-col border-r border-[#E8E6DF] bg-white shadow-xl transition-transform duration-300",
+          sidebarOpen ? "translate-x-0" : "-translate-x-full",
+        )}
+      >
+        <div className="flex h-14 items-center justify-between px-4">
+          <div className="flex items-center gap-2">
+            <Logo size={24} />
+            <span className="text-[14px] font-semibold tracking-tight text-[#0C2D22]">NesT</span>
+          </div>
+          <button type="button" onClick={() => setSidebarOpen(false)} className="text-[#94a3b8] hover:text-[#0f172a]">
+            <X size={18} />
+          </button>
+        </div>
+        <nav className="flex-1 overflow-auto px-3 pb-3">
+          {SIDEBAR_NAV.map((item) => {
             const active = pathname === item.href;
             const count = counts[item.href];
             return (
               <div key={item.href}>
-                {item.section ? (
-                  <p className="px-2 pb-1 pt-4 text-[10.5px] font-medium uppercase tracking-[0.1em] text-faint">
+                {item.section && (
+                  <p className="px-2 pb-1 pt-4 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#94a3b8]">
                     {item.section}
                   </p>
-                ) : null}
+                )}
                 <Link
                   href={item.href}
                   prefetch={false}
-                  aria-current={active ? "page" : undefined}
+                  onClick={() => setSidebarOpen(false)}
                   className={cx(
-                    "relative mb-0.5 flex h-8 items-center gap-2.5 rounded-lg pl-2.5 pr-2 text-[13px] transition",
-                    active ? "bg-accent-soft/60 font-medium text-ink" : "text-ink-2 hover:bg-hover hover:text-ink",
+                    "mb-0.5 flex h-9 items-center gap-2.5 rounded-lg px-3 text-[13px] transition",
+                    active ? "bg-[#ecfdf5] font-medium text-[#065f46]" : "text-[#475569] hover:bg-[#f1f0eb]",
                   )}
                 >
-                  {active ? (
-                    <span aria-hidden className="absolute left-0 top-1/2 h-4 w-[2.5px] -translate-y-1/2 rounded-r bg-accent" />
-                  ) : null}
-                  <item.icon size={15} className={active ? "text-accent" : "text-muted"} />
+                  <item.icon size={15} className={active ? "text-[#059669]" : "text-[#94a3b8]"} />
                   <span className="flex-1 truncate">{item.label}</span>
-                  {count !== undefined ? (
-                    <span className={cx("tabular rounded px-1 text-[11px]", item.href === "/outreach" && due ? "tone-orange" : "text-muted")}>
-                      {count.toLocaleString()}
-                    </span>
-                  ) : null}
+                  {count !== undefined && (
+                    <span className="tabular text-[11px] text-[#94a3b8]">{count.toLocaleString()}</span>
+                  )}
                 </Link>
               </div>
             );
           })}
-
-          {settings.segments.length > 0 ? (
+          {settings.segments.length > 0 && (
             <>
-              <p className="mt-4 border-t border-line px-2 pb-1 pt-3 text-[10.5px] font-medium uppercase tracking-[0.1em] text-faint">Saved lists</p>
+              <p className="mt-4 border-t border-[#E8E6DF] px-2 pb-1 pt-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#94a3b8]">Saved lists</p>
               {settings.segments.map((seg) => (
                 <button
                   key={seg.id}
                   type="button"
-                  onClick={() => {
-                    setPeopleFilters(seg.filters);
-                    router.push("/people");
-                  }}
-                  className="mb-0.5 flex h-7 w-full items-center gap-2 rounded-lg px-2 text-left text-[12.5px] text-ink-2 transition hover:bg-hover hover:text-ink"
+                  onClick={() => { setPeopleFilters(seg.filters); router.push("/people"); setSidebarOpen(false); }}
+                  className="mb-0.5 flex h-8 w-full items-center gap-2 rounded-lg px-3 text-left text-[12.5px] text-[#475569] transition hover:bg-[#f1f0eb]"
                 >
-                  <Compass size={13} className="text-muted" />
+                  <Compass size={13} className="text-[#94a3b8]" />
                   <span className="truncate">{seg.name}</span>
                 </button>
               ))}
             </>
-          ) : null}
+          )}
         </nav>
-
-        <div className="border-t border-line p-2">
+        <div className="border-t border-[#E8E6DF] p-3">
           <button
             type="button"
-            onClick={() => setAddOpen(true)}
-            className="mb-1 flex h-8 w-full items-center gap-2.5 rounded-lg px-2 text-[13px] text-ink-2 transition hover:bg-hover hover:text-ink"
+            onClick={() => { setAddOpen(true); setSidebarOpen(false); }}
+            className="mb-1 flex h-8 w-full items-center gap-2.5 rounded-lg px-3 text-[13px] text-[#475569] transition hover:bg-[#f1f0eb]"
           >
-            <Plus size={15} className="text-muted" />
+            <Plus size={15} className="text-[#94a3b8]" />
             Add data
           </button>
           <Link
             href="/settings"
             prefetch={false}
-            className={cx(
-              "mb-1 flex h-8 items-center gap-2.5 rounded-lg px-2 text-[13px] transition",
-              pathname === "/settings" ? "bg-panel font-medium text-ink shadow-pop" : "text-ink-2 hover:bg-hover hover:text-ink",
-            )}
+            onClick={() => setSidebarOpen(false)}
+            className="mb-1 flex h-8 items-center gap-2.5 rounded-lg px-3 text-[13px] text-[#475569] transition hover:bg-[#f1f0eb]"
           >
-            <SettingsIcon size={15} className="text-muted" />
+            <SettingsIcon size={15} className="text-[#94a3b8]" />
             Settings
           </Link>
-          <p className="truncate px-2 text-[11px] text-muted" title={(dataset.files ?? []).map((f) => f.fileName).join(", ") || dataset.fileName}>
-            {people.length.toLocaleString()} connections
-            {(dataset.files?.length ?? 1) > 1 ? ` · ${dataset.files!.length} files` : ` · ${dataset.fileName}`}
-          </p>
-          <p className="flex items-center gap-1.5 px-2 pb-1 pt-0.5 text-[11px] text-muted" title="Everything you change is written to this browser automatically. Excel export is for sharing, not for safekeeping.">
-            <Cloud size={11} className="text-[var(--t-green)]" />
+          <p className="flex items-center gap-1.5 px-3 py-1 text-[11px] text-[#94a3b8]">
+            <Cloud size={11} className="text-[#10B981]" />
             {savedAt ? `Saved locally · ${savedRelative(savedAt)}` : "Saved locally"}
           </p>
-          <Link href="/?welcome" prefetch={false} className="flex items-center gap-1.5 px-2 pt-1 text-[11px] text-muted transition hover:text-ink">
+          <Link href="/?welcome" prefetch={false} className="flex items-center gap-1.5 px-3 pt-1 text-[11px] text-[#94a3b8] transition hover:text-[#0f172a]">
             <Home size={11} />
             Back to landing page
           </Link>
@@ -198,21 +232,42 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </aside>
 
-      <main className="flex min-w-0 flex-1 flex-col overflow-hidden bg-canvas">
-        <div className="flex h-11 shrink-0 items-center gap-2 border-b border-line px-3 md:hidden">
-          <button
-            type="button"
-            aria-label="Open navigation"
-            aria-expanded={navOpen}
-            onClick={() => setNavOpen(true)}
-            className="grid size-8 place-items-center rounded-lg text-ink-2 transition hover:bg-hover"
-          >
-            <MenuIcon size={17} />
-          </button>
-          <span className="text-[13px] font-semibold tracking-tight">NesT</span>
-        </div>
+      {/* ============ MAIN ============ */}
+      <main className="min-h-0 flex-1 overflow-auto pb-16 md:pb-0">
         {children}
       </main>
+
+      {/* ============ BOTTOM NAV (mobile) ============ */}
+      <nav className="fixed bottom-0 left-0 right-0 z-40 flex h-14 items-center justify-around border-t border-[#E8E6DF] bg-white/95 backdrop-blur-sm md:hidden">
+        {BOTTOM_NAV.map((item) => {
+          const active = pathname === item.href;
+          const count = item.countKey ? counts[item.countKey] : undefined;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              prefetch={false}
+              className={cx(
+                "relative flex flex-col items-center gap-0.5 px-2 py-1 text-[10px] transition",
+                active ? "font-semibold text-[#065f46]" : "text-[#94a3b8]",
+              )}
+            >
+              {active && (
+                <span className="absolute -top-1 left-1/2 h-[3px] w-8 -translate-x-1/2 rounded-b-full bg-[#0C2D22]" />
+              )}
+              <span className={cx("relative rounded-lg px-3 py-1", active && "bg-[#0C2D22] text-white")}>
+                <item.icon size={16} />
+                {count !== undefined && count > 0 && (
+                  <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#ef4444] px-1 text-[9px] font-bold text-white">
+                    {count > 99 ? "99+" : count}
+                  </span>
+                )}
+              </span>
+              <span className="truncate">{item.label}</span>
+            </Link>
+          );
+        })}
+      </nav>
 
       <CommandPalette />
       <PersonPanel />
@@ -222,23 +277,20 @@ export function AppShell({ children }: { children: ReactNode }) {
       <AddData open={addOpen} onClose={() => setAddOpen(false)} />
       <Guide />
 
-      <div className="pointer-events-none fixed bottom-4 left-1/2 z-[60] flex -translate-x-1/2 flex-col items-center gap-2">
+      <div className="pointer-events-none fixed bottom-16 left-1/2 z-[60] flex -translate-x-1/2 flex-col items-center gap-2 md:bottom-4">
         {toasts.map((t) => (
-          <div key={t.id} className="anim-pop pointer-events-auto flex items-center gap-3 rounded-xl border border-line bg-panel px-3 py-2 text-[13px] shadow-float">
+          <div key={t.id} className="anim-pop pointer-events-auto flex items-center gap-3 rounded-xl border border-[#E8E6DF] bg-white px-3 py-2 text-[13px] shadow-lg">
             <span>{t.text}</span>
             {t.action ? (
               <Button
                 size="sm"
                 variant="subtle"
-                onClick={() => {
-                  t.action!.run();
-                  dismissToast(t.id);
-                }}
+                onClick={() => { t.action!.run(); dismissToast(t.id); }}
               >
                 {t.action.label}
               </Button>
             ) : null}
-            <button type="button" aria-label="Dismiss" onClick={() => dismissToast(t.id)} className="text-muted hover:text-ink">
+            <button type="button" aria-label="Dismiss" onClick={() => dismissToast(t.id)} className="text-[#94a3b8] hover:text-[#0f172a]">
               <X size={13} />
             </button>
           </div>
@@ -258,10 +310,10 @@ function savedRelative(iso: string): string {
 
 export function PageHeader({ title, subtitle, actions }: { title: string; subtitle?: ReactNode; actions?: ReactNode }) {
   return (
-    <header className="flex h-auto min-h-12 shrink-0 items-center justify-between gap-4 border-b border-line px-5 py-2.5">
+    <header className="flex h-auto min-h-12 shrink-0 items-center justify-between gap-4 border-b border-[#E8E6DF] bg-white px-5 py-2.5">
       <div className="min-w-0">
-        <h1 className="truncate text-[15px] font-semibold tracking-tight">{title}</h1>
-        {subtitle ? <p className="truncate text-[12px] text-muted">{subtitle}</p> : null}
+        <h1 className="truncate text-[15px] font-semibold tracking-tight text-[#0f172a]">{title}</h1>
+        {subtitle ? <p className="truncate text-[12px] text-[#94a3b8]">{subtitle}</p> : null}
       </div>
       {actions ? <div className="flex shrink-0 items-center gap-2">{actions}</div> : null}
     </header>
@@ -269,5 +321,5 @@ export function PageHeader({ title, subtitle, actions }: { title: string; subtit
 }
 
 export function PageBody({ children, className }: { children: ReactNode; className?: string }) {
-  return <div className={cx("scroll-thin min-h-0 flex-1 overflow-auto px-5 py-5", className)}>{children}</div>;
+  return <div className={cx("min-h-0 flex-1 overflow-auto px-5 py-5", className)}>{children}</div>;
 }
