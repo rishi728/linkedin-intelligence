@@ -12,7 +12,7 @@ export function Mascot({ size = 40, className }: { size?: number; className?: st
       fill="none"
       className={className}
       role="img"
-      aria-label="Pip, your guide"
+      aria-label="Owlie, your guide"
     >
       {/* body */}
       <path

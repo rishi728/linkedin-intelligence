@@ -198,7 +198,7 @@ export function WelcomeView() {
               ]).map((t) => (
                 <button
                   key={t.id}
-                  onClick={() => { setActiveTab(t.id); if (t.id === "demo") setActiveTab("home"); }}
+                  onClick={() => { if (t.id === "demo") { router.push("/home"); return; } setActiveTab(t.id); }}
                   style={{
                     padding: "6px 16px", borderRadius: 9999, border: "none", cursor: "pointer",
                     fontFamily: "inherit", fontSize: 14, fontWeight: activeTab === t.id ? 600 : 500,

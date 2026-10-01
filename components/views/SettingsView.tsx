@@ -624,7 +624,7 @@ export function SettingsView() {
                   <Button
                     onClick={() => {
                       updateSettings((st) => ({ ...st, toursSeen: [] }));
-                      toast("Pip will introduce each page again.");
+                      toast("Owlie will introduce each page again.");
                     }}
                   >
                     Show the guide again

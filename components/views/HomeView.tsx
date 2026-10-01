@@ -14,7 +14,7 @@ import { useUI, useWorkspace } from "@/components/workspace/store";
 
 const WavingOwl = memo(function WavingOwl() {
   return (
-    <svg width="96" height="96" viewBox="0 0 340 320" xmlns="http://www.w3.org/2000/svg" fill="none">
+    <svg width="192" height="192" viewBox="0 0 340 320" xmlns="http://www.w3.org/2000/svg" fill="none">
       <defs>
         <filter id="nest-owl-shadow" x="-10%" y="-10%" width="120%" height="120%"><feDropShadow dx="0" dy="4" stdDeviation="6" floodColor="#0f2d24" floodOpacity="0.12" /></filter>
         <linearGradient id="nest-straw-grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#D99B4B" /><stop offset="50%" stopColor="#C28230" /><stop offset="100%" stopColor="#9C5E19" /></linearGradient>
@@ -395,7 +395,7 @@ export function HomeView() {
                 textTransform: "uppercase" as const, color: "#059669",
                 background: "#dcfce7", padding: "2px 8px", borderRadius: 4, marginBottom: 6,
               }}>
-                NeST INTELLIGENCE ASSISTANT
+                OWLIE
               </span>
               <p style={{ fontSize: 13, color: "#334155", lineHeight: 1.6, marginTop: 4 }}>
                 &ldquo;Wooaah, you are so much active! <strong>{people.length.toLocaleString()} connections</strong> is an incredible network. Let&rsquo;s find your warmest signals.&rdquo;

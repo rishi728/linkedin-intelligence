@@ -93,7 +93,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <MenuIcon size={18} />
         </button>
         <Link href="/home" className="flex items-center gap-2" prefetch={false}>
-          <Logo size={28} />
+          <Logo size={56} />
         </Link>
         <span className="hidden items-center gap-1.5 rounded-full bg-[#ecfdf5] px-2.5 py-1 text-[11px] font-medium text-[#065f46] sm:flex">
           <span className="size-1.5 rounded-full bg-[#10B981]" />
@@ -160,7 +160,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       >
         <div className="flex h-14 items-center justify-between px-4">
           <div className="flex items-center gap-2">
-            <Logo size={24} />
+            <Logo size={48} />
             <span className="text-[14px] font-semibold tracking-tight text-[#0C2D22]">NesT</span>
           </div>
           <button type="button" onClick={() => setSidebarOpen(false)} className="text-[#94a3b8] hover:text-[#0f172a]">
