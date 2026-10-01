@@ -237,37 +237,36 @@ export function AppShell({ children }: { children: ReactNode }) {
         {children}
       </main>
 
-      {/* ============ BOTTOM NAV (mobile) ============ */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 flex h-14 items-center justify-around border-t border-[#E8E6DF] bg-white/95 backdrop-blur-sm md:hidden">
-        {BOTTOM_NAV.map((item) => {
-          const active = pathname === item.href;
-          const count = item.countKey ? counts[item.countKey] : undefined;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              prefetch={false}
-              className={cx(
-                "relative flex flex-col items-center gap-0.5 px-2 py-1 text-[10px] transition",
-                active ? "font-semibold text-[#065f46]" : "text-[#94a3b8]",
-              )}
-            >
-              {active && (
-                <span className="absolute -top-1 left-1/2 h-[3px] w-8 -translate-x-1/2 rounded-b-full bg-[#0C2D22]" />
-              )}
-              <span className={cx("relative rounded-lg px-3 py-1", active && "bg-[#0C2D22] text-white")}>
-                <item.icon size={16} />
+      {/* ============ BOTTOM NAV BAR ============ */}
+      <div className="fixed bottom-3 left-1/2 z-40 w-[calc(100%-24px)] max-w-4xl -translate-x-1/2">
+        <nav className="flex items-center justify-between gap-1.5 rounded-2xl border border-[#E0DCD3] bg-[#EFECE6]/90 p-1.5 shadow-sm backdrop-blur-md">
+          {BOTTOM_NAV.map((item) => {
+            const active = pathname === item.href;
+            const count = item.countKey ? counts[item.countKey] : undefined;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                prefetch={false}
+                className={cx(
+                  "relative flex flex-1 items-center justify-center gap-1.5 rounded-xl px-2 py-2 text-[11px] font-medium transition-all duration-300",
+                  active
+                    ? "bg-[#0F2D24] font-semibold text-white shadow-sm"
+                    : "text-[#57534e] hover:bg-[#0F2D24]/10 hover:text-[#0f172a]",
+                )}
+              >
+                <item.icon size={15} className={active ? "text-[#6ee7b7]" : "text-[#78716c]"} />
+                <span className="hidden tracking-tight sm:inline">{item.label}</span>
                 {count !== undefined && count > 0 && (
-                  <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#ef4444] px-1 text-[9px] font-bold text-white">
-                    {count > 99 ? "99+" : count}
+                  <span className="ml-0.5 rounded-full bg-[#FEF3C7] px-1.5 text-[9px] font-bold text-[#92400e]">
+                    {count > 999 ? `${Math.round(count / 100) / 10}k` : count}
                   </span>
                 )}
-              </span>
-              <span className="truncate">{item.label}</span>
-            </Link>
-          );
-        })}
-      </nav>
+              </Link>
+            );
+          })}
+        </nav>
+      </div>
 
       <CommandPalette />
       <PersonPanel />
