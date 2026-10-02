@@ -1055,7 +1055,7 @@ function DemoTabContent({ loadSample, updateSettings, router }: { loadSample: ()
             Interactive Preview
           </div>
           <h2 className="font-serif" style={{ fontSize: "clamp(28px, 3.5vw, 48px)", fontWeight: 700, color: "#0C2D22", letterSpacing: "-0.02em", lineHeight: 1.15, marginBottom: 12 }}>
-            See NesT in action
+            See NEST in action
           </h2>
           <p style={{ color: "#64748b", fontSize: "clamp(14px, 1.2vw, 18px)", fontWeight: 300, lineHeight: 1.6 }}>
             Explore the key screens before importing your own data. Everything runs locally in your browser.
