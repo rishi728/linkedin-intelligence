@@ -198,7 +198,7 @@ export function WelcomeView() {
               ]).map((t) => (
                 <button
                   key={t.id}
-                  onClick={() => { if (t.id === "demo") { router.push("/home"); return; } setActiveTab(t.id); }}
+                  onClick={() => setActiveTab(t.id)}
                   style={{
                     padding: "6px 16px", borderRadius: 9999, border: "none", cursor: "pointer",
                     fontFamily: "inherit", fontSize: 14, fontWeight: activeTab === t.id ? 600 : 500,
@@ -611,6 +611,9 @@ export function WelcomeView() {
           <WalkthroughSection walkthroughOpen={walkthroughOpen} setWalkthroughOpen={setWalkthroughOpen} />
           </div>
           )}
+          {activeTab === "demo" && (
+          <DemoTabContent loadSample={loadSample} updateSettings={updateSettings} router={router} />
+          )}
           {activeTab === "privacy" && (
           <PrivacyTabContent walkthroughOpen={walkthroughOpen} setWalkthroughOpen={setWalkthroughOpen} />
           )}
@@ -918,6 +921,240 @@ function ExportModal({
         </div>
       </div>
     </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Demo tab content                                                   */
+/* ------------------------------------------------------------------ */
+function DemoTabContent({ loadSample, updateSettings, router }: { loadSample: () => void; updateSettings: (fn: (s: any) => any) => void; router: any }) {
+  const [activeScreen, setActiveScreen] = useState(0);
+  const screens = [
+    {
+      title: "Home Dashboard",
+      desc: "See your entire network at a glance. Stat cards show total connections, pending follow-ups, active outreach, and response rates. Owlie sits on the dashboard to help you navigate.",
+      icon: (
+        <svg style={{ width: 20, height: 20, fill: "none", stroke: "currentColor", strokeWidth: 2 }} viewBox="0 0 24 24"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>
+      ),
+      mockup: (
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8 }}>
+            {[
+              { label: "Total People", val: "1,248", color: "#0C2D22" },
+              { label: "To Contact", val: "47", color: "#2563eb" },
+              { label: "Awaiting Reply", val: "12", color: "#d97706" },
+              { label: "Replied", val: "31", color: "#059669" },
+            ].map((s) => (
+              <div key={s.label} style={{ background: "#fff", borderRadius: 10, border: "1px solid #E8E6DF", padding: "10px 12px", textAlign: "center" }}>
+                <div style={{ fontSize: 20, fontWeight: 700, color: s.color }}>{s.val}</div>
+                <div style={{ fontSize: 10, color: "#94a3b8", fontWeight: 500, marginTop: 2 }}>{s.label}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{ background: "#fff", borderRadius: 10, border: "1px solid #E8E6DF", padding: 12 }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: "#334155", marginBottom: 8 }}>Recent Activity</div>
+            {["Neha Sharma replied to your message", "Follow-up due: Rohit Verma", "Aarav Mehta moved to Contacted"].map((a, i) => (
+              <div key={i} style={{ padding: "6px 0", borderTop: i ? "1px solid #f1f5f9" : "none", fontSize: 11, color: "#64748b", display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ width: 6, height: 6, borderRadius: "50%", background: i === 0 ? "#059669" : i === 1 ? "#d97706" : "#2563eb", flexShrink: 0 }} />
+                {a}
+              </div>
+            ))}
+          </div>
+        </div>
+      ),
+    },
+    {
+      title: "Find People",
+      desc: "Filter your network by role, industry, or intent. Select tiles to narrow down exactly who you need -- product managers at startups, engineers at FAANG, or alumni from your school.",
+      icon: (
+        <svg style={{ width: 20, height: 20, fill: "none", stroke: "currentColor", strokeWidth: 2 }} viewBox="0 0 24 24"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg>
+      ),
+      mockup: (
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <div style={{ fontSize: 11, fontWeight: 600, color: "#334155" }}>Select Roles</div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6 }}>
+            {["Product Manager", "Software Engineer", "Data Scientist", "Consultant", "Designer", "Founder"].map((r, i) => (
+              <div key={r} style={{
+                padding: "8px 10px", borderRadius: 8, fontSize: 11, fontWeight: 500, cursor: "pointer", textAlign: "center",
+                background: i < 2 ? "#ecfdf5" : "#fff",
+                border: i < 2 ? "1.5px solid #059669" : "1px solid #E8E6DF",
+                color: i < 2 ? "#065f46" : "#64748b",
+              }}>
+                {i < 2 && <span style={{ marginRight: 4 }}>&#10003;</span>}
+                {r}
+              </div>
+            ))}
+          </div>
+          <div style={{ marginTop: 4, padding: "8px 12px", borderRadius: 8, background: "#ecfdf5", border: "1px solid #a7f3d0", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <span style={{ fontSize: 11, color: "#065f46", fontWeight: 500 }}>2 roles selected -- 186 matches</span>
+            <span style={{ fontSize: 11, fontWeight: 600, color: "#059669" }}>Show People &rarr;</span>
+          </div>
+        </div>
+      ),
+    },
+    {
+      title: "People & Outreach",
+      desc: "View detailed profiles with relationship context, compose personalized messages from templates, and track every interaction. Never lose track of who you reached out to.",
+      icon: (
+        <svg style={{ width: 20, height: 20, fill: "none", stroke: "currentColor", strokeWidth: 2 }} viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
+      ),
+      mockup: (
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {[
+            { initials: "NS", name: "Neha Sharma", role: "Product Manager at Google", status: "Replied", statusColor: "#059669" },
+            { initials: "AM", name: "Aarav Mehta", role: "Supply Chain Lead, Ex-Flipkart", status: "Contacted", statusColor: "#8b5cf6" },
+            { initials: "IK", name: "Isha Kapoor", role: "Data Scientist at Cred", status: "To contact", statusColor: "#2563eb" },
+          ].map((p) => (
+            <div key={p.initials} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 10px", borderRadius: 10, border: "1px solid #f1f5f9", background: "#fff" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#f3e8ff", color: "#6b21a8", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 11 }}>{p.initials}</div>
+                <div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: "#0f172a" }}>{p.name}</div>
+                  <div style={{ fontSize: 10, color: "#94a3b8" }}>{p.role}</div>
+                </div>
+              </div>
+              <span style={{ fontSize: 10, fontWeight: 600, color: p.statusColor, background: `${p.statusColor}15`, padding: "2px 8px", borderRadius: 6 }}>{p.status}</span>
+            </div>
+          ))}
+        </div>
+      ),
+    },
+    {
+      title: "Reminders & Follow-ups",
+      desc: "Automated follow-up cadences ensure you never drop the ball. Set reminders per person, see overdue items, and keep your outreach momentum going week after week.",
+      icon: (
+        <svg style={{ width: 20, height: 20, fill: "none", stroke: "currentColor", strokeWidth: 2 }} viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></svg>
+      ),
+      mockup: (
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {[
+            { name: "Rohit Verma", action: "Follow up on referral request", due: "Today", urgent: true },
+            { name: "Neha Sharma", action: "Send thank-you after call", due: "Tomorrow", urgent: false },
+            { name: "Isha Kapoor", action: "Initial outreach", due: "In 3 days", urgent: false },
+          ].map((r) => (
+            <div key={r.name} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 10px", borderRadius: 10, border: r.urgent ? "1px solid #fca5a5" : "1px solid #f1f5f9", background: r.urgent ? "#fef2f2" : "#fff" }}>
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 600, color: "#0f172a" }}>{r.name}</div>
+                <div style={{ fontSize: 10, color: "#64748b" }}>{r.action}</div>
+              </div>
+              <span style={{ fontSize: 10, fontWeight: 600, color: r.urgent ? "#dc2626" : "#64748b", padding: "2px 8px", borderRadius: 6, background: r.urgent ? "#fee2e2" : "#f1f5f9" }}>{r.due}</span>
+            </div>
+          ))}
+        </div>
+      ),
+    },
+  ];
+
+  return (
+    <section className="hero-glow" style={{ position: "relative", paddingTop: 40, paddingBottom: 80, overflow: "hidden" }}>
+      <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 48px" }}>
+        {/* Header */}
+        <div style={{ textAlign: "center", maxWidth: 640, margin: "0 auto 48px" }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 14px", borderRadius: 9999, background: "#ecfdf5", border: "1px solid #a7f3d0", fontSize: 12, fontWeight: 600, color: "#065f46", marginBottom: 16 }}>
+            <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#10B981" }} />
+            Interactive Preview
+          </div>
+          <h2 className="font-serif" style={{ fontSize: "clamp(28px, 3.5vw, 48px)", fontWeight: 700, color: "#0C2D22", letterSpacing: "-0.02em", lineHeight: 1.15, marginBottom: 12 }}>
+            See NesT in action
+          </h2>
+          <p style={{ color: "#64748b", fontSize: "clamp(14px, 1.2vw, 18px)", fontWeight: 300, lineHeight: 1.6 }}>
+            Explore the key screens before importing your own data. Everything runs locally in your browser.
+          </p>
+        </div>
+
+        {/* Screen selector + preview */}
+        <div style={{ display: "grid", gridTemplateColumns: "280px 1fr", gap: 24, maxWidth: 960, margin: "0 auto" }}>
+          {/* Left: screen list */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {screens.map((s, i) => (
+              <button
+                key={s.title}
+                onClick={() => setActiveScreen(i)}
+                style={{
+                  display: "flex", alignItems: "center", gap: 12, padding: "12px 16px",
+                  borderRadius: 12, border: "none", cursor: "pointer", fontFamily: "inherit",
+                  textAlign: "left", transition: "all 0.2s",
+                  background: activeScreen === i ? "#0C2D22" : "#fff",
+                  color: activeScreen === i ? "#fff" : "#334155",
+                  boxShadow: activeScreen === i ? "0 4px 12px rgba(12,45,34,0.2)" : "0 1px 2px rgba(0,0,0,0.04)",
+                }}
+              >
+                <div style={{
+                  width: 36, height: 36, borderRadius: 10, flexShrink: 0,
+                  background: activeScreen === i ? "rgba(255,255,255,0.15)" : "#EBF6F1",
+                  color: activeScreen === i ? "#fff" : "#0C2D22",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                }}>
+                  {s.icon}
+                </div>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 600 }}>{s.title}</div>
+                  <div style={{ fontSize: 11, opacity: 0.7, marginTop: 1 }}>
+                    {i === 0 ? "Network overview" : i === 1 ? "Smart filters" : i === 2 ? "Manage contacts" : "Stay on track"}
+                  </div>
+                </div>
+              </button>
+            ))}
+
+            {/* CTA */}
+            <button
+              onClick={() => {
+                loadSample();
+                updateSettings((s: any) => ({ ...s, focus: { ...s.focus, confirmedAt: new Date().toISOString() } }));
+                router.push("/home");
+              }}
+              className="cta-main"
+              style={{
+                marginTop: 12, display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                padding: "12px 20px", borderRadius: 9999, border: "none",
+                background: "#0C2D22", color: "#fff", fontSize: 13, fontWeight: 600,
+                cursor: "pointer", fontFamily: "inherit",
+                boxShadow: "0 4px 12px rgba(12,45,34,0.2)",
+              }}
+            >
+              Try with Sample Data
+              <span className="cta-arrow" style={{
+                width: 22, height: 22, borderRadius: "50%", background: "rgba(255,255,255,0.1)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}>
+                <svg style={{ width: 12, height: 12, stroke: "currentColor", strokeWidth: 2, fill: "none" }} viewBox="0 0 24 24"><path d="M5 12h14m-7-7 7 7-7 7" /></svg>
+              </span>
+            </button>
+          </div>
+
+          {/* Right: preview card */}
+          <div className="shadow-float-l" style={{
+            background: "#fff", borderRadius: 16, border: "1px solid #E8E6DF",
+            overflow: "hidden",
+          }}>
+            {/* Window bar */}
+            <div style={{
+              padding: "12px 16px", background: "rgba(248,250,252,0.8)",
+              borderBottom: "1px solid #E8E6DF",
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <div style={{ width: 10, height: 10, borderRadius: "50%", background: "rgba(255,95,86,0.8)" }} />
+                <div style={{ width: 10, height: 10, borderRadius: "50%", background: "rgba(255,189,46,0.8)" }} />
+                <div style={{ width: 10, height: 10, borderRadius: "50%", background: "rgba(39,201,63,0.8)" }} />
+              </div>
+              <span style={{ fontSize: 11, color: "#94a3b8", fontWeight: 500 }}>{screens[activeScreen].title}</span>
+              <div style={{ width: 48 }} />
+            </div>
+
+            {/* Content */}
+            <div style={{ padding: 20 }}>
+              {screens[activeScreen].mockup}
+            </div>
+
+            {/* Description */}
+            <div style={{ padding: "12px 20px 16px", borderTop: "1px solid #E8E6DF", background: "rgba(244,243,238,0.4)" }}>
+              <p style={{ fontSize: 12, color: "#64748b", lineHeight: 1.6 }}>{screens[activeScreen].desc}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }
 
