@@ -264,7 +264,31 @@ export function MenuLabel({ children }: { children: ReactNode }) {
 
 // ---------------------------------------------------------------------------
 
+function useFocusTrap(open: boolean) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open || !ref.current) return;
+    const el = ref.current;
+    const prev = document.activeElement as HTMLElement | null;
+    const focusable = () => el.querySelectorAll<HTMLElement>('a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])');
+    const first = focusable()[0];
+    first?.focus();
+    const onTab = (e: KeyboardEvent) => {
+      if (e.key !== "Tab") return;
+      const nodes = focusable();
+      if (!nodes.length) return;
+      const last = nodes[nodes.length - 1];
+      if (e.shiftKey && document.activeElement === nodes[0]) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); nodes[0].focus(); }
+    };
+    el.addEventListener("keydown", onTab);
+    return () => { el.removeEventListener("keydown", onTab); prev?.focus(); };
+  }, [open]);
+  return ref;
+}
+
 export function Dialog({ open, onClose, title, subtitle, children, footer, width = 720 }: { open: boolean; onClose: () => void; title: string; subtitle?: ReactNode; children: ReactNode; footer?: ReactNode; width?: number }) {
+  const trapRef = useFocusTrap(open);
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -274,7 +298,7 @@ export function Dialog({ open, onClose, title, subtitle, children, footer, width
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-auto bg-black/30 p-4 py-[6vh] backdrop-blur-[2px]" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="anim-pop w-full rounded-2xl border border-line bg-panel shadow-float" style={{ maxWidth: width }}>
+      <div ref={trapRef} role="dialog" aria-modal="true" className="anim-pop w-full rounded-2xl border border-line bg-panel shadow-float" style={{ maxWidth: width }}>
         <div className="flex items-start justify-between gap-4 border-b border-line px-5 py-3.5">
           <div>
             <h2 className="text-[15px] font-semibold tracking-tight">{title}</h2>
@@ -290,6 +314,7 @@ export function Dialog({ open, onClose, title, subtitle, children, footer, width
 }
 
 export function Sheet({ open, onClose, children, width = 560 }: { open: boolean; onClose: () => void; children: ReactNode; width?: number }) {
+  const trapRef = useFocusTrap(open);
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -299,7 +324,7 @@ export function Sheet({ open, onClose, children, width = 560 }: { open: boolean;
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-black/20" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <aside className="anim-sheet flex h-full w-full flex-col border-l border-line bg-panel shadow-float" style={{ maxWidth: width }}>
+      <aside ref={trapRef} role="dialog" aria-modal="true" className="anim-sheet flex h-full w-full flex-col border-l border-line bg-panel shadow-float" style={{ maxWidth: width }}>
         {children}
       </aside>
     </div>

@@ -46,7 +46,7 @@ export function buildFollowUpCalendar(people: Person[], settings: Settings, toda
       `DTEND;VALUE=DATE:${ymd(end)}`,
       `SUMMARY:${escape(`Follow up with ${p.name}${p.company ? ` (${p.company})` : ""}`)}`,
       `DESCRIPTION:${escape(details)}`,
-      p.followUpAt < today ? "STATUS:CONFIRMED" : "STATUS:CONFIRMED",
+      "STATUS:CONFIRMED",
       "BEGIN:VALARM",
       "TRIGGER:PT9H",
       "ACTION:DISPLAY",

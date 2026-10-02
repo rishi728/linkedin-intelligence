@@ -87,7 +87,7 @@ const WavingOwl = memo(function WavingOwl() {
 
 const NestCradle = memo(function NestCradle() {
   return (
-    <svg className="w-full" style={{ height: 40, overflow: "visible", display: "block", marginTop: 4 }} viewBox="0 0 320 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg className="w-full" style={{ height: 56, overflow: "visible", display: "block" }} viewBox="0 0 320 48" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
       <ellipse cx="160" cy="38" rx="140" ry="7" fill="#0F2D24" fillOpacity="0.07" />
       <path d="M 20 20 C 60 44 260 44 300 20 C 275 36 200 42 160 42 C 120 42 45 36 20 20 Z" fill="#E8C396" fillOpacity="0.55" stroke="#C28230" strokeWidth="1.8" />
       <path d="M 35 24 Q 160 46 285 24" stroke="#9C5E19" strokeWidth="2" strokeLinecap="round" />
@@ -164,7 +164,7 @@ function ActivityChart({ people }: { people: ReturnType<typeof useWorkspace>["pe
 
   if (months.length < 2) return null;
 
-  const W = 700, H = 260, PL = 44, PR = 10, PT = 15, PB = 32;
+  const W = 700, H = 270, PL = 44, PR = 10, PT = 30, PB = 32;
   const cw = W - PL - PR, ch = H - PT - PB;
   const n = months.length;
   const barW = Math.min(cw / n * 0.55, 28);
@@ -398,7 +398,7 @@ export function HomeView() {
                 OWLIE
               </span>
               <p style={{ fontSize: 13, color: "#334155", lineHeight: 1.6, marginTop: 4 }}>
-                &ldquo;Wooaah, you are so much active! <strong>{people.length.toLocaleString()} connections</strong> is an incredible network. Let&rsquo;s find your warmest signals.&rdquo;
+                &ldquo;Wooaah, you are really active! <strong>{people.length.toLocaleString()} connections</strong> is an incredible network. Let&rsquo;s find your warmest signals.&rdquo;
               </p>
             </div>
           </div>
@@ -434,10 +434,9 @@ export function HomeView() {
             textAlign: "left", padding: "20px 18px 14px", borderRadius: 18,
             border: "1px solid #E8E6DF", background: "#fff", cursor: "pointer",
             fontFamily: "inherit", boxShadow: "0 2px 8px rgba(0,0,0,0.04), 0 0 20px rgba(13,148,136,0.05)",
-            position: "relative", overflow: "hidden",
+            position: "relative", borderTop: "3px solid #0D9488",
           }}
         >
-          <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: "linear-gradient(90deg, #0D9488, #10B981)" }} />
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
             <span style={{
               width: 32, height: 32, borderRadius: 10,
@@ -449,7 +448,7 @@ export function HomeView() {
             </span>
             <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "#94a3b8" }}>Total Connections</span>
             <span style={{ marginLeft: "auto", fontSize: 9, fontWeight: 600, color: "#059669", background: "#ecfdf5", padding: "2px 7px", borderRadius: 6 }}>
-              +{Math.min(people.length, 48)} this mo
+              +{Math.min(people.length, 48)} total
             </span>
           </div>
           <div style={{ fontSize: 11, fontWeight: 600, color: "#94a3b8" }}>Everyone in your network</div>
@@ -457,7 +456,7 @@ export function HomeView() {
             <div style={{ fontSize: 42, fontWeight: 800, color: "#0f172a", letterSpacing: "-0.03em", marginTop: 2, fontVariantNumeric: "tabular-nums", position: "relative", zIndex: 1 }}>
               {people.length.toLocaleString()}
             </div>
-            <div style={{ marginTop: -14 }}><NestCradle /></div>
+            <div style={{ marginTop: -28, pointerEvents: "none" }}><NestCradle /></div>
           </div>
           <div style={{ fontSize: 11, fontWeight: 600, color: "#059669", marginTop: 0 }}>All synced profiles</div>
         </button>
@@ -470,10 +469,9 @@ export function HomeView() {
             textAlign: "left", padding: "20px 18px 14px", borderRadius: 18,
             border: "1px solid #E8E6DF", background: "#fff", cursor: "pointer",
             fontFamily: "inherit", boxShadow: "0 2px 8px rgba(0,0,0,0.04), 0 0 20px rgba(220,38,38,0.05)",
-            position: "relative", overflow: "hidden",
+            position: "relative", borderTop: "3px solid #F97316",
           }}
         >
-          <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: "linear-gradient(90deg, #F97316, #EF4444)" }} />
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
             <span style={{
               width: 32, height: 32, borderRadius: 10,
@@ -493,7 +491,7 @@ export function HomeView() {
             <div style={{ fontSize: 42, fontWeight: 800, color: "#0f172a", letterSpacing: "-0.03em", marginTop: 2, fontVariantNumeric: "tabular-nums", position: "relative", zIndex: 1 }}>
               {toContact.toLocaleString()}
             </div>
-            <div style={{ marginTop: -14 }}><NestCradle /></div>
+            <div style={{ marginTop: -28, pointerEvents: "none" }}><NestCradle /></div>
           </div>
           <div style={{ fontSize: 11, fontWeight: 600, color: "#EA580C", marginTop: 0 }}>High outreach potential</div>
         </button>
@@ -506,10 +504,9 @@ export function HomeView() {
             textAlign: "left", padding: "20px 18px 14px", borderRadius: 18,
             border: "1px solid #E8E6DF", background: "#fff", cursor: "pointer",
             fontFamily: "inherit", boxShadow: "0 2px 8px rgba(0,0,0,0.04), 0 0 20px rgba(37,99,235,0.05)",
-            position: "relative", overflow: "hidden",
+            position: "relative", borderTop: "3px solid #3B82F6",
           }}
         >
-          <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: "linear-gradient(90deg, #3B82F6, #8B5CF6)" }} />
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
             <span style={{
               width: 32, height: 32, borderRadius: 10,
@@ -529,7 +526,7 @@ export function HomeView() {
             <div style={{ fontSize: 42, fontWeight: 800, color: "#0f172a", letterSpacing: "-0.03em", marginTop: 2, fontVariantNumeric: "tabular-nums", position: "relative", zIndex: 1 }}>
               {replied.toLocaleString()}
             </div>
-            <div style={{ marginTop: -14 }}><NestCradle /></div>
+            <div style={{ marginTop: -28, pointerEvents: "none" }}><NestCradle /></div>
           </div>
           <div style={{ fontSize: 11, fontWeight: 600, color: "#059669", marginTop: 0 }}>Active conversations</div>
         </button>

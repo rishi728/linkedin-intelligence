@@ -189,7 +189,6 @@ export function FindView() {
 
   const showResults = useCallback(() => {
     const filters: Filters = {};
-    const catIds: string[] = [];
     const sectorIds: string[] = [];
     for (const id of selectedRoles) {
       const intent = intents.find((i) => i.id === id);

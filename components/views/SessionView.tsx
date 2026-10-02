@@ -107,7 +107,7 @@ export function SessionView() {
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  });
+  }, [queue, live, copy, markSent, next, prev, notAFit]);
 
   if (!queue) {
     return (

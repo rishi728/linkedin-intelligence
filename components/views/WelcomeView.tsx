@@ -317,12 +317,8 @@ export function WelcomeView() {
                       }} />
                     </div>
                     {/* Owl image */}
-                    <div className="anim-owl" style={{ position: "relative", width: 176, height: 176 }}>
-                      <img
-                        alt="Owl Mascot"
-                        src="https://lh3.googleusercontent.com/aida/AEtjO1URxPcV_yYvguNzmlzde-xuqYcbuzuZwXmZ8Y7dOh2c1NEwFWZqgiBFv28JnG6Cz7iaPy0BVK4oXJnf6oMWKdwLIyAe45cioBMgvF-Qw4g5mQdQw5hwPHxFn9uLbc-wiK63_hitZKAY7AjzYfU8qcXdUBbzH8LaU7gqEkTmmuKv5M6LsKhWalh3qwplYuMWtZYr1CTdQFq4U40H_MPxjlRxv82HFfSxBJmRaGWgB2Enf2sMALttQ47pXw"
-                        style={{ width: "100%", height: "100%", objectFit: "contain" }}
-                      />
+                    <div className="anim-owl" style={{ position: "relative", width: 176, height: 176, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <span style={{ fontSize: 120, lineHeight: 1 }} role="img" aria-label="Owl Mascot">🦉</span>
                     </div>
                   </div>
 
@@ -744,12 +740,8 @@ function ExportModal({
               boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
             }}>Archive parsed!</div>
           </div>
-          <div style={{ width: 64, height: 64 }}>
-            <img
-              alt="Inspector Owl Mascot"
-              src="https://lh3.googleusercontent.com/aida/AEtjO1UY91Kw-C8aDDOQbSY0SoXF3GkpkHKNCORY6mY0BYEMThqetM8CH6y88MsU3ZG8TrjGiXAJhpu9S-34dHri-z03tE3uBpUZUKGlMvcPsg8L4Y29evZ3xHzEz8JYQiBP75C9mSYO6x2oweSYh0gbeBkM-AMEYLRywoTNbUD4VGQhq0XFuW-0AzKqeHlkr6BDx2jkqulkJNPySHWEZlgIcd7xAydbINIOdBiF05YBbiEXvCArsVhnVe3hHFg"
-              style={{ width: "100%", height: "100%", objectFit: "contain" }}
-            />
+          <div style={{ width: 64, height: 64, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <span style={{ fontSize: 48, lineHeight: 1 }} role="img" aria-label="Inspector Owl Mascot">🦉</span>
           </div>
         </div>
 

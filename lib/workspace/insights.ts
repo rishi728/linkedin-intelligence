@@ -13,7 +13,6 @@ export interface CompanyGroup {
   sector: string;
   domains: Array<[string, number]>;
   roles: Array<[string, number]>;
-  sections: Array<[string, number]>;
   contacted: number;
   highPriority: number;
   people: Person[];
@@ -43,7 +42,6 @@ export function groupCompanies(people: Person[], settings: Settings): CompanyGro
       sector: tally(list.map((p) => sectorLabel(p.sector)))[0][0],
       domains: tally(list.map((p) => p.category)),
       roles: tally(list.map((p) => p.roleFamily).filter(Boolean)),
-      sections: tally(list.map((p) => p.roleFamily).filter(Boolean)),
       contacted: list.filter((p) => p.status !== "not_contacted").length,
       highPriority: list.filter((p) => p.priority === "high").length,
       people: list,

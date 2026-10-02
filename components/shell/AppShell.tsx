@@ -249,7 +249,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </main>
 
       {/* ============ BOTTOM NAV BAR ============ */}
-      <div className="fixed bottom-3 left-1/2 z-40 w-[calc(100%-24px)] max-w-4xl -translate-x-1/2">
+      <div className="fixed bottom-3 left-1/2 z-40 w-[calc(100%-24px)] max-w-4xl -translate-x-1/2 md:hidden">
         <nav className="flex items-center justify-between gap-1.5 rounded-2xl border border-[#E0DCD3] bg-[#EFECE6]/90 p-1.5 shadow-sm backdrop-blur-md">
           {BOTTOM_NAV.map((item) => {
             const active = pathname === item.href;

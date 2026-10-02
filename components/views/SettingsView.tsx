@@ -6,7 +6,6 @@ import { Download, Plus, Trash2, Upload, X } from "lucide-react";
 import { CsvFormatError } from "@/lib/analyzer";
 import { CATEGORY_ID, CATS } from "@/lib/classifier/categories";
 import { ROLE_FAMILIES, familiesOf } from "@/lib/classifier/search";
-import { DOMAINS } from "@/lib/roles";
 import { OPPORTUNITY_TYPES, PURPOSES, CHANNELS, defaultSettings } from "@/lib/workspace/defaults";
 import { groupCompanies } from "@/lib/workspace/insights";
 import { TEMPLATE_VARIABLES } from "@/lib/workspace/outreach";

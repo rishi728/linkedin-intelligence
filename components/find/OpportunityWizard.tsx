@@ -53,6 +53,7 @@ export function OpportunityWizard() {
   const filters = useMemo<Filters>(() => {
     const f: Filters = {};
     if (domains.length) f.categories = domains;
+    if (functions.length) f.roleFamilies = functions;
     if (audiences.length) f.audiences = audiences;
     if (targetOnly) f.targetOnly = true;
     if (excludeContacted) f.statuses = ["not_contacted"];

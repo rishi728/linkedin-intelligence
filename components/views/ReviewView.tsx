@@ -114,7 +114,7 @@ export function ReviewView() {
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  });
+  }, [suggestions, accept, skip, markUnknown]);
 
   const total = queue.length + done.length;
   const progress = total ? (done.length / total) * 100 : 100;

@@ -121,7 +121,7 @@ export function CompaniesView() {
                 <Card>
                   <CardTitle hint="What they do there">Sections</CardTitle>
                   <div className="p-2">
-                    {active.sections.slice(0, 8).map(([label, n]: [string, number]) => (
+                    {active.roles.slice(0, 8).map(([label, n]: [string, number]) => (
                       <BarRow key={label} label={label} value={n} max={active.count} />
                     ))}
                   </div>
