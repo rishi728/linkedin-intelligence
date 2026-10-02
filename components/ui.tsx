@@ -221,6 +221,17 @@ export function Menu({ trigger, children, align = "left", width = 220 }: { trigg
 
   const toggle = useCallback(() => setOpen((o) => !o), []);
 
+  const onMenuKey = useCallback((e: React.KeyboardEvent) => {
+    const panel = panelRef.current;
+    if (!panel) return;
+    const items = Array.from(panel.querySelectorAll<HTMLElement>('button:not([disabled])'));
+    const idx = items.indexOf(document.activeElement as HTMLElement);
+    if (e.key === "ArrowDown") { e.preventDefault(); items[(idx + 1) % items.length]?.focus(); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); items[(idx - 1 + items.length) % items.length]?.focus(); }
+    else if (e.key === "Home") { e.preventDefault(); items[0]?.focus(); }
+    else if (e.key === "End") { e.preventDefault(); items[items.length - 1]?.focus(); }
+  }, []);
+
   return (
     <div ref={anchorRef} className="relative">
       {trigger({ open, toggle })}
@@ -228,6 +239,8 @@ export function Menu({ trigger, children, align = "left", width = 220 }: { trigg
         ? createPortal(
             <div
               ref={panelRef}
+              role="menu"
+              onKeyDown={onMenuKey}
               className="anim-pop scroll-thin fixed z-[60] overflow-auto rounded-xl border border-line bg-panel p-1 shadow-float"
               style={{ top: pos.top, left: pos.left, width, maxHeight: pos.maxHeight }}
             >
@@ -244,6 +257,7 @@ export function MenuItem({ children, onClick, icon: Icon, danger, selected, disa
   return (
     <button
       type="button"
+      role="menuitem"
       disabled={disabled}
       onClick={onClick}
       className={cx(

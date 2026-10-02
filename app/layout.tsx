@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { Caveat, Inter, JetBrains_Mono, Newsreader, Plus_Jakarta_Sans } from "next/font/google";
 import { WorkspaceProvider } from "@/components/workspace/store";
 import "./globals.css";
 
@@ -13,6 +13,23 @@ const mono = JetBrains_Mono({
   subsets: ["latin"],
 });
 
+const newsreader = Newsreader({
+  variable: "--font-newsreader",
+  subsets: ["latin"],
+  style: ["normal", "italic"],
+});
+
+const jakarta = Plus_Jakarta_Sans({
+  variable: "--font-jakarta",
+  subsets: ["latin"],
+});
+
+const caveat = Caveat({
+  variable: "--font-caveat",
+  subsets: ["latin"],
+  weight: "600",
+});
+
 export const metadata: Metadata = {
   title: { default: "NesT", template: "%s · NesT" },
   description:
@@ -21,7 +38,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${inter.variable} ${mono.variable} h-full`}>
+    <html lang="en" className={`${inter.variable} ${mono.variable} ${newsreader.variable} ${jakarta.variable} ${caveat.variable} h-full`}>
       <body className="h-full">
         <WorkspaceProvider>{children}</WorkspaceProvider>
       </body>

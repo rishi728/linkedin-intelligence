@@ -67,7 +67,7 @@ export function WelcomeView() {
       <div style={{ display: "flex", height: "100%", alignItems: "center", justifyContent: "center", background: "#FAF8F5" }}>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
           <div className="landing-spinner" />
-          <span style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: 14, color: "#64748b" }}>Loading...</span>
+          <span style={{ fontFamily: "var(--font-jakarta), sans-serif", fontSize: 14, color: "#64748b" }}>Loading...</span>
         </div>
       </div>
     );
@@ -75,14 +75,6 @@ export function WelcomeView() {
 
   return (
     <>
-      {/* Google Fonts */}
-      <link rel="preconnect" href="https://fonts.googleapis.com" />
-      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-      <link
-        href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400;1,6..72,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Caveat:wght@600&display=swap"
-        rel="stylesheet"
-      />
-
       <style>{`
         .landing-root {
           --sf: #FAF8F5;
@@ -94,7 +86,7 @@ export function WelcomeView() {
           --br-accent: #19614C;
           --br-mint: #EBF6F1;
           --br-sage: #E3ECE6;
-          font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+          font-family: var(--font-jakarta), -apple-system, BlinkMacSystemFont, sans-serif;
           background-color: #FAF8F5;
           background-image:
             radial-gradient(circle at 15% 10%, rgba(17,75,58,0.06) 0%, transparent 45%),
@@ -108,8 +100,8 @@ export function WelcomeView() {
         }
         .landing-root * { box-sizing: border-box; }
         .landing-root ::selection { background: #114B3A; color: #fff; }
-        .font-serif { font-family: 'Newsreader', Georgia, serif; }
-        .font-hand { font-family: 'Caveat', cursive; }
+        .font-serif { font-family: var(--font-newsreader), Georgia, serif; }
+        .font-hand { font-family: var(--font-caveat), cursive; }
         @keyframes floatOwl {
           0%, 100% { transform: translateY(0px) rotate(0deg); }
           50% { transform: translateY(-8px) rotate(-1deg); }

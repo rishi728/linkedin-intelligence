@@ -81,7 +81,7 @@ export function PeopleList({
           <EmptyState title="No people match these filters" body={emptyBody ?? "Try removing a filter, or search for something broader like “product” or “supply chain”."} action={emptyAction} />
         </div>
       ) : (
-        <div className="relative w-full" style={{ height: virtualizer.getTotalSize() }}>
+        <div role={mode === "cards" ? "list" : "grid"} aria-label="People list" className="relative w-full" style={{ height: virtualizer.getTotalSize() }}>
           {virtualizer.getVirtualItems().map((item) => {
             const person = people[item.index];
             const isSelected = selected.has(person.id);
@@ -92,7 +92,7 @@ export function PeopleList({
 
             if (mode === "cards") {
               return (
-                <div key={person.id} style={style} ref={virtualizer.measureElement} data-index={item.index}>
+                <div key={person.id} role="listitem" style={style} ref={virtualizer.measureElement} data-index={item.index}>
                   <div className={cx("flex h-full flex-col rounded-xl border bg-panel p-3 transition hover:border-line-strong", isSelected ? "border-accent" : "border-line")}>
                     <div className="flex items-start gap-2.5">
                       <Checkbox checked={isSelected} onChange={(v) => onSelect(person.id, v, false)} />
@@ -132,7 +132,7 @@ export function PeopleList({
 
             if (mode === "compact") {
               return (
-                <div key={person.id} style={style} className={cx("flex items-center gap-3 border-b border-line/60 px-4 text-[12.5px] hover:bg-hover", isSelected && "bg-accent-soft/40")}>
+                <div key={person.id} role="row" style={style} className={cx("flex items-center gap-3 border-b border-line/60 px-4 text-[12.5px] hover:bg-hover", isSelected && "bg-accent-soft/40")}>
                   <Checkbox checked={isSelected} onChange={(v) => onSelect(person.id, v, false)} />
                   <button type="button" onClick={() => onOpen(person.id)} className="flex min-w-0 flex-1 items-center gap-2 text-left">
                     <span className="w-[190px] shrink-0 truncate font-medium">{person.name}</span>
@@ -147,6 +147,7 @@ export function PeopleList({
             return (
               <div
                 key={person.id}
+                role="row"
                 style={style}
                 className={cx(
                   "group relative grid grid-cols-[30px_minmax(190px,2fr)_minmax(130px,1.1fr)_minmax(140px,1.2fr)_150px_34px] items-center gap-3 border-b border-line/50 px-4 transition",
