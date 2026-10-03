@@ -1290,39 +1290,111 @@ function PrivacyTabContent({ walkthroughOpen, setWalkthroughOpen }: { walkthroug
 /* ------------------------------------------------------------------ */
 /*  Walkthrough section (shared by Home + Privacy tabs)                */
 /* ------------------------------------------------------------------ */
+function NestStepOwl({ progress }: { progress: number }) {
+  const nestW = 54 + progress * 0.26;
+  const nestH = 8 + progress * 0.08;
+  return (
+    <svg width="72" height="72" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+      {/* Nest */}
+      <ellipse cx="50" cy="82" rx={nestW / 2} ry={nestH / 2} fill="#E8C396" fillOpacity={0.3 + progress * 0.005} stroke="#C28230" strokeWidth="1.5" />
+      {progress > 20 && <path d={`M ${50 - nestW / 2 + 5} 80 Q 50 ${86 + progress * 0.04} ${50 + nestW / 2 - 5} 80`} stroke="#9C5E19" strokeWidth="1.5" strokeLinecap="round" fill="none" />}
+      {progress > 50 && <path d={`M ${50 - nestW / 2 + 10} 82 Q 50 ${88 + progress * 0.02} ${50 + nestW / 2 - 10} 82`} stroke="#783F0E" strokeWidth="1.2" strokeLinecap="round" fill="none" />}
+      {progress >= 100 && <>
+        <path d="M 22 79 L 16 76" stroke="#C28230" strokeWidth="1.2" strokeLinecap="round" />
+        <path d="M 78 79 L 84 76" stroke="#C28230" strokeWidth="1.2" strokeLinecap="round" />
+      </>}
+      {/* Owl body */}
+      <ellipse cx="50" cy="56" rx="22" ry="26" fill="#D9B382" stroke="#4A2E16" strokeWidth="2" />
+      <path d="M36 54 Q50 74 64 54 Q58 80 42 80 Q34 78 36 54Z" fill="#FAF2E4" stroke="#C8A26A" strokeWidth="1" />
+      {/* Ears */}
+      <path d="M32 32 L27 18 Q34 24 38 28" fill="#B0824E" stroke="#4A2E16" strokeWidth="1.8" strokeLinejoin="round" />
+      <path d="M68 32 L73 18 Q66 24 62 28" fill="#B0824E" stroke="#4A2E16" strokeWidth="1.8" strokeLinejoin="round" />
+      {/* Eyes */}
+      <circle cx="40" cy="40" r="10" fill="#fff" stroke="#114B3A" strokeWidth="2" />
+      <circle cx="60" cy="40" r="10" fill="#fff" stroke="#114B3A" strokeWidth="2" />
+      <circle cx="41" cy="40" r="5" fill="#2A180B" />
+      <circle cx="59" cy="40" r="5" fill="#2A180B" />
+      <circle cx="39.5" cy="38" r="1.8" fill="#fff" />
+      <circle cx="57.5" cy="38" r="1.8" fill="#fff" />
+      {/* Glasses bridge */}
+      <path d="M49.5 40 L50.5 40" stroke="#114B3A" strokeWidth="2" strokeLinecap="round" />
+      {/* Beak */}
+      <polygon points="50,46 47,52 53,52" fill="#E58B24" stroke="#B8650C" strokeWidth="1" />
+      {/* Feet */}
+      <path d="M42 80 Q43 86 45 80" stroke="#E58B24" strokeWidth="2" strokeLinecap="round" />
+      <path d="M55 80 Q56 86 58 80" stroke="#E58B24" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 function WalkthroughSection({ walkthroughOpen: _, setWalkthroughOpen: __ }: { walkthroughOpen: boolean; setWalkthroughOpen: (v: boolean) => void }) {
   const steps = [
-    { icon: "👤", title: "Profile picture", desc: "Open LinkedIn and click on your profile picture." },
-    { icon: "⚙️", title: "Settings & Privacy", desc: "Go to Settings & Privacy from the menu." },
-    { icon: "📥", title: "Download your data", desc: "Click on Download your data." },
-    { icon: "📦", title: "Larger data only", desc: "Select Larger data only." },
-    { icon: "🚀", title: "Request archive", desc: "Click Request archive to start the export." },
-    { icon: "📬", title: "Wait for email", desc: "Your archive should be ready within 24 hours. LinkedIn will notify you via email. Check spam/junk too." },
+    { phase: "First Twig", pct: 15, title: "Profile picture", desc: "Open LinkedIn and click on your profile picture.", bar: "Nest started" },
+    { phase: "Base Weave", pct: 35, title: "Settings & Privacy", desc: "Go to Settings & Privacy from the account menu.", bar: "Forming base" },
+    { phase: "Half Nest", pct: 50, title: "Download your data", desc: "Click on Data privacy then \"Download your data\".", bar: "Half-way built" },
+    { phase: "Cozy Shaping", pct: 70, title: "Larger data only", desc: "Select \"Larger data only\" to capture your connections.", bar: "Thickening nest" },
+    { phase: "Final Touches", pct: 90, title: "Request archive", desc: "Click Request archive to begin the LinkedIn export.", bar: "Placing signal antenna" },
+    { phase: "Nest Complete", pct: 100, title: "Wait for email", desc: "Your archive is ready within 24h. Drop your zip into NEST to explore!", bar: "Fully built & ready!" },
   ];
   return (
-    <div style={{ maxWidth: 900, margin: "0 auto", marginBottom: 32 }}>
+    <div style={{ maxWidth: 960, margin: "0 auto", marginBottom: 32 }}>
       <h3 style={{ fontSize: 18, fontWeight: 700, color: "#0C2D22", textAlign: "center", marginBottom: 24 }}>
         Steps to Download Your LinkedIn Data
       </h3>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
-        {steps.map((s, i) => (
-          <div key={i} style={{
-            background: "#fff", borderRadius: 14, border: "1px solid #E8E6DF", padding: "20px 16px",
-            display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center",
-            position: "relative", transition: "box-shadow 0.2s, border-color 0.2s",
-          }}>
-            <div style={{
-              position: "absolute", top: -10, left: 14,
-              width: 22, height: 22, borderRadius: "50%",
-              background: i === 5 ? "#059669" : "#0C2D22", color: "#fff",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 11, fontWeight: 700, fontFamily: "monospace",
-            }}>{i + 1}</div>
-            <span style={{ fontSize: 28, lineHeight: 1, marginBottom: 10 }} role="img">{s.icon}</span>
-            <h4 style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", marginBottom: 6 }}>{s.title}</h4>
-            <p style={{ fontSize: 12, color: "#57534e", lineHeight: 1.5, margin: 0 }}>{s.desc}</p>
-          </div>
-        ))}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
+        {steps.map((s, i) => {
+          const isLast = i === 5;
+          return (
+            <div key={i} style={{
+              background: isLast ? "#ecfdf5" : "#fff",
+              borderRadius: 16, padding: "16px 16px 14px",
+              border: isLast ? "2px solid #059669" : "1px solid #E8E6DF",
+              boxShadow: isLast ? "0 0 0 3px rgba(16,185,129,0.12)" : "0 1px 3px rgba(0,0,0,0.04)",
+              display: "flex", flexDirection: "column", position: "relative",
+            }}>
+              {/* Header row: badge + phase label ... owl */}
+              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 10 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{
+                    width: 26, height: 26, borderRadius: "50%",
+                    background: isLast ? "#059669" : "#0C2D22", color: "#fff",
+                    display: "inline-flex", alignItems: "center", justifyContent: "center",
+                    fontSize: 12, fontWeight: 700, fontFamily: "monospace", flexShrink: 0,
+                  }}>{i + 1}</span>
+                  <span style={{
+                    fontSize: 10, fontWeight: 700, letterSpacing: "0.06em",
+                    textTransform: "uppercase" as const,
+                    color: isLast ? "#047857" : "#0C2D22",
+                  }}>{s.phase} ({s.pct}%)</span>
+                </div>
+                <NestStepOwl progress={s.pct} />
+              </div>
+              {/* Title + desc */}
+              <h4 style={{ fontSize: 14, fontWeight: 700, color: "#0f172a", marginBottom: 4 }}>{s.title}</h4>
+              <p style={{ fontSize: 12, color: "#57534e", lineHeight: 1.5, margin: 0, flex: 1 }}>{s.desc}</p>
+              {/* Progress bar */}
+              <div style={{ marginTop: 12 }}>
+                <div style={{
+                  height: 5, borderRadius: 3,
+                  background: isLast ? "rgba(16,185,129,0.2)" : "#E8E6DF",
+                  overflow: "hidden",
+                }}>
+                  <div style={{
+                    height: "100%", borderRadius: 3,
+                    width: `${s.pct}%`,
+                    background: isLast ? "#059669" : "#0C2D22",
+                    transition: "width 0.4s",
+                  }} />
+                </div>
+                <p style={{
+                  fontSize: 10, fontWeight: 500, margin: "4px 0 0",
+                  color: isLast ? "#047857" : "#94a3b8",
+                  fontStyle: "italic",
+                }}>{s.bar}</p>
+              </div>
+            </div>
+          );
+        })}
       </div>
       <div style={{ marginTop: 14, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, fontSize: 11, color: "#065f46", fontWeight: 500 }}>
         <svg style={{ width: 14, height: 14, color: "#059669", fill: "none", stroke: "currentColor", strokeWidth: 2.5 }} viewBox="0 0 24 24"><path d="m4.5 12.75 6 6 9-13.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
