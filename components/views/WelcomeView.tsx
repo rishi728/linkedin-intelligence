@@ -241,7 +241,7 @@ export function WelcomeView() {
               <div style={{ display: "grid", gridTemplateColumns: "7fr 5fr", gap: 48, alignItems: "center", marginBottom: 64 }}>
                 {/* Left: headline */}
                 <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-                  <img src="/nest-logo.webp" alt="NesT - Network Engagement & Signal Tracker" style={{ maxWidth: 420, width: "100%" }} />
+                  <img src="/nest-logo.webp" alt="NesT - Network Engagement & Signal Tracker" style={{ maxWidth: 840, width: "100%" }} />
                   <p style={{ fontSize: "clamp(18px, 1.6vw, 24px)", color: "#64748b", fontWeight: 300, maxWidth: 560, lineHeight: 1.6 }}>
                     Turn your LinkedIn connections into meaningful career and business opportunities.
                   </p>
@@ -1329,12 +1329,12 @@ function NestStepOwl({ progress }: { progress: number }) {
 
 function WalkthroughSection({ walkthroughOpen: _, setWalkthroughOpen: __ }: { walkthroughOpen: boolean; setWalkthroughOpen: (v: boolean) => void }) {
   const steps = [
-    { phase: "First Twig", pct: 15, title: "Profile picture", desc: "Open LinkedIn and click on your profile picture.", bar: "Nest started" },
-    { phase: "Base Weave", pct: 35, title: "Settings & Privacy", desc: "Go to Settings & Privacy from the account menu.", bar: "Forming base" },
-    { phase: "Half Nest", pct: 50, title: "Download your data", desc: "Click on Data privacy then \"Download your data\".", bar: "Half-way built" },
-    { phase: "Cozy Shaping", pct: 70, title: "Larger data only", desc: "Select \"Larger data only\" to capture your connections.", bar: "Thickening nest" },
-    { phase: "Final Touches", pct: 90, title: "Request archive", desc: "Click Request archive to begin the LinkedIn export.", bar: "Placing signal antenna" },
-    { phase: "Nest Complete", pct: 100, title: "Wait for email", desc: "Your archive is ready within 24h. Drop your zip into NEST to explore!", bar: "Fully built & ready!" },
+    { phase: "First Twig", pct: 15, title: "Profile picture", desc: "Open LinkedIn and click the Me option (profile picture)." },
+    { phase: "Base Weave", pct: 35, title: "Settings & Privacy", desc: "Go to Settings & Privacy from the account menu." },
+    { phase: "Half Nest", pct: 50, title: "Download your data", desc: "Click on Data privacy then \"Download your data\"." },
+    { phase: "Cozy Shaping", pct: 70, title: "Larger data only", desc: "Select \"Larger data only\" to capture your connections." },
+    { phase: "Final Touches", pct: 90, title: "Request archive", desc: "Click Request archive to begin the LinkedIn export." },
+    { phase: "Nest Complete", pct: 100, title: "Wait for email", desc: "Your archive is ready within 24h. Drop your zip into NEST to explore!" },
   ];
   return (
     <div style={{ maxWidth: 960, margin: "0 auto", marginBottom: 32 }}>
@@ -1386,11 +1386,6 @@ function WalkthroughSection({ walkthroughOpen: _, setWalkthroughOpen: __ }: { wa
                     transition: "width 0.4s",
                   }} />
                 </div>
-                <p style={{
-                  fontSize: 10, fontWeight: 500, margin: "4px 0 0",
-                  color: isLast ? "#047857" : "#94a3b8",
-                  fontStyle: "italic",
-                }}>{s.bar}</p>
               </div>
             </div>
           );
