@@ -288,37 +288,8 @@ export function WelcomeView() {
                   </div>
                 </div>
 
-                {/* Right: Owl + Product Preview */}
+                {/* Right: Product Preview */}
                 <div id="network-preview" style={{ position: "relative" }}>
-                  {/* Mascot */}
-                  <div style={{ position: "absolute", top: -24, left: -80, zIndex: 30, display: "flex", flexDirection: "column", alignItems: "center", pointerEvents: "none", userSelect: "none" }}>
-                    {/* Chat bubble */}
-                    <div className="anim-cloud" style={{ position: "relative", marginBottom: 2, marginLeft: 56 }}>
-                      <div style={{
-                        position: "relative", padding: "6px 14px",
-                        background: "rgba(255,255,255,0.95)", backdropFilter: "blur(4px)",
-                        border: "1px solid #d6d3d1", boxShadow: "0 4px 6px rgba(0,0,0,0.05)",
-                        borderRadius: 16, display: "flex", alignItems: "center", gap: 4, color: "#1e293b",
-                      }}>
-                        <span className="font-hand" style={{ fontSize: 20, fontWeight: 600, lineHeight: 1 }}>Hello!</span>
-                        <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#22c55e" }} />
-                      </div>
-                      <div style={{
-                        width: 10, height: 10, background: "#fff",
-                        borderRight: "1px solid #d6d3d1", borderBottom: "1px solid #d6d3d1",
-                        transform: "rotate(45deg)", position: "absolute", bottom: -4, left: 16,
-                        boxShadow: "2px 2px 2px rgba(0,0,0,0.03)",
-                      }} />
-                    </div>
-                    {/* Owl image */}
-                    <div className="anim-owl" style={{ position: "relative", width: 176, height: 176 }}>
-                      <img
-                        alt="Owl Mascot"
-                        src="https://lh3.googleusercontent.com/aida/AEtjO1URxPcV_yYvguNzmlzde-xuqYcbuzuZwXmZ8Y7dOh2c1NEwFWZqgiBFv28JnG6Cz7iaPy0BVK4oXJnf6oMWKdwLIyAe45cioBMgvF-Qw4g5mQdQw5hwPHxFn9uLbc-wiK63_hitZKAY7AjzYfU8qcXdUBbzH8LaU7gqEkTmmuKv5M6LsKhWalh3qwplYuMWtZYr1CTdQFq4U40H_MPxjlRxv82HFfSxBJmRaGWgB2Enf2sMALttQ47pXw"
-                        style={{ width: "100%", height: "100%", objectFit: "contain" }}
-                      />
-                    </div>
-                  </div>
 
                   {/* Product window */}
                   <div className="shadow-float-l product-window" style={{
