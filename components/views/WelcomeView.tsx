@@ -238,10 +238,12 @@ export function WelcomeView() {
           {/* ==================== HERO ==================== */}
           <section className="hero-glow" style={{ position: "relative", paddingTop: 40, paddingBottom: 80, overflow: "hidden" }}>
             <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 48px" }}>
+              <div style={{ display: "flex", justifyContent: "center", marginBottom: 32 }}>
+                <img src="/nest-logo.webp" alt="NesT - Network Engagement & Signal Tracker" style={{ maxWidth: 840, width: "100%" }} />
+              </div>
               <div style={{ display: "grid", gridTemplateColumns: "7fr 5fr", gap: 48, alignItems: "center", marginBottom: 64 }}>
                 {/* Left: headline */}
                 <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-                  <img src="/nest-logo.webp" alt="NesT - Network Engagement & Signal Tracker" style={{ maxWidth: 840, width: "100%" }} />
                   <p style={{ fontSize: "clamp(18px, 1.6vw, 24px)", color: "#64748b", fontWeight: 300, maxWidth: 560, lineHeight: 1.6 }}>
                     Turn your LinkedIn connections into meaningful career and business opportunities.
                   </p>
