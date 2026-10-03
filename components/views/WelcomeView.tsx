@@ -288,8 +288,35 @@ export function WelcomeView() {
                   </div>
                 </div>
 
-                {/* Right: Product Preview */}
+                {/* Right: Owl + Product Preview */}
                 <div id="network-preview" style={{ position: "relative" }}>
+                  {/* Mascot */}
+                  <div style={{ position: "absolute", top: -24, left: -80, zIndex: 30, display: "flex", flexDirection: "column", alignItems: "center", pointerEvents: "none", userSelect: "none" }}>
+                    <div className="anim-cloud" style={{ position: "relative", marginBottom: 2, marginLeft: 56 }}>
+                      <div style={{
+                        position: "relative", padding: "6px 14px",
+                        background: "rgba(255,255,255,0.95)", backdropFilter: "blur(4px)",
+                        border: "1px solid #d6d3d1", boxShadow: "0 4px 6px rgba(0,0,0,0.05)",
+                        borderRadius: 16, display: "flex", alignItems: "center", gap: 4, color: "#1e293b",
+                      }}>
+                        <span className="font-hand" style={{ fontSize: 20, fontWeight: 600, lineHeight: 1 }}>Hello!</span>
+                        <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#22c55e" }} />
+                      </div>
+                      <div style={{
+                        width: 10, height: 10, background: "#fff",
+                        borderRight: "1px solid #d6d3d1", borderBottom: "1px solid #d6d3d1",
+                        transform: "rotate(45deg)", position: "absolute", bottom: -4, left: 16,
+                        boxShadow: "2px 2px 2px rgba(0,0,0,0.03)",
+                      }} />
+                    </div>
+                    <div className="anim-owl" style={{ position: "relative", width: 176, height: 176 }}>
+                      <img
+                        alt="Owl Mascot"
+                        src="/owl-mascot.png"
+                        style={{ width: "100%", height: "100%", objectFit: "contain", mixBlendMode: "multiply" }}
+                      />
+                    </div>
+                  </div>
 
                   {/* Product window */}
                   <div className="shadow-float-l product-window" style={{
