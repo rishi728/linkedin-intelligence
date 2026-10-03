@@ -313,7 +313,7 @@ export function WelcomeView() {
                       <img
                         alt="Owl Mascot"
                         src="/owl-mascot.png"
-                        style={{ width: "100%", height: "100%", objectFit: "contain", mixBlendMode: "multiply" }}
+                        style={{ width: "100%", height: "100%", objectFit: "contain" }}
                       />
                     </div>
                   </div>
