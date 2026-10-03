@@ -1283,44 +1283,42 @@ function PrivacyTabContent({ walkthroughOpen, setWalkthroughOpen }: { walkthroug
 /*  Walkthrough section (shared by Home + Privacy tabs)                */
 /* ------------------------------------------------------------------ */
 function WalkthroughSection({ walkthroughOpen: _, setWalkthroughOpen: __ }: { walkthroughOpen: boolean; setWalkthroughOpen: (v: boolean) => void }) {
+  const steps = [
+    { icon: "👤", title: "Profile picture", desc: "Open LinkedIn and click on your profile picture." },
+    { icon: "⚙️", title: "Settings & Privacy", desc: "Go to Settings & Privacy from the menu." },
+    { icon: "📥", title: "Download your data", desc: "Click on Download your data." },
+    { icon: "📦", title: "Larger data only", desc: "Select Larger data only." },
+    { icon: "🚀", title: "Request archive", desc: "Click Request archive to start the export." },
+    { icon: "📬", title: "Wait for email", desc: "Your archive should be ready within 24 hours. LinkedIn will notify you via email. Check spam/junk too." },
+  ];
   return (
-    <div style={{ maxWidth: 640, margin: "0 auto", marginBottom: 32 }}>
-      <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #E8E6DF", padding: 24, boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
-          <div style={{
-            width: 36, height: 36, borderRadius: 10, background: "#EBF6F1",
-            display: "flex", alignItems: "center", justifyContent: "center", color: "#0C2D22", flexShrink: 0,
+    <div style={{ maxWidth: 900, margin: "0 auto", marginBottom: 32 }}>
+      <h3 style={{ fontSize: 18, fontWeight: 700, color: "#0C2D22", textAlign: "center", marginBottom: 24 }}>
+        Steps to Download Your LinkedIn Data
+      </h3>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
+        {steps.map((s, i) => (
+          <div key={i} style={{
+            background: "#fff", borderRadius: 14, border: "1px solid #E8E6DF", padding: "20px 16px",
+            display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center",
+            position: "relative", transition: "box-shadow 0.2s, border-color 0.2s",
           }}>
-            <svg style={{ width: 18, height: 18 }} fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-              <path d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+            <div style={{
+              position: "absolute", top: -10, left: 14,
+              width: 22, height: 22, borderRadius: "50%",
+              background: i === 5 ? "#059669" : "#0C2D22", color: "#fff",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 11, fontWeight: 700, fontFamily: "monospace",
+            }}>{i + 1}</div>
+            <span style={{ fontSize: 28, lineHeight: 1, marginBottom: 10 }} role="img">{s.icon}</span>
+            <h4 style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", marginBottom: 6 }}>{s.title}</h4>
+            <p style={{ fontSize: 12, color: "#57534e", lineHeight: 1.5, margin: 0 }}>{s.desc}</p>
           </div>
-          <h3 style={{ fontSize: 16, fontWeight: 700, color: "#0C2D22" }}>Steps to Download Your LinkedIn Data</h3>
-        </div>
-        <ol style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 14 }}>
-          {[
-            "Open LinkedIn and click on your profile picture.",
-            "Go to Settings & Privacy.",
-            "Click on Download your data.",
-            "Select Larger data only.",
-            "Click Request archive.",
-            "Your data archive should be ready within 24 hours. LinkedIn will notify you via email once it's ready. Check your spam/junk folder as well in case the email lands there.",
-          ].map((text, i) => (
-            <li key={i} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
-              <span style={{
-                width: 24, height: 24, borderRadius: "50%", flexShrink: 0, marginTop: 1,
-                background: i === 5 ? "#059669" : "#0C2D22", color: "#fff",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: 12, fontWeight: 700, fontFamily: "monospace",
-              }}>{i + 1}</span>
-              <p style={{ fontSize: 13, color: "#334155", lineHeight: 1.55, margin: 0 }}>{text}</p>
-            </li>
-          ))}
-        </ol>
-        <div style={{ marginTop: 16, paddingTop: 12, borderTop: "1px solid #E8E6DF", display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: "#065f46", fontWeight: 500 }}>
-          <svg style={{ width: 14, height: 14, color: "#059669", fill: "none", stroke: "currentColor", strokeWidth: 2.5 }} viewBox="0 0 24 24"><path d="m4.5 12.75 6 6 9-13.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
-          Official LinkedIn feature. No bots or scrapers involved.
-        </div>
+        ))}
+      </div>
+      <div style={{ marginTop: 14, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, fontSize: 11, color: "#065f46", fontWeight: 500 }}>
+        <svg style={{ width: 14, height: 14, color: "#059669", fill: "none", stroke: "currentColor", strokeWidth: 2.5 }} viewBox="0 0 24 24"><path d="m4.5 12.75 6 6 9-13.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+        Official LinkedIn feature. No bots or scrapers involved.
       </div>
     </div>
   );
