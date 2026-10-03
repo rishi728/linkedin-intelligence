@@ -291,7 +291,7 @@ export function WelcomeView() {
                 {/* Right: Owl + Product Preview */}
                 <div id="network-preview" style={{ position: "relative" }}>
                   {/* Mascot */}
-                  <div style={{ position: "absolute", top: -96, left: -80, zIndex: 30, display: "flex", flexDirection: "column", alignItems: "center", pointerEvents: "none", userSelect: "none" }}>
+                  <div style={{ position: "absolute", top: -24, left: -80, zIndex: 30, display: "flex", flexDirection: "column", alignItems: "center", pointerEvents: "none", userSelect: "none" }}>
                     {/* Chat bubble */}
                     <div className="anim-cloud" style={{ position: "relative", marginBottom: 2, marginLeft: 56 }}>
                       <div style={{
