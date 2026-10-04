@@ -24,17 +24,18 @@ const SORTS: Array<{ value: SortKey; label: string }> = [
   { value: "confidence", label: "Lowest confidence" },
 ];
 
-/** Least certain first, because that is the order worth reviewing in. */
+const coll = new Intl.Collator("en", { sensitivity: "base" });
+
 function sortPeople(people: Person[], key: SortKey): Person[] {
   const copy = [...people];
   switch (key) {
-    case "name": return copy.sort((a, b) => a.name.localeCompare(b.name));
-    case "company": return copy.sort((a, b) => (a.company || "zzz").localeCompare(b.company || "zzz") || a.name.localeCompare(b.name));
+    case "name": return copy.sort((a, b) => coll.compare(a.name, b.name));
+    case "company": return copy.sort((a, b) => coll.compare(a.company || "zzz", b.company || "zzz") || coll.compare(a.name, b.name));
     case "recent": return copy.sort((a, b) => (b.connectedOn?.getTime() ?? 0) - (a.connectedOn?.getTime() ?? 0));
-    case "followup": return copy.sort((a, b) => (a.followUpAt || "9999").localeCompare(b.followUpAt || "9999"));
-    case "confidence": return copy.sort((a, b) => a.confidence - b.confidence || a.name.localeCompare(b.name));
+    case "followup": return copy.sort((a, b) => (a.followUpAt || "9999") < (b.followUpAt || "9999") ? -1 : (a.followUpAt || "9999") > (b.followUpAt || "9999") ? 1 : 0);
+    case "confidence": return copy.sort((a, b) => a.confidence - b.confidence || coll.compare(a.name, b.name));
     default:
-      return copy.sort((a, b) => PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority] || b.priorityScore - a.priorityScore || a.name.localeCompare(b.name));
+      return copy.sort((a, b) => PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority] || b.priorityScore - a.priorityScore || coll.compare(a.name, b.name));
   }
 }
 
