@@ -64,7 +64,7 @@ export function PeopleView() {
   const clearSelection = () => setSelected(new Set());
 
   return (
-    <>
+    <div className="flex h-full min-h-0 flex-col">
       <PageHeader
         title="People"
         subtitle={`${sorted.length.toLocaleString()} of ${people.length.toLocaleString()} connections`}
@@ -238,7 +238,7 @@ export function PeopleView() {
           clearSelection();
         }}
       />
-    </>
+    </div>
   );
 }
 

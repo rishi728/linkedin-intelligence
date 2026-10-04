@@ -68,6 +68,25 @@ const QUICK: Array<{ label: string; patch: Filters; on: (f: Filters) => boolean 
   { label: "Follow-up due", patch: { followUp: "overdue" }, on: (f) => f.followUp === "overdue" },
 ];
 
+function computeCounts(people: Person[], filters: Filters, settings: Settings) {
+  const tally = <K extends keyof Filters>(key: K, get: (p: Person) => string | string[]) => {
+    const m = new Map<string, number>();
+    for (const p of applyFilters(people, { ...filters, [key]: undefined }, settings)) {
+      const v = get(p);
+      for (const one of Array.isArray(v) ? v : [v]) m.set(one, (m.get(one) ?? 0) + 1);
+    }
+    return m;
+  };
+  return {
+    categories: tally("categories", (p) => CATEGORY_ID[p.category]),
+    bands: tally("bands", (p) => p.band),
+    companies: tally("companies", (p) => p.companyKey),
+    sectors: tally("sectors", (p) => p.sector ?? ""),
+    statuses: tally("statuses", (p) => p.status),
+    tags: tally("tags", (p) => p.tags),
+  };
+}
+
 export function FilterBar({
   filters, onChange, people, settings, companies, right, placeholder = "Search people, or describe who you need…",
 }: {
@@ -83,26 +102,12 @@ export function FilterBar({
   const [understood, setUnderstood] = useState<string[]>([]);
 
   /**
-   * Counts shown next to each option reflect the *other* filters already applied,
-   * so the numbers tell you what you'd actually get, one pass per facet, memoised.
+   * Counts next to each option reflect the *other* filters already applied. Six full
+   * passes over every person, so they are computed only when a menu opens, then reused.
    */
   const counts = useMemo(() => {
-    const tally = <K extends keyof Filters>(key: K, get: (p: Person) => string | string[]) => {
-      const m = new Map<string, number>();
-      for (const p of applyFilters(people, { ...filters, [key]: undefined }, settings)) {
-        const v = get(p);
-        for (const one of Array.isArray(v) ? v : [v]) m.set(one, (m.get(one) ?? 0) + 1);
-      }
-      return m;
-    };
-    return {
-      categories: tally("categories", (p) => CATEGORY_ID[p.category]),
-      bands: tally("bands", (p) => p.band),
-      companies: tally("companies", (p) => p.companyKey),
-      sectors: tally("sectors", (p) => p.sector ?? ""),
-      statuses: tally("statuses", (p) => p.status),
-      tags: tally("tags", (p) => p.tags),
-    };
+    let cached: ReturnType<typeof computeCounts> | null = null;
+    return () => (cached ??= computeCounts(people, filters, settings));
   }, [people, settings, filters]);
 
   const set = (key: ListKey) => (values: string[]) => onChange({ ...filters, [key]: values.length ? values : undefined });
@@ -172,7 +177,7 @@ export function FilterBar({
 
         {/* ROLE: bucket, then section, then the detailed roles inside it */}
         <Menu width={280} trigger={({ toggle }) => <TriggerButton label="Category" icon={Briefcase} active={n("categories", "bands")} toggle={toggle} />}>
-          {() => <RolePicker filters={filters} counts={counts} onChange={onChange} />}
+          {() => <RolePicker filters={filters} counts={counts()} onChange={onChange} />}
         </Menu>
 
         {/* WHERE */}
@@ -184,13 +189,13 @@ export function FilterBar({
                 searchable
                 selected={filters.companies ?? []}
                 onChange={set("companies")}
-                options={companies.map((c) => ({ value: c.key, label: c.name, count: counts.companies.get(c.key) ?? 0 })).filter((o) => keep(filters.companies, o))}
+                options={companies.map((c) => ({ value: c.key, label: c.name, count: counts().companies.get(c.key) ?? 0 })).filter((o) => keep(filters.companies, o))}
               />
               <MultiSelect
                 label="Sector"
                 selected={filters.sectors ?? []}
                 onChange={set("sectors")}
-                options={SECTORS.map((x) => ({ value: x.id, label: x.label, count: counts.sectors.get(x.id) ?? 0 })).filter((o) => keep(filters.sectors, o))}
+                options={SECTORS.map((x) => ({ value: x.id, label: x.label, count: counts().sectors.get(x.id) ?? 0 })).filter((o) => keep(filters.sectors, o))}
               />
               <div className="px-2 pb-2 pt-1">
                 <Checkbox checked={!!filters.targetOnly} onChange={(v) => onChange({ ...filters, targetOnly: v || undefined })} label="Target companies only" />
@@ -243,7 +248,7 @@ export function FilterBar({
                 label="Stage"
                 selected={filters.statuses ?? []}
                 onChange={set("statuses")}
-                options={settings.statuses.map((s) => ({ value: s.id, label: s.label, count: counts.statuses.get(s.id) ?? 0 }))}
+                options={settings.statuses.map((s) => ({ value: s.id, label: s.label, count: counts().statuses.get(s.id) ?? 0 }))}
               />
               <MultiSelect
                 label="Priority"
@@ -273,8 +278,8 @@ export function FilterBar({
                 searchable
                 selected={filters.tags ?? []}
                 onChange={set("tags")}
-                options={[...new Set([...TAGS.map((t) => t.label), ...counts.tags.keys()])]
-                  .map((t) => ({ value: t, label: t, count: counts.tags.get(t) ?? 0 }))
+                options={[...new Set([...TAGS.map((t) => t.label), ...counts().tags.keys()])]
+                  .map((t) => ({ value: t, label: t, count: counts().tags.get(t) ?? 0 }))
                   .filter((o) => keep(filters.tags, o))}
               />
               <MenuLabel>How to reach them</MenuLabel>
