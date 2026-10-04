@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Download, Plus, Trash2, Upload, X } from "lucide-react";
 import { CsvFormatError } from "@/lib/analyzer";
@@ -8,6 +8,7 @@ import { CATEGORY_ID, CATS } from "@/lib/classifier/categories";
 import { ROLE_FAMILIES, familiesOf } from "@/lib/classifier/search";
 import { OPPORTUNITY_TYPES, PURPOSES, CHANNELS, defaultSettings } from "@/lib/workspace/defaults";
 import { groupCompanies } from "@/lib/workspace/insights";
+import { hasGoals } from "@/lib/workspace/priority";
 import { TEMPLATE_VARIABLES } from "@/lib/workspace/outreach";
 import type { StatusDef, Tone } from "@/lib/workspace/types";
 import { PageBody, PageHeader } from "@/components/shell/AppShell";
@@ -35,6 +36,48 @@ function Chip({ active, onClick, children }: { active: boolean; onClick: () => v
   );
 }
 
+const WEIGHT_ROWS = [
+  ["functionMatch", "Works in a role you want", "Their job matches one of your target roles."],
+  ["domainMatch", "Works in a field you want", "Their field matches one of your target categories."],
+  ["targetCompany", "Works at a target company", "Their employer is on your target company list."],
+  ["recruiter", "Is a recruiter", "Counts only if you are looking for jobs, internships or referrals."],
+  ["hiring", "Says they are hiring", "Their headline mentions hiring."],
+  ["alumni", "Went to your school", "Their employer or campus matches your school."],
+  ["replied", "Has replied to you before", "You have already talked and they answered."],
+  ["theyInvited", "Sent you the invite", "They asked to connect with you first."],
+  ["hasEmail", "Has an email on file", "You have a direct way to reach them."],
+] as const;
+
+/** Keeps the thumb moving smoothly; the workspace is only updated when you let go. */
+function WeightSlider({ label, hint, value, onCommit }: { label: string; hint: string; value: number; onCommit: (v: number) => void }) {
+  const [draft, setDraft] = useState<number | null>(null);
+  const shown = draft ?? value;
+  const commit = () => {
+    if (draft !== null && draft !== value) onCommit(draft);
+    setDraft(null);
+  };
+  return (
+    <div>
+      <div className="flex items-center justify-between text-[12.5px]">
+        <span className="font-medium">{label}</span>
+        <span className="tabular text-[12px] font-medium text-ink-2">{shown === 0 ? "Ignored" : `+${shown} points`}</span>
+      </div>
+      <input
+        type="range"
+        min={0}
+        max={40}
+        value={shown}
+        onChange={(e) => setDraft(Number(e.target.value))}
+        onPointerUp={commit}
+        onKeyUp={commit}
+        onBlur={commit}
+        className="mt-1 w-full accent-[var(--accent)]"
+      />
+      <p className="text-[11.5px] text-muted">{hint}</p>
+    </div>
+  );
+}
+
 export function SettingsView() {
   const {
     people, settings, updateSettings, deleteRule, deleteSegment, toggleTarget, importCsv, exportBackup, importBackup,
@@ -46,6 +89,12 @@ export function SettingsView() {
   const [storage, setStorage] = useState<{ persisted: boolean; usedMb: number | null }>({ persisted: false, usedMb: null });
 
   const [backupFile, setBackupFile] = useState<string | null>(null);
+
+  const priorityCounts = useMemo(() => {
+    const c = { high: 0, medium: 0, low: 0 };
+    for (const p of people) c[p.priority]++;
+    return c;
+  }, [people]);
 
   useEffect(() => {
     void storageStatus().then(setStorage);
@@ -279,32 +328,36 @@ export function SettingsView() {
           {tab === "outreach" ? (
             <>
               <Card>
-                <CardTitle hint="When you mark someone as contacted, the next nudge is scheduled for you">Follow-up cadence</CardTitle>
+                <CardTitle hint="After you message someone, NesT reminds you to check back if they have not replied">Follow-up reminders</CardTitle>
                 <div className="p-4 pt-3">
                   <Checkbox
                     checked={settings.cadence.enabled}
                     onChange={(v) => updateSettings((s) => ({ ...s, cadence: { ...s.cadence, enabled: v } }))}
-                    label="Schedule follow-ups automatically"
+                    label="Remind me to follow up automatically"
                   />
-                  <div className="mt-3 flex flex-wrap items-end gap-3">
+                  <div className={cx("mt-3 flex flex-wrap items-end gap-3", !settings.cadence.enabled && "pointer-events-none opacity-50")}>
                     {settings.cadence.steps.map((d, i) => (
-                      <Field key={i} label={i === 0 ? "First nudge" : i === 1 ? "Second nudge" : `Nudge ${i + 1}`} className="w-32">
-                        <Input
-                          type="number"
-                          min={1}
-                          max={120}
-                          value={d}
-                          onChange={(e) => updateSettings((s) => ({
-                            ...s,
-                            cadence: { ...s.cadence, steps: s.cadence.steps.map((x, j) => (j === i ? Math.max(1, Number(e.target.value) || 1) : x)) },
-                          }))}
-                        />
+                      <Field key={i} label={`Reminder ${i + 1}`} className="w-36">
+                        <div className="flex items-center gap-1.5">
+                          <Input
+                            type="number"
+                            min={1}
+                            max={120}
+                            value={d}
+                            onChange={(e) => updateSettings((s) => ({
+                              ...s,
+                              cadence: { ...s.cadence, steps: s.cadence.steps.map((x, j) => (j === i ? Math.max(1, Number(e.target.value) || 1) : x)) },
+                            }))}
+                          />
+                          <span className="text-[12px] text-muted">days</span>
+                        </div>
+                        <p className="mt-1 text-[11px] text-muted">{i === 0 ? "after you contact them" : `after reminder ${i}`}</p>
                       </Field>
                     ))}
                     <Button
                       onClick={() => updateSettings((s) => ({ ...s, cadence: { ...s.cadence, steps: [...s.cadence.steps, (s.cadence.steps.at(-1) ?? 7) + 7] } }))}
                     >
-                      Add a step
+                      Add a reminder
                     </Button>
                     {settings.cadence.steps.length > 1 ? (
                       <Button variant="ghost" onClick={() => updateSettings((s) => ({ ...s, cadence: { ...s.cadence, steps: s.cadence.steps.slice(0, -1) } }))}>
@@ -312,50 +365,61 @@ export function SettingsView() {
                       </Button>
                     ) : null}
                   </div>
+                  <div className="mt-3 rounded-lg bg-subtle px-3 py-2 text-[12.5px] text-ink-2">
+                    {settings.cadence.enabled ? (
+                      <>
+                        <span className="font-medium">Example:</span> if you message someone today, you will be reminded on{" "}
+                        {settings.cadence.steps.map((d, i, all) => {
+                          const day = all.slice(0, i + 1).reduce((a, b) => a + b, 0);
+                          return (
+                            <span key={i}>
+                              <strong>{formatDate(addDays(todayISO(), day))}</strong> (day {day}){i < all.length - 1 ? ", then " : "."}
+                            </span>
+                          );
+                        })}
+                      </>
+                    ) : (
+                      "Automatic reminders are off. You can still set a follow-up date on any person yourself."
+                    )}
+                  </div>
                   <p className="mt-2 text-[12px] text-muted">
-                    Days after the previous step. Marking a follow-up done moves the person to the next step automatically.
+                    Each gap counts from the one before it. Marking a reminder done moves that person on to the next one.
                   </p>
                 </div>
               </Card>
 
               <Card>
                 <CardTitle
-                  hint="How each signal moves someone up your priority list"
-                  action={<Button size="sm" onClick={() => updateSettings((s) => ({ ...s, weights: { ...DEFAULT_WEIGHTS } }))}>Reset</Button>}
+                  hint="Everyone gets a score out of 100. Higher scores float to the top of your list"
+                  action={<Button size="sm" onClick={() => updateSettings((s) => ({ ...s, weights: { ...DEFAULT_WEIGHTS } }))}>Reset to default</Button>}
                 >
-                  Priority weights
+                  What makes someone a priority
                 </CardTitle>
-                <div className="grid gap-3 p-4 pt-3 sm:grid-cols-2">
-                  {([
-                    ["functionMatch", "Target function"],
-                    ["domainMatch", "Target domain"],
-                    ["targetCompany", "Target company"],
-                    ["seniorityMatch", "Target seniority"],
-                    ["recruiter", "Recruiter (when job hunting)"],
-                    ["hiring", "Mentions hiring"],
-                    ["alumni", "Shares your school"],
-                    ["replied", "Has replied to you"],
-                    ["theyInvited", "They invited you"],
-                    ["hasEmail", "Email available"],
-                  ] as const).map(([key, label]) => (
-                    <div key={key}>
-                      <div className="flex items-center justify-between text-[12.5px]">
-                        <span>{label}</span>
-                        <span className="tabular text-muted">+{settings.weights[key]}</span>
-                      </div>
-                      <input
-                        type="range"
-                        min={0}
-                        max={40}
-                        value={settings.weights[key]}
-                        onChange={(e) => updateSettings((s) => ({ ...s, weights: { ...s.weights, [key]: Number(e.target.value) } }))}
-                        className="mt-1 w-full accent-[var(--accent)]"
-                      />
-                    </div>
+                <div className="px-4 pt-3 text-[12.5px] text-ink-2">
+                  <p>
+                    Each thing below adds points to a person when it is true for them. <strong>55 or more is High</strong>, 30 to 54 is Medium, anything lower is Low.
+                    Drag right to make something matter more, or all the way left to ignore it.
+                  </p>
+                  <p className="mt-2 rounded-lg bg-subtle px-3 py-2">
+                    <span className="font-medium">Right now:</span>{" "}
+                    <strong>{priorityCounts.high.toLocaleString()}</strong> High, <strong>{priorityCounts.medium.toLocaleString()}</strong> Medium, <strong>{priorityCounts.low.toLocaleString()}</strong> Low
+                    {" "}out of {people.length.toLocaleString()} people.
+                    {hasGoals(settings) ? null : " Nobody scores yet because no target roles or companies are set. Add them under the Goals and Targets tabs."}
+                  </p>
+                </div>
+                <div className="grid gap-x-6 gap-y-4 p-4 sm:grid-cols-2">
+                  {WEIGHT_ROWS.map(([key, label, hint]) => (
+                    <WeightSlider
+                      key={key}
+                      label={label}
+                      hint={hint}
+                      value={settings.weights[key]}
+                      onCommit={(v) => updateSettings((s) => ({ ...s, weights: { ...s.weights, [key]: v } }))}
+                    />
                   ))}
                 </div>
                 <p className="px-4 pb-4 text-[12px] text-muted">
-                  High priority starts at 55 points. Every person&apos;s profile lists exactly which of these applied to them.
+                  Open any person to see exactly which of these added to their score. A priority you set by hand on a person always wins over the score.
                 </p>
               </Card>
             </>
