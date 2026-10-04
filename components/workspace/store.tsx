@@ -264,14 +264,16 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   }, [dataset]);
   const cache: AutoCache = useMemo(() => autoClassifyAll(rows), [rows]);
   const corpus = useMemo(() => buildCorpus(rows), [rows]);
+  // Only the settings fields buildPeople reads, so editing lists, templates or focus does not rebuild everyone.
   const buildSettings = useMemo(() => ({
     rules: settings.rules,
     targetCompanies: settings.targetCompanies,
-    schools: settings.profile.schools,
+    profile: { schools: settings.profile.schools },
     statuses: settings.statuses,
-    focus: settings.focus,
-  }), [settings.rules, settings.targetCompanies, settings.profile.schools, settings.statuses, settings.focus]);
-  const people = useMemo(() => buildPeople(rows, cache, records, settings, archive, corpus), [rows, cache, records, buildSettings, archive, corpus]);
+    weights: settings.weights,
+    goals: settings.goals,
+  }) as unknown as Settings, [settings.rules, settings.targetCompanies, settings.profile.schools, settings.statuses, settings.weights, settings.goals]);
+  const people = useMemo(() => buildPeople(rows, cache, records, buildSettings, archive, corpus), [rows, cache, records, buildSettings, archive, corpus]);
   const byId = useMemo(() => new Map(people.map((p) => [p.id, p])), [people]);
 
   // ---- actions --------------------------------------------------------------------

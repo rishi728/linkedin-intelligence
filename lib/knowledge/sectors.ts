@@ -276,23 +276,34 @@ const FROM_COMPANY_TYPE: Record<string, SectorId> = {
   "technology company": "technology",
 };
 
+let NORMALISED: Array<{ sector: SectorId; names: string[]; words: string[] }> | null = null;
+const sectorMemo = new Map<string, SectorResult>();
+
 export function classifySector(company: string): SectorResult {
+  const hit = sectorMemo.get(company);
+  if (hit) return hit;
+  const res = classifySectorUncached(company);
+  sectorMemo.set(company, res);
+  return res;
+}
+
+function classifySectorUncached(company: string): SectorResult {
+  NORMALISED ??= RULES.map((r) => ({ sector: r.sector, names: (r.names ?? []).map(normalise), words: (r.words ?? []).map((w) => w.trim()) }));
   const name = normalise(company);
   if (!name) return { sector: null, evidence: "" };
 
-  for (const rule of RULES) {
-    for (const known of rule.names ?? []) {
-      const n = normalise(known);
+  for (const rule of NORMALISED) {
+    for (const n of rule.names) {
       if (name === n || name.startsWith(`${n} `) || name.endsWith(` ${n}`) || name.includes(` ${n} `)) {
         return { sector: rule.sector, evidence: `Employer "${company}" is a known ${SECTOR_LABEL[rule.sector]} company` };
       }
     }
   }
 
-  for (const rule of RULES) {
-    for (const word of rule.words ?? []) {
-      if (name.includes(word.trim())) {
-        return { sector: rule.sector, evidence: `Employer name contains "${word.trim()}"` };
+  for (const rule of NORMALISED) {
+    for (const word of rule.words) {
+      if (name.includes(word)) {
+        return { sector: rule.sector, evidence: `Employer name contains "${word}"` };
       }
     }
   }
