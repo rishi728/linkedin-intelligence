@@ -108,6 +108,7 @@ const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "
 function ActivityChart({ people }: { people: ReturnType<typeof useWorkspace>["people"] }) {
   const router = useRouter();
   const [range, setRange] = useState<"12" | "6" | "all">("12");
+  const [hover, setHover] = useState<number | null>(null);
 
   const { connByMonth, msgByMonth, months, peak } = useMemo(() => {
     const connMap = new Map<string, number>();
@@ -191,7 +192,7 @@ function ActivityChart({ people }: { people: ReturnType<typeof useWorkspace>["pe
 
   const peakConn = Math.max(...connByMonth);
   const peakIdx = connByMonth.indexOf(peakConn);
-  const peakMonth = months[peakIdx] ? MONTHS[parseInt(months[peakIdx].split("-")[1])] : "";
+  const peakMonth = months[peakIdx] ? `${MONTHS[parseInt(months[peakIdx].split("-")[1])]}'${months[peakIdx].split("-")[0].slice(2)}` : "";
 
   const totalConn = connByMonth.reduce((a, b) => a + b, 0);
   const avgPerMonth = months.length ? Math.round(totalConn / months.length) : 0;
@@ -277,7 +278,42 @@ function ActivityChart({ people }: { people: ReturnType<typeof useWorkspace>["pe
         <path d={bezier(msgByMonth)} fill="none" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" strokeDasharray="6 3" />
 
         {connByMonth.map((v, i) => (
-          <circle key={i} cx={PL + i * step} cy={PT + ch - (v / peak) * ch} r={3.5} fill="#fff" stroke="#0D9488" strokeWidth="2" />
+          <circle key={i} cx={PL + i * step} cy={PT + ch - (v / peak) * ch} r={hover === i ? 5 : 3.5} fill="#fff" stroke="#0D9488" strokeWidth="2" style={{ transition: "r 0.15s" }} />
+        ))}
+
+        {hover !== null && (() => {
+          const x = PL + hover * step;
+          const cv = connByMonth[hover];
+          const mv = msgByMonth[hover];
+          const [y, m] = months[hover].split("-").map(Number);
+          const label = `${MONTHS[m]}'${String(y).slice(2)}`;
+          const tooltipW = 120;
+          const tx = Math.max(PL, Math.min(x - tooltipW / 2, W - PR - tooltipW));
+          const ty = 4;
+          return (
+            <g>
+              <line x1={x} y1={PT} x2={x} y2={PT + ch} stroke="#0D9488" strokeWidth="1" strokeDasharray="3 2" opacity="0.4" />
+              <rect x={tx} y={ty} width={tooltipW} height={46} rx={6} fill="#0f172a" opacity="0.92" />
+              <text x={tx + tooltipW / 2} y={ty + 14} textAnchor="middle" style={{ fontSize: 10, fill: "#94a3b8", fontWeight: 600 }}>{label}</text>
+              <text x={tx + tooltipW / 2} y={ty + 28} textAnchor="middle" style={{ fontSize: 10, fill: "#6ee7b7", fontWeight: 700 }}>+{cv} connections</text>
+              <text x={tx + tooltipW / 2} y={ty + 40} textAnchor="middle" style={{ fontSize: 10, fill: "#fcd34d", fontWeight: 600 }}>{mv} messages</text>
+            </g>
+          );
+        })()}
+
+        {/* Invisible hit areas for hover */}
+        {connByMonth.map((_, i) => (
+          <rect
+            key={`hit-${i}`}
+            x={PL + i * step - step / 2}
+            y={PT}
+            width={step}
+            height={ch}
+            fill="transparent"
+            onMouseEnter={() => setHover(i)}
+            onMouseLeave={() => setHover(null)}
+            style={{ cursor: "crosshair" }}
+          />
         ))}
 
         {peakIdx >= 0 && (
@@ -290,7 +326,8 @@ function ActivityChart({ people }: { people: ReturnType<typeof useWorkspace>["pe
         )}
 
         {months.map((k, i) => {
-          const label = MONTHS[parseInt(k.split("-")[1])];
+          const [y, m] = k.split("-").map(Number);
+          const label = `${MONTHS[m]}'${String(y).slice(2)}`;
           const show = months.length <= 12 || i % Math.ceil(months.length / 12) === 0;
           if (!show) return null;
           return (
