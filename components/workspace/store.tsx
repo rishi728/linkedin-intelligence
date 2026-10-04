@@ -5,7 +5,7 @@ import { parseConnectionsCsv, type Connection } from "@/lib/analyzer";
 import { describeArchive, parseArchive, type ArchiveResult } from "@/lib/archive";
 import { titleKey, type CustomRule, type RoleHierarchy } from "@/lib/classifier/corrections";
 import { generateSampleCsv } from "@/lib/sample";
-import { archiveSeedPatches, autoClassifyAll, buildPeople, nextCadenceDate, statusChangePatch, type AutoCache } from "@/lib/workspace/build";
+import { archiveSeedPatches, autoClassifyAll, buildCorpus, buildPeople, nextCadenceDate, statusChangePatch, type AutoCache } from "@/lib/workspace/build";
 import { todayISO } from "@/lib/workspace/dates";
 import { dbDelete, dbGet, dbSet, requestPersistence } from "@/lib/workspace/db";
 import { writeBackup } from "@/lib/workspace/autobackup";
@@ -263,7 +263,8 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     return [...merged.values()];
   }, [dataset]);
   const cache: AutoCache = useMemo(() => autoClassifyAll(rows), [rows]);
-  const people = useMemo(() => buildPeople(rows, cache, records, settings, archive), [rows, cache, records, settings, archive]);
+  const corpus = useMemo(() => buildCorpus(rows), [rows]);
+  const people = useMemo(() => buildPeople(rows, cache, records, settings, archive, corpus), [rows, cache, records, settings, archive, corpus]);
   const byId = useMemo(() => new Map(people.map((p) => [p.id, p])), [people]);
 
   // ---- actions --------------------------------------------------------------------
