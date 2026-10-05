@@ -1,5 +1,6 @@
 "use client";
 
+import { Playbook } from "./Playbook";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CsvFormatError } from "@/lib/analyzer";
@@ -15,6 +16,7 @@ import { useWorkspace } from "@/components/workspace/store";
 export function WelcomeView() {
   const { ready, dataset, people, settings, updateSettings, importCsv, importArchive, loadSample } = useWorkspace();
   const router = useRouter();
+  const destination = useRef("/home");
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -27,7 +29,7 @@ export function WelcomeView() {
   useEffect(() => {
     if (ready && dataset && !showModal) {
       const stayOnLanding = new URLSearchParams(window.location.search).has("welcome");
-      if (!stayOnLanding) router.replace("/home");
+      if (!stayOnLanding) router.replace(destination.current);
     }
   }, [ready, dataset, router, showModal]);
 
@@ -604,7 +606,7 @@ export function WelcomeView() {
           </div>
           )}
           {activeTab === "demo" && (
-          <DemoTabContent loadSample={loadSample} updateSettings={updateSettings} router={router} />
+          <DemoTabContent loadSample={loadSample} updateSettings={updateSettings} router={router} hasData={!!dataset} destination={destination} />
           )}
           {activeTab === "privacy" && (
           <PrivacyTabContent walkthroughOpen={walkthroughOpen} setWalkthroughOpen={setWalkthroughOpen} />
@@ -919,8 +921,16 @@ function ExportModal({
 /* ------------------------------------------------------------------ */
 /*  Demo tab content                                                   */
 /* ------------------------------------------------------------------ */
-function DemoTabContent({ loadSample, updateSettings, router }: { loadSample: () => void; updateSettings: (fn: (s: any) => any) => void; router: any }) {
+function DemoTabContent({ loadSample, updateSettings, router, hasData, destination }: { loadSample: () => void; updateSettings: (fn: (s: any) => any) => void; router: any; hasData: boolean; destination: { current: string } }) {
   const [activeScreen, setActiveScreen] = useState(0);
+  const tryIt = (path: string) => {
+    if (!hasData) {
+      destination.current = path;
+      loadSample();
+      updateSettings((s: any) => ({ ...s, focus: { ...s.focus, confirmedAt: new Date().toISOString() } }));
+    }
+    router.push(path);
+  };
   const screens = [
     {
       title: "Home Dashboard",
@@ -1145,6 +1155,8 @@ function DemoTabContent({ loadSample, updateSettings, router }: { loadSample: ()
             </div>
           </div>
         </div>
+
+        <Playbook hasData={hasData} tryIt={tryIt} />
       </div>
     </section>
   );
