@@ -101,4 +101,3 @@ export function renderTemplate(body: string, vars: Partial<TemplateVars>): strin
     .replace(/[ \t]{2,}/g, " ");
 }
 
-export const LINKEDIN_NOTE_LIMIT = 300;

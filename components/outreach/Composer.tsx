@@ -4,8 +4,7 @@ import { useState } from "react";
 import { ArrowLeft, Check, Copy, ExternalLink, Mail, RotateCcw, Save, Send } from "lucide-react";
 import { CHANNELS } from "@/lib/workspace/defaults";
 import { INTENT_MAP, OUTREACH_INTENTS, type OutreachIntentId } from "@/lib/workspace/intents";
-import { LINKEDIN_NOTE_LIMIT } from "@/lib/workspace/outreach";
-import { Avatar, Button, Dialog, Field, Select, Textarea, cx } from "@/components/ui";
+import { Avatar, Button, Dialog, Field, Select, Textarea } from "@/components/ui";
 import { useUI, useWorkspace } from "@/components/workspace/store";
 
 export function Composer() {
@@ -33,7 +32,6 @@ export function Composer() {
   const intent = intentId ? INTENT_MAP[intentId] : null;
   const preset = intent ? intent.body : "";
   const message = edited ?? preset;
-  const overLimit = channel === "LinkedIn" && message.length > LINKEDIN_NOTE_LIMIT;
 
   /** Keep the draft, and log it once so the profile shows what was written. */
   const persist = (sent = false) => {
@@ -172,9 +170,6 @@ export function Composer() {
         <div className="flex flex-col">
           <div className="mb-1.5 flex items-center justify-between gap-2">
             <span className="text-[10.5px] font-medium uppercase tracking-[0.12em] text-muted">Message</span>
-            <span className={cx("tabular text-[11.5px]", overLimit ? "font-medium text-[var(--t-red)]" : "text-faint")}>
-              {message.length}{channel === "LinkedIn" ? ` / ${LINKEDIN_NOTE_LIMIT}` : ""}
-            </span>
           </div>
           <Textarea
             value={message}

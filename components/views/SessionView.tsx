@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Check, ChevronLeft, ChevronRight, Copy, ExternalLink, Send, SkipForward, ThumbsDown } from "lucide-react";
 import { addDays, todayISO } from "@/lib/workspace/dates";
 import { applyFilters } from "@/lib/workspace/filters";
-import { LINKEDIN_NOTE_LIMIT, renderTemplate, templateVars } from "@/lib/workspace/outreach";
+import { renderTemplate, templateVars } from "@/lib/workspace/outreach";
 import type { Person } from "@/lib/workspace/types";
 import { PageBody, PageHeader } from "@/components/shell/AppShell";
 import { Avatar, Button, Card, EmptyState, Field, Pill, Select, Textarea, cx } from "@/components/ui";
@@ -44,7 +44,6 @@ export function SessionView() {
     () => (live && template ? edited ?? (template.literal ? template.body : renderTemplate(template.body, templateVars(live, settings))) : ""),
     [live, template, settings, edited],
   );
-  const overLimit = message.length > LINKEDIN_NOTE_LIMIT;
 
   const next = () => {
     setEdited(null);
@@ -240,9 +239,6 @@ export function SessionView() {
                 <div className="mt-5 border-t border-line pt-4">
                   <div className="mb-1.5 flex items-center justify-between">
                     <span className="text-[10.5px] font-medium uppercase tracking-[0.12em] text-muted">Message</span>
-                    <span className={cx("tabular text-[11.5px]", overLimit ? "font-medium text-[var(--t-red)]" : "text-faint")}>
-                      {message.length} / {LINKEDIN_NOTE_LIMIT}
-                    </span>
                   </div>
                   <Textarea value={message} onChange={(e) => setEdited(e.target.value)} rows={6} className="text-[13px] leading-relaxed" />
                 </div>
