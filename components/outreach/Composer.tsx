@@ -4,18 +4,17 @@ import { useState } from "react";
 import { ArrowLeft, Check, Copy, ExternalLink, Mail, RotateCcw, Save, Send } from "lucide-react";
 import { CHANNELS } from "@/lib/workspace/defaults";
 import { DRAFT_TOOLS, INTENT_MAP, OUTREACH_INTENTS, type OutreachIntentId } from "@/lib/workspace/intents";
-import { LINKEDIN_NOTE_LIMIT, renderTemplate, templateVars } from "@/lib/workspace/outreach";
-import { Avatar, Button, Dialog, Field, Input, Select, Textarea, cx } from "@/components/ui";
+import { LINKEDIN_NOTE_LIMIT } from "@/lib/workspace/outreach";
+import { Avatar, Button, Dialog, Field, Select, Textarea, cx } from "@/components/ui";
 import { useUI, useWorkspace } from "@/components/workspace/store";
 
 export function Composer() {
-  const { byId, settings, updateRecord, setStatus, updateSettings } = useWorkspace();
+  const { byId, settings, updateRecord, setStatus } = useWorkspace();
   const { composerFor, openComposer, toast } = useUI();
   const person = composerFor ? byId.get(composerFor) : null;
 
   const [intentId, setIntentId] = useState<OutreachIntentId | null>(null);
   const [channel, setChannel] = useState("LinkedIn");
-  const [vars, setVars] = useState({ my_background: "" });
   /** null until the user edits the draft by hand; their edits are never overwritten. */
   const [edited, setEdited] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -25,7 +24,6 @@ export function Composer() {
   if (person && personKey !== person.id) {
     setPersonKey(person.id);
     setIntentId(null);
-    setVars({ my_background: settings.profile.background });
     setEdited(null);
     setCopied(false);
   }
@@ -33,7 +31,7 @@ export function Composer() {
   if (!person) return null;
 
   const intent = intentId ? INTENT_MAP[intentId] : null;
-  const preset = intent ? renderTemplate(intent.body, templateVars(person, settings, vars)) : "";
+  const preset = intent ? intent.body : "";
   const message = edited ?? preset;
   const overLimit = channel === "LinkedIn" && message.length > LINKEDIN_NOTE_LIMIT;
 
@@ -167,17 +165,6 @@ export function Composer() {
                 ))}
               </Select>
             </Field>
-            <Field label="About you" hint="Saved for next time">
-              <Input
-                value={vars.my_background}
-                onChange={(e) => { setVars({ my_background: e.target.value }); setEdited(null); }}
-                onBlur={(e) =>
-                  e.target.value !== settings.profile.background &&
-                  updateSettings((s) => ({ ...s, profile: { ...s.profile, background: e.target.value } }))
-                }
-                placeholder="a final-year student at…"
-              />
-            </Field>
           </div>
         </div>
 
@@ -209,8 +196,8 @@ export function Composer() {
           </div>
 
           <p className="mt-2 text-[11.5px] text-muted">
-            Anything in <span className="rounded bg-subtle px-1">[brackets]</span> is a blank we could not fill from their
-            profile. Edit it or delete the sentence.
+            This preset is used exactly as written. Replace anything in <span className="rounded bg-subtle px-1">{"{{braces}}"}</span> or{" "}
+            <span className="rounded bg-subtle px-1">[brackets]</span> with your own words before you send it.
           </p>
         </div>
       </div>
