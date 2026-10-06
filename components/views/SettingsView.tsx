@@ -6,13 +6,12 @@ import { Download, Plus, Trash2, Upload, X } from "lucide-react";
 import { CsvFormatError } from "@/lib/analyzer";
 import { CATEGORY_ID, CATS } from "@/lib/classifier/categories";
 import { ROLE_FAMILIES, familiesOf } from "@/lib/classifier/search";
-import { OPPORTUNITY_TYPES, PURPOSES, CHANNELS, defaultSettings } from "@/lib/workspace/defaults";
+import { OPPORTUNITY_TYPES } from "@/lib/workspace/defaults";
 import { groupCompanies } from "@/lib/workspace/insights";
 import { hasGoals } from "@/lib/workspace/priority";
-import { TEMPLATE_VARIABLES } from "@/lib/workspace/outreach";
 import type { StatusDef, Tone } from "@/lib/workspace/types";
 import { PageBody, PageHeader } from "@/components/shell/AppShell";
-import { Button, Card, CardTitle, Checkbox, Field, Input, Pill, Segmented, Select, Textarea, Toggle, cx } from "@/components/ui";
+import { Button, Card, CardTitle, Checkbox, Field, Input, Pill, Segmented, Select, Toggle, cx } from "@/components/ui";
 import { ArchiveImport } from "@/components/workspace/ArchiveImport";
 import { storageStatus } from "@/lib/workspace/db";
 import { autoBackupSupported, backupFileName, chooseBackupFile, downloadBackup, forgetBackupFile, writeBackup } from "@/lib/workspace/autobackup";
@@ -20,7 +19,7 @@ import { DEFAULT_WEIGHTS } from "@/lib/workspace/defaults";
 import { addDays, formatDate, todayISO } from "@/lib/workspace/dates";
 import { useUI, useWorkspace } from "@/components/workspace/store";
 
-type Tab = "goals" | "targets" | "pipeline" | "outreach" | "templates" | "rules" | "data";
+type Tab = "goals" | "targets" | "pipeline" | "outreach" | "rules" | "data";
 
 const TONES: Tone[] = ["gray", "blue", "violet", "amber", "orange", "teal", "green", "slate", "red"];
 
@@ -129,7 +128,6 @@ export function SettingsView() {
               { value: "targets", label: "Targets" },
               { value: "pipeline", label: "Pipeline" },
               { value: "outreach", label: "Outreach" },
-              { value: "templates", label: "Templates" },
               { value: "rules", label: "Rules" },
               { value: "data", label: "Data" },
             ]}
@@ -423,63 +421,6 @@ export function SettingsView() {
                 </p>
               </Card>
             </>
-          ) : null}
-
-          {tab === "templates" ? (
-            <Card>
-              <CardTitle
-                hint={`Variables: ${TEMPLATE_VARIABLES.map((v) => `{{${v.key}}}`).join(", ")}`}
-                action={
-                  <div className="flex gap-2">
-                    <Button size="sm" onClick={() => updateSettings((s) => ({ ...s, templates: defaultSettings().templates }))}>Reset</Button>
-                    <Button
-                      size="sm"
-                      icon={Plus}
-                      onClick={() => updateSettings((s) => ({ ...s, templates: [...s.templates, { id: `t_${Date.now()}`, name: "New template", purpose: "Networking", channel: "LinkedIn", body: "Hi {{first_name}}, …" }] }))}
-                    >
-                      Add
-                    </Button>
-                  </div>
-                }
-              >
-                Message templates
-              </CardTitle>
-              <div className="space-y-3 p-4 pt-3">
-                {settings.templates.map((t) => (
-                  <div key={t.id} className="rounded-xl border border-line p-3">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Input defaultValue={t.name} onBlur={(e) => updateSettings((s) => ({ ...s, templates: s.templates.map((x) => (x.id === t.id ? { ...x, name: e.target.value } : x)) }))} className="h-7 w-48" />
-                      <div className="w-36">
-                        <Select value={t.purpose} onChange={(e) => updateSettings((s) => ({ ...s, templates: s.templates.map((x) => (x.id === t.id ? { ...x, purpose: e.target.value } : x)) }))} className="h-7 text-[12px]">
-                          {PURPOSES.map((p) => <option key={p} value={p}>{p}</option>)}
-                        </Select>
-                      </div>
-                      <div className="w-32">
-                        <Select value={t.channel} onChange={(e) => updateSettings((s) => ({ ...s, templates: s.templates.map((x) => (x.id === t.id ? { ...x, channel: e.target.value } : x)) }))} className="h-7 text-[12px]">
-                          {CHANNELS.map((c) => <option key={c} value={c}>{c}</option>)}
-                        </Select>
-                      </div>
-                      <Button size="sm" variant="ghost" icon={Trash2} className="ml-auto" onClick={() => updateSettings((s) => ({ ...s, templates: s.templates.filter((x) => x.id !== t.id) }))}>
-                        Delete
-                      </Button>
-                    </div>
-                    <div className="mt-2">
-                      <Checkbox
-                        checked={!!t.literal}
-                        onChange={(v) => updateSettings((s) => ({ ...s, templates: s.templates.map((x) => (x.id === t.id ? { ...x, literal: v || undefined } : x)) }))}
-                        label="Keep placeholders as written (do not fill from a person's data)"
-                      />
-                    </div>
-                    <Textarea
-                      defaultValue={t.body}
-                      rows={4}
-                      className="mt-2"
-                      onBlur={(e) => updateSettings((s) => ({ ...s, templates: s.templates.map((x) => (x.id === t.id ? { ...x, body: e.target.value } : x)) }))}
-                    />
-                  </div>
-                ))}
-              </div>
-            </Card>
           ) : null}
 
           {tab === "rules" ? (

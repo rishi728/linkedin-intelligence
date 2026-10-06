@@ -163,15 +163,15 @@ const CHAPTERS: Chapter[] = [
     mock: "find", go: { label: "Open Find people", path: "/find" },
   },
   {
-    name: "Write once, reuse often", short: "Templates", where: "Settings, then Templates",
-    hook: "Seven starter templates are ready. Make them sound like you.",
+    name: "Write once, reuse often", short: "Templates", where: "People, then Write message",
+    hook: "Ready-made messages for every moment, so you never start from a blank box.",
     steps: [
-      "Pick a template that fits the moment, from Referral request to Catch up.",
-      "Placeholders such as {{first_name}} and {{company}} fill in from each person.",
-      "Add your reason and your ask for that person, then edit the final message before you use it.",
+      "Open any person and choose Write message, then pick why you are reaching out.",
+      "The wording appears exactly as written. Replace each {{placeholder}} with your own details.",
+      "Use Make shorter, Make warmer or Make more direct, then edit the final message before you use it.",
     ],
     tip: "Every message is a draft for you to read. Nothing is ever sent for you.",
-    mock: "templates", go: { label: "Open Settings", path: "/settings" },
+    mock: "templates", go: { label: "Open People", path: "/people" },
   },
   {
     name: "Send it yourself, fast", short: "Outreach", where: "Outreach session",
