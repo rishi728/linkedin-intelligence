@@ -169,7 +169,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
         <nav className="flex-1 overflow-auto px-3 pb-3">
           {SIDEBAR_NAV.map((item) => {
-            const active = pathname === item.href;
+            const active = pathname.replace(/\/$/, "") === item.href;
             const count = counts[item.href];
             return (
               <div key={item.href}>
@@ -250,9 +250,9 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       {/* ============ BOTTOM NAV BAR ============ */}
       <div className="fixed bottom-3 left-1/2 z-40 w-[calc(100%-24px)] max-w-4xl -translate-x-1/2">
-        <nav className="flex items-center justify-between gap-1.5 rounded-2xl border border-[#E0DCD3] bg-[#EFECE6]/90 p-1.5 shadow-sm backdrop-blur-md">
+        <nav className="flex items-center justify-between gap-1.5 rounded-2xl border border-[#1f4a3b] bg-[#0C2D22] p-1.5 shadow-[0_10px_30px_rgba(12,45,34,0.35)] ring-1 ring-black/10">
           {BOTTOM_NAV.map((item) => {
-            const active = pathname === item.href;
+            const active = pathname.replace(/\/$/, "") === item.href;
             const count = item.countKey ? counts[item.countKey] : undefined;
             return (
               <Link
@@ -260,13 +260,13 @@ export function AppShell({ children }: { children: ReactNode }) {
                 href={item.href}
                 prefetch={false}
                 className={cx(
-                  "relative flex flex-1 items-center justify-center gap-1.5 rounded-xl px-2 py-2 text-[11px] font-medium transition-all duration-300",
+                  "relative flex flex-1 items-center justify-center gap-1.5 rounded-xl px-2 py-2.5 text-[11.5px] font-medium transition-all duration-200",
                   active
-                    ? "bg-[#0F2D24] font-semibold text-white shadow-sm"
-                    : "text-[#57534e] hover:bg-[#0F2D24]/10 hover:text-[#0f172a]",
+                    ? "bg-[#34d399] font-bold text-[#06281d] shadow-md"
+                    : "text-[#d1e7dd] hover:bg-white/10 hover:text-white",
                 )}
               >
-                <item.icon size={15} className={active ? "text-[#6ee7b7]" : "text-[#78716c]"} />
+                <item.icon size={16} className={active ? "text-[#06281d]" : "text-[#6ee7b7]"} />
                 <span className="hidden tracking-tight sm:inline">{item.label}</span>
                 {count !== undefined && count > 0 && (
                   <span className="ml-0.5 rounded-full bg-[#FEF3C7] px-1.5 text-[9px] font-bold text-[#92400e]">
