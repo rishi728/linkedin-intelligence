@@ -52,6 +52,40 @@ export const DEFAULT_TEMPLATES: Template[] = [
   },
 ];
 
+/** Added in version 1 of the template set. Placeholders are left as written, never filled in. */
+export const PLAIN_TEMPLATES: Template[] = [
+  {
+    id: "plain-referral", name: "Referral Request (as written)", purpose: "Referral", channel: "LinkedIn", literal: true,
+    body: "Hi {{first_name}}, I came across your work as {{role}} at {{company}} and noticed {{reason}}. I’m {{my_background}} and currently exploring {{ask}}. Would you be open to referring me, or pointing me toward the right person on the team? Happy to share my resume. Thanks!",
+  },
+  {
+    id: "plain-advice", name: "Quick Advice (as written)", purpose: "Advice", channel: "LinkedIn", literal: true,
+    body: "Hi {{first_name}}, I’m {{my_background}}. I came across your profile because {{reason}}. Given your experience as {{role}} at {{company}}, I wanted to ask you {{ask}}. Even a quick perspective would be really helpful. Thanks!",
+  },
+  {
+    id: "plain-intro", name: "Introduction / Connect (as written)", purpose: "Introduction", channel: "LinkedIn", literal: true,
+    body: "Hi {{first_name}}, great to connect! {{common_context}}. I’m {{my_background}}, and {{reason}}. I’d love to learn more about your experience and was wondering if you’d be open to {{ask}}.",
+  },
+  {
+    id: "plain-job", name: "Job / Internship Opportunity (as written)", purpose: "Job", channel: "LinkedIn", literal: true,
+    body: "Hi {{first_name}}, I noticed you’re working as {{role}} at {{company}}. {{reason}}. I’m {{my_background}} and currently exploring {{ask}}. I wanted to ask how your team usually hires for these roles, or if there’s someone you’d recommend I reach out to. Thanks!",
+  },
+  {
+    id: "plain-networking", name: "Catch-up / Networking (as written)", purpose: "Networking", channel: "LinkedIn", literal: true,
+    body: "Hi {{first_name}}, hope you’re doing well! {{common_context}}. I’m really interested in what you’re building/working on at {{company}}. Would love to hear about your experience and {{ask}}.",
+  },
+  {
+    id: "plain-cold", name: "Cold Connect", purpose: "Networking", channel: "LinkedIn", literal: true,
+    body: "Hi {{first_name}}, came across your profile while looking into {{topic/company/role}}. Your work in {{specific_area}} caught my attention. I’m {{my_background}} and exploring {{area}}. Would be great to connect!",
+  },
+  {
+    id: "plain-followup", name: "Follow-up", purpose: "Networking", channel: "LinkedIn", literal: true,
+    body: "Hi {{first_name}}, just wanted to follow up on my previous message. I know things can get busy, so no worries if you haven’t had a chance to look at it. I’d really appreciate your thoughts whenever you get a moment. Thanks!",
+  },
+];
+
+export const TEMPLATES_VERSION = 1;
+
 export const DEFAULT_CADENCE: Cadence = { steps: [5, 9, 14], enabled: true };
 
 export const DEFAULT_WEIGHTS: PriorityWeights = {
@@ -71,7 +105,8 @@ export function defaultSettings(): Settings {
     goals: { ...EMPTY_GOALS },
     targetCompanies: [],
     statuses: DEFAULT_STATUSES.map((s) => ({ ...s })),
-    templates: DEFAULT_TEMPLATES.map((t) => ({ ...t })),
+    templates: [...DEFAULT_TEMPLATES, ...PLAIN_TEMPLATES].map((t) => ({ ...t })),
+    templatesVersion: TEMPLATES_VERSION,
     segments: [],
     lists: [],
     focus: { ...EMPTY_FOCUS, goals: [] },

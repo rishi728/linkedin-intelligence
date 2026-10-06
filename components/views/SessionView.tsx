@@ -41,7 +41,7 @@ export function SessionView() {
   const live = current ? people.find((p) => p.id === current.id) ?? current : null;
   const template = settings.templates.find((t) => t.id === templateId) ?? settings.templates[0];
   const message = useMemo(
-    () => (live && template ? edited ?? renderTemplate(template.body, templateVars(live, settings)) : ""),
+    () => (live && template ? edited ?? (template.literal ? template.body : renderTemplate(template.body, templateVars(live, settings))) : ""),
     [live, template, settings, edited],
   );
   const overLimit = message.length > LINKEDIN_NOTE_LIMIT;

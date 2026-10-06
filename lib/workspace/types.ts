@@ -92,6 +92,8 @@ export interface Template {
   purpose: string;
   channel: string;
   body: string;
+  /** Placeholders stay exactly as written instead of being filled from a person's data. */
+  literal?: boolean;
 }
 
 /** What the user said they are here for, confirmed at first import. */
@@ -154,6 +156,8 @@ export interface Settings {
   rules: CustomRule[];
   /** ISO date of the last downloaded backup, so the app can nudge when it goes stale. */
   lastBackupAt?: string;
+  /** Which built-in template sets have been added to this workspace. */
+  templatesVersion?: number;
   /** Routes whose guide has been read, so Pip only introduces a page once. */
   toursSeen?: string[];
 }

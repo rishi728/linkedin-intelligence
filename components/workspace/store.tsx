@@ -9,7 +9,7 @@ import { archiveSeedPatches, autoClassifyAll, buildCorpus, buildPeople, nextCade
 import { todayISO } from "@/lib/workspace/dates";
 import { dbDelete, dbGet, dbSet, requestPersistence } from "@/lib/workspace/db";
 import { writeBackup } from "@/lib/workspace/autobackup";
-import { defaultSettings } from "@/lib/workspace/defaults";
+import { PLAIN_TEMPLATES, TEMPLATES_VERSION, defaultSettings } from "@/lib/workspace/defaults";
 import type { Activity, ArchiveData, Dataset, DatasetFile, Filters, Person, PersonRecord, Settings } from "@/lib/workspace/types";
 
 type Records = Record<string, PersonRecord>;
@@ -118,7 +118,12 @@ function mergeSettings(saved: Partial<Settings> | undefined): Settings {
     focus: { ...d.focus, ...saved.focus },
     lists: saved.lists ?? d.lists,
     statuses: saved.statuses?.length ? saved.statuses : d.statuses,
-    templates: saved.templates?.length ? saved.templates : d.templates,
+    templates: saved.templates?.length
+      ? (saved.templatesVersion ?? 0) < TEMPLATES_VERSION
+        ? [...saved.templates, ...PLAIN_TEMPLATES.filter((t) => !saved.templates!.some((x) => x.id === t.id))]
+        : saved.templates
+      : d.templates,
+    templatesVersion: TEMPLATES_VERSION,
   };
 }
 

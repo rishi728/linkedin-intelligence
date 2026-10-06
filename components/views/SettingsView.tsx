@@ -463,6 +463,13 @@ export function SettingsView() {
                         Delete
                       </Button>
                     </div>
+                    <div className="mt-2">
+                      <Checkbox
+                        checked={!!t.literal}
+                        onChange={(v) => updateSettings((s) => ({ ...s, templates: s.templates.map((x) => (x.id === t.id ? { ...x, literal: v || undefined } : x)) }))}
+                        label="Keep placeholders as written (do not fill from a person's data)"
+                      />
+                    </div>
                     <Textarea
                       defaultValue={t.body}
                       rows={4}
