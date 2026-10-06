@@ -168,7 +168,7 @@ const CHAPTERS: Chapter[] = [
     steps: [
       "Open any person and choose Write message, then pick why you are reaching out.",
       "The wording appears exactly as written. Replace each {{placeholder}} with your own details.",
-      "Use Make shorter, Make warmer or Make more direct, then edit the final message before you use it.",
+      "Edit the wording until it sounds like you, then copy it. You send it yourself.",
     ],
     tip: "Every message is a draft for you to read. Nothing is ever sent for you.",
     mock: "templates", go: { label: "Open People", path: "/people" },

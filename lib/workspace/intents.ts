@@ -68,39 +68,3 @@ Best,
 export const INTENT_MAP: Record<OutreachIntentId, OutreachIntent> = Object.fromEntries(
   OUTREACH_INTENTS.map((i) => [i.id, i]),
 ) as Record<OutreachIntentId, OutreachIntent>;
-
-/**
- * Small rewrites that keep a draft in the user's hands. Deterministic text work,
- * not generation: nothing new is claimed, sentences are only cut or softened.
- */
-export const DRAFT_TOOLS = [
-  {
-    id: "shorter",
-    label: "Make shorter",
-    apply: (text: string) =>
-      text
-        .split(/\n{2,}/)
-        .filter((para, i, all) => i === 0 || i === all.length - 1 || para.trim().length < 180)
-        .join("\n\n"),
-  },
-  {
-    id: "warmer",
-    label: "Make warmer",
-    apply: (text: string) =>
-      text
-        .replace(/^Hi /m, "Hi ")
-        .replace(/\bI wanted to\b/g, "I'd love to")
-        .replace(/\bI would\b/g, "I'd")
-        .replace(/\bBest,/m, "Thanks so much,"),
-  },
-  {
-    id: "direct",
-    label: "Make more direct",
-    apply: (text: string) =>
-      text
-        .replace(/\bI would really appreciate\b/g, "I'd appreciate")
-        .replace(/\bI was wondering whether\b/g, "Could")
-        .replace(/\bif you're open to sharing\b/g, "if you have a moment")
-        .replace(/\bI'd really appreciate any guidance on how best to explore the opportunity\./g, "Any pointers would help."),
-  },
-] as const;

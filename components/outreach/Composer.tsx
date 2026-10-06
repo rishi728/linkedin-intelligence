@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { ArrowLeft, Check, Copy, ExternalLink, Mail, RotateCcw, Save, Send } from "lucide-react";
 import { CHANNELS } from "@/lib/workspace/defaults";
-import { DRAFT_TOOLS, INTENT_MAP, OUTREACH_INTENTS, type OutreachIntentId } from "@/lib/workspace/intents";
+import { INTENT_MAP, OUTREACH_INTENTS, type OutreachIntentId } from "@/lib/workspace/intents";
 import { LINKEDIN_NOTE_LIMIT } from "@/lib/workspace/outreach";
 import { Avatar, Button, Dialog, Field, Select, Textarea, cx } from "@/components/ui";
 import { useUI, useWorkspace } from "@/components/workspace/store";
@@ -183,11 +183,6 @@ export function Composer() {
           />
 
           <div className="mt-2 flex flex-wrap items-center gap-1.5">
-            {DRAFT_TOOLS.map((t) => (
-              <Button key={t.id} size="sm" variant="ghost" onClick={() => setEdited(t.apply(message))}>
-                {t.label}
-              </Button>
-            ))}
             {edited !== null ? (
               <Button size="sm" variant="ghost" icon={RotateCcw} onClick={() => setEdited(null)}>
                 Back to the preset
