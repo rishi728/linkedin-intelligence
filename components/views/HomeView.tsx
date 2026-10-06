@@ -490,7 +490,7 @@ export function HomeView() {
           </div>
           <div style={{ fontSize: 11, fontWeight: 600, color: "#94a3b8" }}>Everyone in your network</div>
           <div style={{ position: "relative", zIndex: 0 }}>
-            <div style={{ fontSize: 42, fontWeight: 800, color: "#0f172a", letterSpacing: "-0.03em", marginTop: 2, fontVariantNumeric: "tabular-nums", position: "relative", zIndex: 1 }}>
+            <div style={{ fontSize: 42, fontWeight: 800, color: "#0f172a", letterSpacing: "-0.03em", marginTop: 2, fontVariantNumeric: "tabular-nums", position: "relative", zIndex: 1, textAlign: "center" }}>
               {people.length.toLocaleString()}
             </div>
             <div style={{ marginTop: -28, pointerEvents: "none" }}><NestCradle /></div>
@@ -525,7 +525,7 @@ export function HomeView() {
           </div>
           <div style={{ fontSize: 11, fontWeight: 600, color: "#94a3b8" }}>{focused ? "Match your focus, not yet contacted" : "Not yet contacted"}</div>
           <div style={{ position: "relative", zIndex: 0 }}>
-            <div style={{ fontSize: 42, fontWeight: 800, color: "#0f172a", letterSpacing: "-0.03em", marginTop: 2, fontVariantNumeric: "tabular-nums", position: "relative", zIndex: 1 }}>
+            <div style={{ fontSize: 42, fontWeight: 800, color: "#0f172a", letterSpacing: "-0.03em", marginTop: 2, fontVariantNumeric: "tabular-nums", position: "relative", zIndex: 1, textAlign: "center" }}>
               {toContact.toLocaleString()}
             </div>
             <div style={{ marginTop: -28, pointerEvents: "none" }}><NestCradle /></div>
@@ -560,7 +560,7 @@ export function HomeView() {
           </div>
           <div style={{ fontSize: 11, fontWeight: 600, color: "#94a3b8" }}>{archive ? "From your message history" : "Add your archive to fill this in"}</div>
           <div style={{ position: "relative", zIndex: 0 }}>
-            <div style={{ fontSize: 42, fontWeight: 800, color: "#0f172a", letterSpacing: "-0.03em", marginTop: 2, fontVariantNumeric: "tabular-nums", position: "relative", zIndex: 1 }}>
+            <div style={{ fontSize: 42, fontWeight: 800, color: "#0f172a", letterSpacing: "-0.03em", marginTop: 2, fontVariantNumeric: "tabular-nums", position: "relative", zIndex: 1, textAlign: "center" }}>
               {replied.toLocaleString()}
             </div>
             <div style={{ marginTop: -28, pointerEvents: "none" }}><NestCradle /></div>
