@@ -447,7 +447,7 @@ export function PrivacyView() {
 
                   {/* Bottom reassurance */}
                   <div style={{ marginTop: 16, paddingTop: 12, borderTop: "1px solid var(--warm-border-light)", display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: "#065f46", fontWeight: 500 }}>
-                    <svg style={{ width: 14, height: 14, color: "#059669", fill: "none", stroke: "currentColor", strokeWidth: 2.5 }} viewBox="0 0 24 24"><path d="m4.5 12.75 6 6 9-13.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                    <svg style={{ width: 14, height: 14, color: "#047857", fill: "none", stroke: "currentColor", strokeWidth: 2.5 }} viewBox="0 0 24 24"><path d="m4.5 12.75 6 6 9-13.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
                     Official LinkedIn feature. No bots or scrapers involved.
                   </div>
                 </div>

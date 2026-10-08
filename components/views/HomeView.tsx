@@ -354,7 +354,7 @@ function ActivityChart({ people }: { people: ReturnType<typeof useWorkspace>["pe
           onClick={() => router.push("/analytics")}
           style={{
             display: "flex", alignItems: "center", gap: 4,
-            fontSize: 12, fontWeight: 600, color: "#059669",
+            fontSize: 12, fontWeight: 600, color: "#047857",
             background: "none", border: "none", cursor: "pointer", fontFamily: "inherit",
           }}
         >
@@ -417,7 +417,7 @@ export function HomeView() {
           <h1 className="max-sm:col-start-2 max-sm:self-end" style={{ fontSize: "clamp(22px, 6vw, 28px)", fontWeight: 700, color: "#0f172a", letterSpacing: "-0.02em", lineHeight: 1.2 }}>
             {greeting}{firstName ? `, ${firstName}` : ""}.
           </h1>
-          <p className="max-sm:col-start-2 max-sm:self-start" style={{ fontSize: 14, color: "#94a3b8", marginTop: 2 }}>{context}</p>
+          <p className="max-sm:col-start-2 max-sm:self-start" style={{ fontSize: 14, color: "#64748b", marginTop: 2 }}>{context}</p>
           {/* Speech bubble */}
           <div className="max-sm:col-span-2" style={{
             position: "relative", marginTop: 12, padding: "12px 16px", borderRadius: 16,
@@ -433,7 +433,7 @@ export function HomeView() {
             <div style={{ position: "relative" }}>
               <span style={{
                 display: "inline-block", fontSize: 9, fontWeight: 700, letterSpacing: "0.08em",
-                textTransform: "uppercase" as const, color: "#059669",
+                textTransform: "uppercase" as const, color: "#047857",
                 background: "#dcfce7", padding: "2px 8px", borderRadius: 4, marginBottom: 6,
               }}>
                 OWLIE
@@ -450,11 +450,11 @@ export function HomeView() {
             border: "1px solid #E8E6DF", background: "#fff",
             textAlign: "center",
           }}>
-            <p style={{ fontSize: 11, color: "#94a3b8" }}>Looking for warm intros?</p>
+            <p style={{ fontSize: 11, color: "#64748b" }}>Looking for warm intros?</p>
             <button
               onClick={() => router.push("/settings")}
               style={{
-                fontSize: 12, fontWeight: 600, color: "#059669", cursor: "pointer",
+                fontSize: 12, fontWeight: 600, color: "#047857", cursor: "pointer",
                 background: "none", border: "none", fontFamily: "inherit",
                 display: "flex", alignItems: "center", gap: 4, marginTop: 2,
               }}
@@ -487,21 +487,21 @@ export function HomeView() {
             }}>
               <svg width="15" height="15" fill="none" stroke="#D97706" strokeWidth="2" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
             </span>
-            <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "#94a3b8" }}>Total Connections</span>
+            <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "#64748b" }}>Total Connections</span>
             {addedRecently > 0 ? (
-              <span style={{ marginLeft: "auto", fontSize: 9, fontWeight: 600, color: "#059669", background: "#ecfdf5", padding: "2px 7px", borderRadius: 6 }}>
+              <span style={{ marginLeft: "auto", fontSize: 9, fontWeight: 600, color: "#047857", background: "#ecfdf5", padding: "2px 7px", borderRadius: 6 }}>
                 +{addedRecently.toLocaleString()} in 30 days
               </span>
             ) : null}
           </div>
-          <div style={{ fontSize: 11, fontWeight: 600, color: "#94a3b8" }}>Everyone in your network</div>
+          <div style={{ fontSize: 11, fontWeight: 600, color: "#64748b" }}>Everyone in your network</div>
           <div style={{ position: "relative", zIndex: 0 }}>
             <div style={{ fontSize: 42, fontWeight: 800, color: "#0f172a", letterSpacing: "-0.03em", marginTop: 2, fontVariantNumeric: "tabular-nums", position: "relative", zIndex: 1, textAlign: "center" }}>
               {people.length.toLocaleString()}
             </div>
             <div style={{ marginTop: -28, pointerEvents: "none" }}><NestCradle /></div>
           </div>
-          <div style={{ fontSize: 11, fontWeight: 600, color: "#059669", marginTop: 0 }}>All synced profiles</div>
+          <div style={{ fontSize: 11, fontWeight: 600, color: "#047857", marginTop: 0 }}>All synced profiles</div>
         </button>
 
         {/* People to Contact */}
@@ -524,12 +524,12 @@ export function HomeView() {
             }}>
               <svg width="15" height="15" fill="none" stroke="#DC2626" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
             </span>
-            <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "#94a3b8" }}>People to Contact</span>
+            <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "#64748b" }}>People to Contact</span>
             <span style={{ marginLeft: "auto", fontSize: 9, fontWeight: 600, color: "#DC2626", background: "#FEF2F2", padding: "2px 7px", borderRadius: 6 }}>
               {unreachedPct}% unreached
             </span>
           </div>
-          <div style={{ fontSize: 11, fontWeight: 600, color: "#94a3b8" }}>{focused ? "Match your focus, not yet contacted" : "Not yet contacted"}</div>
+          <div style={{ fontSize: 11, fontWeight: 600, color: "#64748b" }}>{focused ? "Match your focus, not yet contacted" : "Not yet contacted"}</div>
           <div style={{ position: "relative", zIndex: 0 }}>
             <div style={{ fontSize: 42, fontWeight: 800, color: "#0f172a", letterSpacing: "-0.03em", marginTop: 2, fontVariantNumeric: "tabular-nums", position: "relative", zIndex: 1, textAlign: "center" }}>
               {toContact.toLocaleString()}
@@ -559,19 +559,19 @@ export function HomeView() {
             }}>
               <svg width="15" height="15" fill="none" stroke="#2563EB" strokeWidth="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
             </span>
-            <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "#94a3b8" }}>Have Replied</span>
-            <span style={{ marginLeft: "auto", fontSize: 9, fontWeight: 600, color: "#059669", background: "#ecfdf5", padding: "2px 7px", borderRadius: 6 }}>
+            <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "#64748b" }}>Have Replied</span>
+            <span style={{ marginLeft: "auto", fontSize: 9, fontWeight: 600, color: "#047857", background: "#ecfdf5", padding: "2px 7px", borderRadius: 6 }}>
               {responsePct}% response
             </span>
           </div>
-          <div style={{ fontSize: 11, fontWeight: 600, color: "#94a3b8" }}>{archive ? "From your message history" : "Add your archive to fill this in"}</div>
+          <div style={{ fontSize: 11, fontWeight: 600, color: "#64748b" }}>{archive ? "From your message history" : "Add your archive to fill this in"}</div>
           <div style={{ position: "relative", zIndex: 0 }}>
             <div style={{ fontSize: 42, fontWeight: 800, color: "#0f172a", letterSpacing: "-0.03em", marginTop: 2, fontVariantNumeric: "tabular-nums", position: "relative", zIndex: 1, textAlign: "center" }}>
               {replied.toLocaleString()}
             </div>
             <div style={{ marginTop: -28, pointerEvents: "none" }}><NestCradle /></div>
           </div>
-          <div style={{ fontSize: 11, fontWeight: 600, color: "#059669", marginTop: 0 }}>Active conversations</div>
+          <div style={{ fontSize: 11, fontWeight: 600, color: "#047857", marginTop: 0 }}>Active conversations</div>
         </button>
       </div>
 
@@ -590,10 +590,10 @@ export function HomeView() {
           }}
         >
           View network overview
-          <ArrowRight size={14} style={{ color: "#94a3b8" }} />
+          <ArrowRight size={14} style={{ color: "#64748b" }} />
         </button>
         {!focused && (
-          <p style={{ marginTop: 12, maxWidth: 520, fontSize: 13, color: "#94a3b8", lineHeight: 1.6 }}>
+          <p style={{ marginTop: 12, maxWidth: 520, fontSize: 13, color: "#64748b", lineHeight: 1.6 }}>
             You have not told this what you are looking for yet, so &ldquo;people to contact&rdquo; is simply everyone you have not spoken to.{" "}
             <Button size="sm" variant="ghost" className="align-baseline" onClick={() => router.push("/settings")}>
               Set your focus

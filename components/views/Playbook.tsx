@@ -70,8 +70,8 @@ const MOCKS: Record<string, () => ReactNode> = {
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
       <Card>
         <p style={{ fontSize: 12, lineHeight: 1.7, color: "#334155", margin: 0 }}>
-          Hi <b style={{ color: "#059669" }}>{"{{first_name}}"}</b>, I came across your work at <b style={{ color: "#059669" }}>{"{{company}}"}</b>.
-          {" "}<b style={{ color: "#059669" }}>{"{{reason}}"}</b> Would you be open to <b style={{ color: "#059669" }}>{"{{ask}}"}</b>?
+          Hi <b style={{ color: "#047857" }}>{"{{first_name}}"}</b>, I came across your work at <b style={{ color: "#047857" }}>{"{{company}}"}</b>.
+          {" "}<b style={{ color: "#047857" }}>{"{{reason}}"}</b> Would you be open to <b style={{ color: "#047857" }}>{"{{ask}}"}</b>?
         </p>
       </Card>
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
@@ -92,7 +92,7 @@ const MOCKS: Record<string, () => ReactNode> = {
     <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 6 }}>
       {STATUS_FLOW.map((s, i) => (
         <span key={s} style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-          <Chip on={i === 1}>{s}</Chip>{i < STATUS_FLOW.length - 1 && <span style={{ color: "#94a3b8", fontSize: 12 }}>&rarr;</span>}
+          <Chip on={i === 1}>{s}</Chip>{i < STATUS_FLOW.length - 1 && <span style={{ color: "#64748b", fontSize: 12 }}>&rarr;</span>}
         </span>
       ))}
     </div>
@@ -107,7 +107,7 @@ const MOCKS: Record<string, () => ReactNode> = {
       <Card>
         {WEIGHTS.map(([k, v]) => (
           <div key={k} style={{ display: "flex", justifyContent: "space-between", fontSize: 11.5, color: "#334155", padding: "3px 0" }}>
-            <span>{k}</span><b style={{ color: "#059669" }}>{v}</b>
+            <span>{k}</span><b style={{ color: "#047857" }}>{v}</b>
           </div>
         ))}
       </Card>
@@ -268,7 +268,7 @@ export function Playbook({ hasData, tryIt }: { hasData: boolean; tryIt: (path: s
         <div style={{ height: 4, background: "#eef0ee" }}><div style={{ height: 4, width: `${pct}%`, background: "#059669", transition: "width 0.35s" }} /></div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 28, padding: 26 }}>
           <div>
-            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#059669" }}>Move {i + 1} of {CHAPTERS.length}</div>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#047857" }}>Move {i + 1} of {CHAPTERS.length}</div>
             <h3 className="font-serif" style={{ fontSize: 28, fontWeight: 700, color: INK, margin: "4px 0 6px", lineHeight: 1.15 }}>{c.name}</h3>
             <p style={{ fontSize: 14, color: "#64748b", margin: "0 0 12px" }}>{c.hook}</p>
             <div style={{ display: "inline-block", padding: "3px 10px", borderRadius: 6, background: "#f4f3ee", fontSize: 11, fontWeight: 600, color: "#475569", marginBottom: 14 }}>Where: {c.where}</div>

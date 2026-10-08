@@ -89,6 +89,12 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex h-full flex-col bg-[#FAFAF5]">
+      <a
+        href="#main"
+        className="sr-only z-[80] rounded-lg bg-[#0C2D22] px-3 py-2 text-[13px] font-semibold text-white focus:not-sr-only focus:fixed focus:left-3 focus:top-3"
+      >
+        Skip to content
+      </a>
       {/* ============ TOP BAR ============ */}
       <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center gap-3 border-b border-[#E8E6DF] bg-white/90 px-4 backdrop-blur-md">
         <button
@@ -111,7 +117,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <button
             type="button"
             onClick={() => document.dispatchEvent(new CustomEvent("li:open-search"))}
-            className="flex h-8 w-full items-center gap-2 rounded-full border border-[#E8E6DF] bg-[#FAFAF5] px-3 text-[12.5px] text-[#94a3b8] transition hover:border-[#d6d3c7]"
+            className="flex h-8 w-full items-center gap-2 rounded-full border border-[#E8E6DF] bg-[#FAFAF5] px-3 text-[12.5px] text-[#64748b] transition hover:border-[#d6d3c7]"
           >
             <Search size={13} />
             Search connections, companies...
@@ -172,7 +178,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <Logo size={48} />
             <span className="text-[14px] font-semibold tracking-tight text-[#0C2D22]">NesT</span>
           </div>
-          <button type="button" onClick={() => setSidebarOpen(false)} className="text-[#94a3b8] hover:text-[#0f172a]">
+          <button type="button" onClick={() => setSidebarOpen(false)} className="text-[#64748b] hover:text-[#0f172a]">
             <X size={18} />
           </button>
         </div>
@@ -183,7 +189,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             return (
               <div key={item.href}>
                 {item.section && (
-                  <p className="px-2 pb-1 pt-4 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#94a3b8]">
+                  <p className="px-2 pb-1 pt-4 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#64748b]">
                     {item.section}
                   </p>
                 )}
@@ -196,10 +202,10 @@ export function AppShell({ children }: { children: ReactNode }) {
                     active ? "bg-[#ecfdf5] font-medium text-[#065f46]" : "text-[#475569] hover:bg-[#f1f0eb]",
                   )}
                 >
-                  <item.icon size={15} className={active ? "text-[#059669]" : "text-[#94a3b8]"} />
+                  <item.icon size={15} className={active ? "text-[#047857]" : "text-[#64748b]"} />
                   <span className="flex-1 truncate">{item.label}</span>
                   {count !== undefined && (
-                    <span className="tabular text-[11px] text-[#94a3b8]">{count.toLocaleString()}</span>
+                    <span className="tabular text-[11px] text-[#64748b]">{count.toLocaleString()}</span>
                   )}
                 </Link>
               </div>
@@ -207,7 +213,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           })}
           {settings.segments.length > 0 && (
             <>
-              <p className="mt-4 border-t border-[#E8E6DF] px-2 pb-1 pt-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#94a3b8]">Saved lists</p>
+              <p className="mt-4 border-t border-[#E8E6DF] px-2 pb-1 pt-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#64748b]">Saved lists</p>
               {settings.segments.map((seg) => (
                 <button
                   key={seg.id}
@@ -215,7 +221,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   onClick={() => { setPeopleFilters(seg.filters); router.push("/people"); setSidebarOpen(false); }}
                   className="mb-0.5 flex h-8 w-full items-center gap-2 rounded-lg px-3 text-left text-[12.5px] text-[#475569] transition hover:bg-[#f1f0eb]"
                 >
-                  <Compass size={13} className="text-[#94a3b8]" />
+                  <Compass size={13} className="text-[#64748b]" />
                   <span className="truncate">{seg.name}</span>
                 </button>
               ))}
@@ -228,7 +234,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             onClick={() => { setAddOpen(true); setSidebarOpen(false); }}
             className="mb-1 flex h-8 w-full items-center gap-2.5 rounded-lg px-3 text-[13px] text-[#475569] transition hover:bg-[#f1f0eb]"
           >
-            <Plus size={15} className="text-[#94a3b8]" />
+            <Plus size={15} className="text-[#64748b]" />
             Add data
           </button>
           <Link
@@ -237,14 +243,14 @@ export function AppShell({ children }: { children: ReactNode }) {
             onClick={() => setSidebarOpen(false)}
             className="mb-1 flex h-8 items-center gap-2.5 rounded-lg px-3 text-[13px] text-[#475569] transition hover:bg-[#f1f0eb]"
           >
-            <SettingsIcon size={15} className="text-[#94a3b8]" />
+            <SettingsIcon size={15} className="text-[#64748b]" />
             Settings
           </Link>
-          <p className="flex items-center gap-1.5 px-3 py-1 text-[11px] text-[#94a3b8]">
+          <p className="flex items-center gap-1.5 px-3 py-1 text-[11px] text-[#64748b]">
             <Cloud size={11} className="text-[#10B981]" />
             {savedAt ? `Saved locally · ${savedRelative(savedAt)}` : "Saved locally"}
           </p>
-          <Link href="/?welcome" prefetch={false} className="flex items-center gap-1.5 px-3 pt-1 text-[11px] text-[#94a3b8] transition hover:text-[#0f172a]">
+          <Link href="/?welcome" prefetch={false} className="flex items-center gap-1.5 px-3 pt-1 text-[11px] text-[#64748b] transition hover:text-[#0f172a]">
             <Home size={11} />
             Back to landing page
           </Link>
@@ -253,7 +259,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </aside>
 
       {/* ============ MAIN ============ */}
-      <main className="min-h-0 flex-1 overflow-auto pb-20">
+      <main id="main" tabIndex={-1} className="min-h-0 flex-1 overflow-auto pb-20 outline-none">
         {children}
       </main>
 
@@ -297,7 +303,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <AddData open={addOpen} onClose={() => setAddOpen(false)} />
       <Guide />
 
-      <div className="pointer-events-none fixed bottom-16 left-1/2 z-[60] flex -translate-x-1/2 flex-col items-center gap-2 md:bottom-4">
+      <div role="status" aria-live="polite" className="pointer-events-none fixed bottom-20 left-1/2 z-[60] flex -translate-x-1/2 flex-col items-center gap-2">
         {toasts.map((t) => (
           <div key={t.id} className="anim-pop pointer-events-auto flex items-center gap-3 rounded-xl border border-[#E8E6DF] bg-white px-3 py-2 text-[13px] shadow-lg">
             <span>{t.text}</span>
@@ -310,7 +316,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 {t.action.label}
               </Button>
             ) : null}
-            <button type="button" aria-label="Dismiss" onClick={() => dismissToast(t.id)} className="text-[#94a3b8] hover:text-[#0f172a]">
+            <button type="button" aria-label="Dismiss" onClick={() => dismissToast(t.id)} className="text-[#64748b] hover:text-[#0f172a]">
               <X size={13} />
             </button>
           </div>
@@ -333,7 +339,7 @@ export function PageHeader({ title, subtitle, actions }: { title: string; subtit
     <header className="flex h-auto min-h-12 shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-[#E8E6DF] bg-white px-4 py-2.5 sm:px-5">
       <div className="min-w-0 max-sm:basis-full">
         <h1 className="truncate text-[15px] font-semibold tracking-tight text-[#0f172a]">{title}</h1>
-        {subtitle ? <p className="truncate text-[12px] text-[#94a3b8]">{subtitle}</p> : null}
+        {subtitle ? <p className="truncate text-[12px] text-[#64748b]">{subtitle}</p> : null}
       </div>
       {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
     </header>

@@ -168,6 +168,34 @@ export function WelcomeView() {
         .cta-main:hover { background: #114B3A !important; box-shadow: 0 8px 20px rgba(12,45,34,0.3); }
         .cta-main .cta-arrow { transition: transform 0.2s; }
         .cta-main:hover .cta-arrow { transform: translateX(4px); }
+
+        /* Responsive: the landing page is written with inline styles, so the
+           narrow-screen overrides live here and must beat them. */
+        @media (max-width: 900px) {
+          .w-split { grid-template-columns: 1fr !important; gap: 32px !important; }
+          .w-split > * { min-width: 0; }
+          .w-grid4 { grid-template-columns: repeat(2, 1fr) !important; }
+          .w-preview { margin-top: 124px; }
+          .w-mascot { left: auto !important; right: 4px; top: -148px !important; }
+          .w-mascot .anim-owl { width: 112px !important; height: 112px !important; }
+          .w-mockgrid { grid-template-columns: 1fr !important; }
+          .w-mockside { display: none !important; }
+        }
+        @media (max-width: 720px) {
+          .w-wrap { padding-left: 16px !important; padding-right: 16px !important; }
+          .w-header { height: 64px !important; gap: 8px; }
+          .w-logo img { height: 32px !important; }
+          .w-nav { gap: 2px !important; }
+          .w-nav button { padding: 6px 10px !important; font-size: 13px !important; white-space: nowrap; }
+          .w-social { border-left: none !important; padding-left: 0 !important; gap: 6px !important; }
+          .w-social a { width: 32px !important; height: 32px !important; }
+          .w-grid3 { grid-template-columns: repeat(2, 1fr) !important; }
+        }
+        @media (max-width: 520px) {
+          .w-logo { display: none !important; }
+          .w-header { justify-content: space-between; }
+          .w-grid4, .w-grid3 { grid-template-columns: 1fr !important; }
+        }
       `}</style>
 
       <div className="landing-root" style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
@@ -177,14 +205,14 @@ export function WelcomeView() {
           background: "rgba(250,250,245,0.8)", backdropFilter: "blur(12px)",
           position: "sticky", top: 0, zIndex: 40,
         }}>
-          <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 48px", height: 80, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div className="w-wrap w-header" style={{ maxWidth: 1280, margin: "0 auto", padding: "0 48px", height: 80, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             {/* Logo */}
-            <a href="#" style={{ display: "flex", alignItems: "center", gap: 14, textDecoration: "none" }}>
+            <a href="#" className="w-logo" style={{ display: "flex", alignItems: "center", gap: 14, textDecoration: "none" }}>
               <img src="/nest-logo.webp" alt="NesT" style={{ height: 44, objectFit: "contain" }} />
             </a>
 
             {/* Nav tabs */}
-            <nav style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 14, fontWeight: 500 }}>
+            <nav className="w-nav" style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 14, fontWeight: 500 }}>
               {([
                 { id: "home" as const, label: "Home" },
                 { id: "demo" as const, label: "Demo" },
@@ -209,7 +237,7 @@ export function WelcomeView() {
             </nav>
 
             {/* Social */}
-            <div style={{ display: "flex", alignItems: "center", gap: 8, borderLeft: "1px solid #E8E6DF", paddingLeft: 16 }}>
+            <div className="w-social" style={{ display: "flex", alignItems: "center", gap: 8, borderLeft: "1px solid #E8E6DF", paddingLeft: 16 }}>
               <a
                 href="https://www.linkedin.com/in/rishiagrawal2004" target="_blank" rel="noopener noreferrer"
                 aria-label="LinkedIn profile"
@@ -239,11 +267,11 @@ export function WelcomeView() {
           <div>
           {/* ==================== HERO ==================== */}
           <section className="hero-glow" style={{ position: "relative", paddingTop: 40, paddingBottom: 80, overflow: "hidden" }}>
-            <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 48px" }}>
+            <div className="w-wrap" style={{ maxWidth: 1280, margin: "0 auto", padding: "0 48px" }}>
               <div style={{ display: "flex", justifyContent: "center", marginBottom: 32 }}>
                 <img src="/nest-logo.webp" alt="NesT - Network Engagement & Signal Tracker" style={{ maxWidth: 840, width: "100%" }} />
               </div>
-              <div style={{ display: "grid", gridTemplateColumns: "7fr 5fr", gap: 48, alignItems: "center", marginBottom: 64 }}>
+              <div className="w-split" style={{ display: "grid", gridTemplateColumns: "7fr 5fr", gap: 48, alignItems: "center", marginBottom: 64 }}>
                 {/* Left: headline */}
                 <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
                   <p style={{ fontSize: "clamp(18px, 1.6vw, 24px)", color: "#64748b", fontWeight: 300, maxWidth: 560, lineHeight: 1.6 }}>
@@ -285,15 +313,15 @@ export function WelcomeView() {
                         <svg style={{ width: 14, height: 14, stroke: "#16a34a", strokeWidth: 2, fill: "none" }} viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12" /></svg>
                         Zero API Key required
                       </span>
-                      <span style={{ padding: "8px 16px", fontSize: 12, fontWeight: 500, color: "#94a3b8" }}>100% Client-side</span>
+                      <span style={{ padding: "8px 16px", fontSize: 12, fontWeight: 500, color: "#64748b" }}>100% Client-side</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Right: Owl + Product Preview */}
-                <div id="network-preview" style={{ position: "relative" }}>
+                <div id="network-preview" className="w-preview" style={{ position: "relative" }}>
                   {/* Mascot */}
-                  <div style={{ position: "absolute", top: -24, left: -80, zIndex: 30, display: "flex", flexDirection: "column", alignItems: "center", pointerEvents: "none", userSelect: "none" }}>
+                  <div className="w-mascot" style={{ position: "absolute", top: -24, left: -80, zIndex: 30, display: "flex", flexDirection: "column", alignItems: "center", pointerEvents: "none", userSelect: "none" }}>
                     <div className="anim-cloud" style={{ position: "relative", marginBottom: 2, marginLeft: 56 }}>
                       <div style={{
                         position: "relative", padding: "6px 14px",
@@ -337,19 +365,19 @@ export function WelcomeView() {
                         <div style={{ width: 12, height: 12, borderRadius: "50%", background: "rgba(39,201,63,0.8)" }} />
                       </div>
                       <div style={{ position: "relative", maxWidth: 240, width: "100%" }}>
-                        <svg style={{ width: 14, height: 14, color: "#94a3b8", position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)" }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg>
+                        <svg style={{ width: 14, height: 14, color: "#64748b", position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)" }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg>
                         <div style={{
                           width: "100%", paddingLeft: 36, paddingRight: 12, padding: "4px 12px 4px 36px",
                           fontSize: 12, background: "#fff", borderRadius: 6, border: "1px solid #e2e8f0",
-                          color: "#94a3b8",
+                          color: "#64748b",
                         }}>Search people, companies...</div>
                       </div>
                     </div>
 
                     {/* Window content */}
-                    <div style={{ display: "grid", gridTemplateColumns: "4fr 8fr", minHeight: 360 }}>
+                    <div className="w-mockgrid" style={{ display: "grid", gridTemplateColumns: "4fr 8fr", minHeight: 360 }}>
                       {/* Sidebar */}
-                      <div style={{ borderRight: "1px solid #E8E6DF", padding: 12, display: "flex", flexDirection: "column", gap: 4, background: "rgba(244,243,238,0.4)" }}>
+                      <div className="w-mockside" style={{ borderRight: "1px solid #E8E6DF", padding: 12, display: "flex", flexDirection: "column", gap: 4, background: "rgba(244,243,238,0.4)" }}>
                         {[
                           { label: "Home", active: true, d: "m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" },
                           { label: "People", d: "M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" },
@@ -379,7 +407,7 @@ export function WelcomeView() {
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingBottom: 12, marginBottom: 12, borderBottom: "1px solid #E8E6DF" }}>
                           <div>
                             <h4 style={{ fontSize: 12, fontWeight: 600, color: "#1e293b" }}>Your Network</h4>
-                            <p style={{ fontSize: 11, color: "#94a3b8", fontWeight: 500 }}>1,248 people analysed</p>
+                            <p style={{ fontSize: 11, color: "#64748b", fontWeight: 500 }}>1,248 people analysed</p>
                           </div>
                           <div style={{
                             display: "flex", alignItems: "center", gap: 6,
@@ -413,7 +441,7 @@ export function WelcomeView() {
                                 }}>{c.initials}</div>
                                 <div style={{ overflow: "hidden" }}>
                                   <div style={{ fontSize: 12, fontWeight: 600, color: "#0f172a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{c.name}</div>
-                                  <div style={{ fontSize: 11, color: "#94a3b8", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{c.sub}</div>
+                                  <div style={{ fontSize: 11, color: "#64748b", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{c.sub}</div>
                                 </div>
                               </div>
                               <button style={{
@@ -437,7 +465,7 @@ export function WelcomeView() {
                 padding: 10, maxWidth: 896, margin: "0 auto",
                 display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 12, fontSize: 14,
               }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#94a3b8", paddingLeft: 8 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#64748b", paddingLeft: 8 }}>
                   <span style={{
                     width: 28, height: 28, borderRadius: "50%", background: "#f1f5f9",
                     display: "flex", alignItems: "center", justifyContent: "center", color: "#334155",
@@ -458,7 +486,7 @@ export function WelcomeView() {
 
           {/* ==================== CORE FEATURES (OWL TIMELINE) ==================== */}
           <section id="features" style={{ padding: "80px 0", background: "#fff", borderTop: "1px solid #E8E6DF", borderBottom: "1px solid #E8E6DF" }}>
-            <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 48px" }}>
+            <div className="w-wrap" style={{ maxWidth: 1280, margin: "0 auto", padding: "0 48px" }}>
               {/* Section header */}
               <div style={{ textAlign: "center", maxWidth: 768, margin: "0 auto 64px" }}>
                 <h2 className="font-serif" style={{ fontSize: "clamp(28px, 3.5vw, 48px)", fontWeight: 700, color: "#0C2D22", marginBottom: 16, letterSpacing: "-0.02em", lineHeight: 1.15 }}>
@@ -505,7 +533,7 @@ export function WelcomeView() {
 
           {/* ==================== LINKEDIN STEPS + FILE DROP ZONE ==================== */}
           <section id="how-it-works" style={{ padding: "64px 0" }}>
-            <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 48px" }}>
+            <div className="w-wrap" style={{ maxWidth: 1280, margin: "0 auto", padding: "0 48px" }}>
               <WalkthroughSection walkthroughOpen={walkthroughOpen} setWalkthroughOpen={setWalkthroughOpen} />
               {/* ==================== FILE DROP ZONE ==================== */}
               <div style={{ maxWidth: 640, margin: "48px auto 0" }}>
@@ -544,7 +572,7 @@ export function WelcomeView() {
                         </svg>
                       </div>
                       <p style={{ marginTop: 12, fontSize: 16, fontWeight: 600, color: "#0f172a" }}>Drop the whole .zip here</p>
-                      <p style={{ marginTop: 4, fontSize: 13, color: "#94a3b8" }}>Basic data (Connections) comes in ~10 min. The full archive takes 1-2 days but gives richer insights.</p>
+                      <p style={{ marginTop: 4, fontSize: 13, color: "#64748b" }}>Basic data (Connections) comes in ~10 min. The full archive takes 1-2 days but gives richer insights.</p>
                       <button style={{
                         marginTop: 16, padding: "10px 20px", borderRadius: 9999,
                         background: "#0C2D22", color: "#fff", fontSize: 14, fontWeight: 600,
@@ -573,7 +601,7 @@ export function WelcomeView() {
                 ) : null}
 
                 <div style={{ marginTop: 12, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-                  <p style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#94a3b8" }}>
+                  <p style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#64748b" }}>
                     <svg style={{ width: 14, height: 14, stroke: "currentColor", strokeWidth: 2, fill: "none" }} viewBox="0 0 24 24">
                       <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
                       <path d="M7 11V7a5 5 0 0 1 10 0v4" />
@@ -615,7 +643,7 @@ export function WelcomeView() {
 
         {/* ==================== FOOTER ==================== */}
         <footer style={{ marginTop: "auto", borderTop: "1px solid #E8E6DF", background: "#FAF8F5", padding: "48px 0" }}>
-          <div style={{
+          <div className="w-wrap" style={{
             maxWidth: 1280, margin: "0 auto", padding: "0 48px",
             display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 24,
           }}>
@@ -752,7 +780,7 @@ function ExportModal({
           <h2 className="font-serif" style={{ fontSize: "clamp(28px, 3vw, 36px)", fontWeight: 700, color: "#0f172a", letterSpacing: "-0.02em", lineHeight: 1.15, marginBottom: 8 }}>
             Here is what I understand about you.
           </h2>
-          <p style={{ fontSize: 14, color: "#94a3b8", lineHeight: 1.5 }}>Read from your own export. Only what was actually in the files.</p>
+          <p style={{ fontSize: 14, color: "#64748b", lineHeight: 1.5 }}>Read from your own export. Only what was actually in the files.</p>
         </div>
 
         {/* Tabs */}
@@ -782,19 +810,19 @@ function ExportModal({
           <div style={{ borderLeft: "2px solid #6ee7b7", paddingLeft: 16, paddingTop: 4, paddingBottom: 4, marginBottom: 32, display: "flex", flexDirection: "column", gap: 20 }}>
             {settings.profile.background && (
               <div>
-                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", color: "#94a3b8", marginBottom: 4, fontFamily: "monospace" }}>Currently</div>
+                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", color: "#64748b", marginBottom: 4, fontFamily: "monospace" }}>Currently</div>
                 <p style={{ fontSize: 14, color: "#1e293b", lineHeight: 1.5 }}>{settings.profile.background}</p>
               </div>
             )}
             {settings.profile.schools.length > 0 && (
               <div>
-                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", color: "#94a3b8", marginBottom: 4, fontFamily: "monospace" }}>Studied At</div>
+                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", color: "#64748b", marginBottom: 4, fontFamily: "monospace" }}>Studied At</div>
                 <p style={{ fontSize: 14, color: "#1e293b", lineHeight: 1.5 }}>{settings.profile.schools.join(" · ")}</p>
               </div>
             )}
             {topCategories.length > 0 && (
               <div>
-                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", color: "#94a3b8", marginBottom: 6, fontFamily: "monospace" }}>Your Network is Concentrated In</div>
+                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", color: "#64748b", marginBottom: 6, fontFamily: "monospace" }}>Your Network is Concentrated In</div>
                 <p style={{ fontSize: 14, color: "#1e293b", lineHeight: 1.5 }}>
                   {topCategories.map(([cat, count]) => `${cat} (${count})`).join(" · ")}
                 </p>
@@ -835,7 +863,7 @@ function ExportModal({
             <div>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
                 <label style={{ fontSize: 12, fontWeight: 600, color: "#334155" }}>Schools and colleges</label>
-                <span style={{ fontSize: 11, color: "#94a3b8" }}>Connections from these count as alumni.</span>
+                <span style={{ fontSize: 11, color: "#64748b" }}>Connections from these count as alumni.</span>
               </div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 8 }}>
                 {editSchools.map((s, i) => (
@@ -847,7 +875,7 @@ function ExportModal({
                     {s}
                     <button
                       onClick={() => setEditSchools(editSchools.filter((_, j) => j !== i))}
-                      style={{ color: "#94a3b8", cursor: "pointer", border: "none", background: "none", padding: 0, fontFamily: "inherit", fontSize: 14 }}
+                      style={{ color: "#64748b", cursor: "pointer", border: "none", background: "none", padding: 0, fontFamily: "inherit", fontSize: 14 }}
                     >&times;</button>
                   </span>
                 ))}
@@ -945,11 +973,11 @@ function DemoTabContent({ loadSample, updateSettings, router, hasData, destinati
               { label: "Total People", val: "1,248", color: "#0C2D22" },
               { label: "To Contact", val: "47", color: "#2563eb" },
               { label: "Awaiting Reply", val: "12", color: "#d97706" },
-              { label: "Replied", val: "31", color: "#059669" },
+              { label: "Replied", val: "31", color: "#047857" },
             ].map((s) => (
               <div key={s.label} style={{ background: "#fff", borderRadius: 10, border: "1px solid #E8E6DF", padding: "10px 12px", textAlign: "center" }}>
                 <div style={{ fontSize: 20, fontWeight: 700, color: s.color }}>{s.val}</div>
-                <div style={{ fontSize: 10, color: "#94a3b8", fontWeight: 500, marginTop: 2 }}>{s.label}</div>
+                <div style={{ fontSize: 10, color: "#64748b", fontWeight: 500, marginTop: 2 }}>{s.label}</div>
               </div>
             ))}
           </div>
@@ -989,7 +1017,7 @@ function DemoTabContent({ loadSample, updateSettings, router, hasData, destinati
           </div>
           <div style={{ marginTop: 4, padding: "8px 12px", borderRadius: 8, background: "#ecfdf5", border: "1px solid #a7f3d0", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <span style={{ fontSize: 11, color: "#065f46", fontWeight: 500 }}>2 roles selected -- 186 matches</span>
-            <span style={{ fontSize: 11, fontWeight: 600, color: "#059669" }}>Show People &rarr;</span>
+            <span style={{ fontSize: 11, fontWeight: 600, color: "#047857" }}>Show People &rarr;</span>
           </div>
         </div>
       ),
@@ -1012,7 +1040,7 @@ function DemoTabContent({ loadSample, updateSettings, router, hasData, destinati
                 <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#f3e8ff", color: "#6b21a8", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 11 }}>{p.initials}</div>
                 <div>
                   <div style={{ fontSize: 12, fontWeight: 600, color: "#0f172a" }}>{p.name}</div>
-                  <div style={{ fontSize: 10, color: "#94a3b8" }}>{p.role}</div>
+                  <div style={{ fontSize: 10, color: "#64748b" }}>{p.role}</div>
                 </div>
               </div>
               <span style={{ fontSize: 10, fontWeight: 600, color: p.statusColor, background: `${p.statusColor}15`, padding: "2px 8px", borderRadius: 6 }}>{p.status}</span>
@@ -1049,7 +1077,7 @@ function DemoTabContent({ loadSample, updateSettings, router, hasData, destinati
 
   return (
     <section className="hero-glow" style={{ position: "relative", paddingTop: 40, paddingBottom: 80, overflow: "hidden" }}>
-      <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 48px" }}>
+      <div className="w-wrap" style={{ maxWidth: 1280, margin: "0 auto", padding: "0 48px" }}>
         {/* Header */}
         <div style={{ textAlign: "center", maxWidth: 640, margin: "0 auto 48px" }}>
           <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 14px", borderRadius: 9999, background: "#ecfdf5", border: "1px solid #a7f3d0", fontSize: 12, fontWeight: 600, color: "#065f46", marginBottom: 16 }}>
@@ -1065,7 +1093,7 @@ function DemoTabContent({ loadSample, updateSettings, router, hasData, destinati
         </div>
 
         {/* Screen selector + preview */}
-        <div style={{ display: "grid", gridTemplateColumns: "280px 1fr", gap: 24, maxWidth: 960, margin: "0 auto" }}>
+        <div className="w-split" style={{ display: "grid", gridTemplateColumns: "280px 1fr", gap: 24, maxWidth: 960, margin: "0 auto" }}>
           {/* Left: screen list */}
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             {screens.map((s, i) => (
@@ -1140,7 +1168,7 @@ function DemoTabContent({ loadSample, updateSettings, router, hasData, destinati
                 <div style={{ width: 10, height: 10, borderRadius: "50%", background: "rgba(255,189,46,0.8)" }} />
                 <div style={{ width: 10, height: 10, borderRadius: "50%", background: "rgba(39,201,63,0.8)" }} />
               </div>
-              <span style={{ fontSize: 11, color: "#94a3b8", fontWeight: 500 }}>{screens[activeScreen].title}</span>
+              <span style={{ fontSize: 11, color: "#64748b", fontWeight: 500 }}>{screens[activeScreen].title}</span>
               <div style={{ width: 48 }} />
             </div>
 
@@ -1170,8 +1198,8 @@ function PrivacyTabContent({ walkthroughOpen, setWalkthroughOpen }: { walkthroug
     <>
       {/* Hero */}
       <section className="hero-glow" style={{ position: "relative", paddingTop: 40, paddingBottom: 64, overflow: "hidden" }}>
-        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 48px" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "7fr 5fr", gap: 48, alignItems: "center" }}>
+        <div className="w-wrap" style={{ maxWidth: 1280, margin: "0 auto", padding: "0 48px" }}>
+          <div className="w-split" style={{ display: "grid", gridTemplateColumns: "7fr 5fr", gap: 48, alignItems: "center" }}>
             <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
               <h1 className="font-serif" style={{
                 fontSize: "clamp(48px, 5vw, 72px)", fontWeight: 400,
@@ -1208,14 +1236,14 @@ function PrivacyTabContent({ walkthroughOpen, setWalkthroughOpen }: { walkthroug
 
       {/* Privacy Info Cards */}
       <section style={{ padding: "48px 0", background: "#fff", borderTop: "1px solid #E8E6DF", borderBottom: "1px solid #E8E6DF" }}>
-        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 48px" }}>
+        <div className="w-wrap" style={{ maxWidth: 1280, margin: "0 auto", padding: "0 48px" }}>
           <div style={{ textAlign: "center", maxWidth: 640, margin: "0 auto 48px" }}>
             <h2 className="font-serif" style={{ fontSize: "clamp(28px, 3.5vw, 40px)", color: "#0C2D22", fontWeight: 700, letterSpacing: "-0.02em" }}>
               How your privacy is protected
             </h2>
             <p style={{ color: "#64748b", fontSize: 14, marginTop: 8 }}>Zero technical jargon. Just pure, transparent local software.</p>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 24 }}>
+          <div className="w-grid4" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 24 }}>
             {/* Card 1 */}
             <div className="info-banner" style={{ background: "#FAF8F5", borderRadius: 16, border: "1px solid #E8E6DF", padding: 24, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
               <div>
@@ -1353,7 +1381,7 @@ function WalkthroughSection({ walkthroughOpen: _, setWalkthroughOpen: __ }: { wa
       <h3 style={{ fontSize: 18, fontWeight: 700, color: "#0C2D22", textAlign: "center", marginBottom: 24 }}>
         Steps to Download Your LinkedIn Data
       </h3>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
+      <div className="w-grid3" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
         {steps.map((s, i) => {
           const isLast = i === 5;
           return (
@@ -1404,7 +1432,7 @@ function WalkthroughSection({ walkthroughOpen: _, setWalkthroughOpen: __ }: { wa
         })}
       </div>
       <div style={{ marginTop: 14, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, fontSize: 11, color: "#065f46", fontWeight: 500 }}>
-        <svg style={{ width: 14, height: 14, color: "#059669", fill: "none", stroke: "currentColor", strokeWidth: 2.5 }} viewBox="0 0 24 24"><path d="m4.5 12.75 6 6 9-13.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+        <svg style={{ width: 14, height: 14, color: "#047857", fill: "none", stroke: "currentColor", strokeWidth: 2.5 }} viewBox="0 0 24 24"><path d="m4.5 12.75 6 6 9-13.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
         Official LinkedIn feature. No bots or scrapers involved.
       </div>
     </div>
