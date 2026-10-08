@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react";
 import { BookmarkPlus, Download, ExternalLink, LayoutGrid, List, ListPlus, Plus, Rows3, Sparkles, UserPlus, X } from "lucide-react";
 import { applyFilters, broaden, PRIORITY_ORDER } from "@/lib/workspace/filters";
-import { groupCompanies } from "@/lib/workspace/insights";
 import type { Person } from "@/lib/workspace/types";
 import { PageBody, PageHeader } from "@/components/shell/AppShell";
 import { FilterBar } from "@/components/people/FilterBar";
@@ -40,14 +39,13 @@ function sortPeople(people: Person[], key: SortKey): Person[] {
 }
 
 export function PeopleView() {
-  const { people, settings, setStatus, updateRecord, saveSegment, createList, addToList } = useWorkspace();
+  const { people, companies, settings, setStatus, updateRecord, saveSegment, createList, addToList } = useWorkspace();
   const { peopleFilters, setPeopleFilters, openPerson, personId, openExport, toast, openWizard } = useUI();
   const [mode, setMode] = useState<ViewMode>("table");
   const [sort, setSort] = useState<SortKey>("relevance");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [creatingList, setCreatingList] = useState(false);
 
-  const companies = useMemo(() => groupCompanies(people, settings).map((c) => ({ key: c.key, name: c.name, count: c.count })), [people, settings]);
   const filtered = useMemo(() => applyFilters(people, peopleFilters, settings), [people, peopleFilters, settings]);
   const sorted = useMemo(() => sortPeople(filtered, sort), [filtered, sort]);
   const wider = useMemo(() => (filtered.length ? null : broaden(peopleFilters, settings)), [filtered.length, peopleFilters, settings]);

@@ -12,6 +12,8 @@ export interface PriorityResult {
 
 type Scorable = Pick<Person, "category" | "roleFamily" | "company" | "isTarget" | "isAlumni" | "email" | "url" | "systemTags" | "confidence" | "history">;
 
+export const levelFor = (score: number): Priority => (score >= 55 ? "high" : score >= 30 ? "medium" : "low");
+
 export function scorePriority(p: Scorable, settings: Settings): PriorityResult {
   const { goals } = settings;
   const w = settings.weights;
@@ -64,8 +66,7 @@ export function scorePriority(p: Scorable, settings: Settings): PriorityResult {
   }
 
   score = Math.max(0, Math.min(100, score));
-  const level: Priority = score >= 55 ? "high" : score >= 30 ? "medium" : "low";
-  return { score, level, reasons };
+  return { score, level: levelFor(score), reasons };
 }
 
 export function hasGoals(settings: Settings): boolean {

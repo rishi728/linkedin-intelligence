@@ -4,14 +4,13 @@ import { useMemo, useState } from "react";
 import { Download } from "lucide-react";
 import { buildTrackerWorkbook, DEFAULT_EXPORT_COLUMNS, downloadWorkbook, EXPORT_COLUMNS } from "@/lib/exporter";
 import { applyFilters, describeFilters } from "@/lib/workspace/filters";
-import { groupCompanies } from "@/lib/workspace/insights";
 import { todayISO } from "@/lib/workspace/dates";
 import { FilterBar } from "@/components/people/FilterBar";
 import { Button, Checkbox, Dialog, Field, Input, cx } from "@/components/ui";
 import { useUI, useWorkspace } from "@/components/workspace/store";
 
 export function ExportDialog() {
-  const { people, settings } = useWorkspace();
+  const { people, companies, settings } = useWorkspace();
   const { exportRequest, openExport, toast } = useUI();
   const [columns, setColumns] = useState<string[]>(DEFAULT_EXPORT_COLUMNS);
   const [includeSummary, setIncludeSummary] = useState(true);
@@ -26,7 +25,6 @@ export function ExportDialog() {
     setFilters(exportRequest?.filters ?? {});
   }
 
-  const companies = useMemo(() => groupCompanies(people, settings).map((c) => ({ key: c.key, name: c.name, count: c.count })), [people, settings]);
   const rows = useMemo(() => {
     if (!exportRequest) return [];
     if (exportRequest.ids?.length) {

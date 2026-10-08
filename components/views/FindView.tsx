@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { Building2, Check, Compass, Filter, Search, Target, X } from "lucide-react";
 import { SECTORS } from "@/lib/knowledge/sectors";
 import { applyFilters, buildIntents, parseQuery } from "@/lib/workspace/filters";
-import { groupCompanies } from "@/lib/workspace/insights";
 import type { Filters } from "@/lib/workspace/types";
 import { PageBody } from "@/components/shell/AppShell";
 import { Button, Card, CardTitle, Input, Pill, cx } from "@/components/ui";
@@ -96,7 +95,7 @@ function SectorTile({ label, count, maxCount, selected, onToggle }: {
 }
 
 export function FindView() {
-  const { people, settings } = useWorkspace();
+  const { people, companies, settings } = useWorkspace();
   const { setPeopleFilters } = useUI();
   const router = useRouter();
   const [mode, setMode] = useState<"guided" | "natural">("guided");
@@ -105,7 +104,6 @@ export function FindView() {
   const [selectedSectors, setSelectedSectors] = useState<Set<string>>(new Set());
 
 
-  const companies = useMemo(() => groupCompanies(people, settings).map((c) => ({ key: c.key, name: c.name, count: c.count })), [people, settings]);
 
   const go = useCallback((filters: Filters) => {
     setPeopleFilters(filters);

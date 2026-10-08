@@ -49,7 +49,7 @@ const isActive = (pathname: string, href: string) => {
 };
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const { ready, dataset, people, settings, savedAt } = useWorkspace();
+  const { ready, dataset, people, building, settings, savedAt } = useWorkspace();
   const { setPeopleFilters, toasts, dismissToast } = useUI();
   const pathname = usePathname();
   const router = useRouter();
@@ -66,10 +66,10 @@ export function AppShell({ children }: { children: ReactNode }) {
     if (sidebarOpen) setSidebarOpen(false);
   }
 
-  if (!ready || !dataset) {
+  if (!ready || !dataset || (building && people.length === 0)) {
     return (
       <div className="flex h-full items-center justify-center">
-        <Spinner label="Opening your workspace…" />
+        <Spinner label={ready && dataset ? "Preparing your network…" : "Opening your workspace…"} />
       </div>
     );
   }
@@ -110,8 +110,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           <Logo size={56} />
         </Link>
         <span className="hidden items-center gap-1.5 rounded-full bg-[#ecfdf5] px-2.5 py-1 text-[11px] font-medium text-[#065f46] sm:flex">
-          <span className="size-1.5 rounded-full bg-[#10B981]" />
-          {people.length.toLocaleString()} conn. synced
+          <span className={cx("size-1.5 rounded-full bg-[#10B981]", building && "animate-pulse")} />
+          {building ? "Updating…" : `${people.length.toLocaleString()} conn. synced`}
         </span>
         <div className="mx-auto hidden max-w-xs flex-1 md:block">
           <button

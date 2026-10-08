@@ -10,7 +10,7 @@ import { classifySector, type SectorId } from "../knowledge/sectors";
 import { TAG_MAP } from "../taxonomy";
 import { tokenize } from "../text";
 import { addDays, todayISO } from "./dates";
-import { scorePriority } from "./priority";
+import { levelFor, scorePriority } from "./priority";
 import type { ArchiveData, Person, PersonRecord, Settings } from "./types";
 
 export type AutoCache = Map<string, PersonClassification>;
@@ -40,6 +40,49 @@ export type CorpusCache = ReturnType<typeof classifyCorpus>["byPair"];
 
 export function buildCorpus(rows: Connection[]): CorpusCache {
   return classifyCorpus(rows.map((r) => ({ position: r.position, company: r.company }))).byPair;
+}
+
+type RecordInputs = Pick<Person, "name" | "company" | "position" | "roleFamily" | "systemTags" | "pastCompanies">;
+
+/** Everything on a Person that comes from the user's own record rather than from the imported row. */
+function recDerived(core: RecordInputs, rec: PersonRecord, autoLevel: Person["priority"], settings: Settings, today: string) {
+  const status = rec.status ?? "not_contacted";
+  const statusDef = settings.statuses.find((s) => s.id === status);
+  const tags = [...core.systemTags.map((t) => TAG_MAP[t].label), ...(rec.userTags ?? [])];
+  const personalization = { why: "", know: "", common: "", ask: "", personal: "", ...rec.personalization };
+  const location = rec.location ?? "";
+  const notes = rec.notes ?? "";
+  return {
+    tags,
+    location,
+    status,
+    priority: rec.priority ?? autoLevel,
+    priorityManual: !!rec.priority,
+    lastContactedAt: rec.lastContactedAt ?? "",
+    followUpAt: statusDef?.kind === "closed" ? "" : rec.followUpAt ?? "",
+    channel: rec.channel ?? "",
+    response: rec.response ?? "",
+    nextAction: rec.nextAction || suggestNextAction(status, rec.followUpAt, today),
+    opportunityType: rec.opportunityType ?? "",
+    notes,
+    personalization,
+    draft: rec.draft ?? "",
+    messages: rec.messages ?? [],
+    activity: rec.activity ?? [],
+    sequenceStep: rec.sequenceStep ?? 0,
+    haystack: [
+      core.name, core.company, core.position, core.roleFamily, location, notes, ...tags, ...core.pastCompanies,
+      personalization.why, personalization.know, personalization.common,
+    ].join("  ").toLowerCase(),
+  };
+}
+
+/**
+ * The same Person with a changed record applied. Classification is not recomputed here
+ * (that needs the whole corpus), so a classification edit still triggers a full rebuild.
+ */
+export function patchPerson(prev: Person, rec: PersonRecord, settings: Settings, today = todayISO()): Person {
+  return { ...prev, ...recDerived(prev, rec, levelFor(prev.priorityScore), settings, today) };
 }
 
 export function buildPeople(
@@ -89,10 +132,6 @@ export function buildPeople(
       email: r.email, url: r.url, systemTags: c.tags, confidence: known.confidence, history,
     };
     const pr = scorePriority(base, settings);
-    const status = rec.status ?? "not_contacted";
-    const statusDef = settings.statuses.find((s) => s.id === status);
-    const tags = [...c.tags.map((t) => TAG_MAP[t].label), ...(rec.userTags ?? [])];
-    const personalization = { why: "", know: "", common: "", ask: "", personal: "", ...rec.personalization };
 
     const person: Person = {
       id: r.id,
@@ -108,27 +147,10 @@ export function buildPeople(
       classSource: known.source,
       classBasis: r.basis,
       systemTags: c.tags,
-      tags,
-      location: rec.location ?? "",
-      status,
-      priority: rec.priority ?? pr.level,
       priorityScore: pr.score,
       priorityReasons: pr.reasons,
-      priorityManual: !!rec.priority,
-      lastContactedAt: rec.lastContactedAt ?? "",
-      followUpAt: statusDef?.kind === "closed" ? "" : rec.followUpAt ?? "",
-      channel: rec.channel ?? "",
-      response: rec.response ?? "",
-      nextAction: rec.nextAction || suggestNextAction(status, rec.followUpAt, today),
-      opportunityType: rec.opportunityType ?? "",
-      notes: rec.notes ?? "",
-      personalization,
-      draft: rec.draft ?? "",
-      messages: rec.messages ?? [],
-      activity: rec.activity ?? [],
       pastCompanies: c.pastCompanies,
       history,
-      sequenceStep: rec.sequenceStep ?? 0,
       isTarget,
       isCampus: c.campusOrg,
       campusActivity: c.campusActivity,
@@ -146,12 +168,8 @@ export function buildPeople(
       genericInference: known.genericInference,
       sector: sectorCache.has(r.company) ? sectorCache.get(r.company)! : (() => { const s = classifySector(r.company).sector; sectorCache.set(r.company, s); return s; })(),
       needsReview: known.needsReview,
-      haystack: "",
+      ...recDerived({ name: r.name, company: r.company, position: r.position, roleFamily: known.roleFamily, systemTags: c.tags, pastCompanies: c.pastCompanies }, rec, pr.level, settings, today),
     };
-    person.haystack = [
-      person.name, person.company, person.position, person.roleFamily, person.location, person.notes, ...tags, ...c.pastCompanies,
-      personalization.why, personalization.know, personalization.common,
-    ].join("  ").toLowerCase();
     return person;
   });
 }

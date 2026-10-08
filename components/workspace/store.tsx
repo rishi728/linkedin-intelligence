@@ -5,7 +5,9 @@ import { parseConnectionsCsv, type Connection } from "@/lib/analyzer";
 import { describeArchive, parseArchive, type ArchiveResult } from "@/lib/archive";
 import { titleKey, type CustomRule, type RoleHierarchy } from "@/lib/classifier/corrections";
 import { generateSampleCsv } from "@/lib/sample";
-import { archiveSeedPatches, autoClassifyAll, buildCorpus, buildPeople, nextCadenceDate, statusChangePatch, type AutoCache } from "@/lib/workspace/build";
+import { archiveSeedPatches, nextCadenceDate, patchPerson, statusChangePatch } from "@/lib/workspace/build";
+import { buildEverything } from "@/lib/workspace/engineClient";
+import type { CompanyOption } from "@/lib/workspace/engine";
 import { todayISO } from "@/lib/workspace/dates";
 import { dbDelete, dbGet, dbSet, requestPersistence } from "@/lib/workspace/db";
 import { writeBackup } from "@/lib/workspace/autobackup";
@@ -18,6 +20,10 @@ interface DataContext {
   ready: boolean;
   dataset: Dataset | null;
   people: Person[];
+  /** True while everyone is being (re)built in the background. */
+  building: boolean;
+  /** Every company with its connection count, ready for pickers. Unchanged by edits. */
+  companies: CompanyOption[];
   byId: Map<string, Person>;
   settings: Settings;
   records: Records;
@@ -88,6 +94,19 @@ interface UIContext {
   toast: (text: string, action?: Toast["action"]) => void;
   dismissToast: (id: number) => void;
 }
+
+interface Built {
+  people: Person[];
+  rows: Connection[];
+  companies: CompanyOption[];
+  /** The records the people were built from; later edits are patched on top. */
+  basedOn: Records;
+  index: Map<string, number>;
+}
+
+const NO_ROWS: Connection[] = [];
+const NO_PEOPLE: Person[] = [];
+const NO_COMPANIES: CompanyOption[] = [];
 
 const Data = createContext<DataContext | null>(null);
 const UI = createContext<UIContext | null>(null);
@@ -253,23 +272,13 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   }, [schedule]);
 
   // ---- derived ------------------------------------------------------------------
-  const rows: Connection[] = useMemo(() => {
-    if (!dataset) return [];
-    // Every export the user has added, merged. The same person in two files is kept
-    // once, taking the newest row, so re-importing after a fresh download just updates.
-    const merged = new Map<string, Connection>();
-    for (const file of datasetFiles(dataset)) {
-      try {
-        for (const r of parseConnectionsCsv(file.csv)) merged.set(r.id, r);
-      } catch {
-        // A file that no longer parses should not take the rest of the workspace down.
-      }
-    }
-    return [...merged.values()];
-  }, [dataset]);
-  const cache: AutoCache = useMemo(() => autoClassifyAll(rows), [rows]);
-  const corpus = useMemo(() => buildCorpus(rows), [rows]);
-  // Only the settings fields buildPeople reads, so editing lists, templates or focus does not rebuild everyone.
+  // Building everyone (parse, classify, score) is the heavy part, so it runs in a worker.
+  // Ordinary edits then patch only the people they touch instead of rebuilding them all.
+  const recordsRef = useRef(records);
+  useEffect(() => {
+    recordsRef.current = records;
+  });
+  // Only the settings fields the build reads, so editing lists, templates or focus does not rebuild everyone.
   const buildSettings = useMemo(() => ({
     rules: settings.rules,
     targetCompanies: settings.targetCompanies,
@@ -278,7 +287,71 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     weights: settings.weights,
     goals: settings.goals,
   }) as unknown as Settings, [settings.rules, settings.targetCompanies, settings.profile.schools, settings.statuses, settings.weights, settings.goals]);
-  const people = useMemo(() => buildPeople(rows, cache, records, buildSettings, archive, corpus), [rows, cache, records, buildSettings, archive, corpus]);
+
+  const [built, setBuilt] = useState<Built | null>(null);
+  const [inFlight, setInFlight] = useState(false);
+  /** Bumped by the few actions that need the whole corpus again (manual classification, restore, import). */
+  const [rebuildToken, setRebuildToken] = useState(0);
+  const latest = useRef(0);
+
+  // Drop the old people the moment the dataset goes away (reset), so a new import never shows them.
+  const [seenDataset, setSeenDataset] = useState(dataset);
+  if (seenDataset !== dataset) {
+    setSeenDataset(dataset);
+    if (!dataset) setBuilt(null);
+  }
+
+  useEffect(() => {
+    if (!ready || !dataset) {
+      latest.current++;
+      return;
+    }
+    const mine = ++latest.current;
+    const files = datasetFiles(dataset);
+    const dataKey = files.map((f) => `${f.importedAt}:${f.csv.length}`).join("|");
+    const basedOn = recordsRef.current;
+    // Settle quick successive changes (a slider, several edits) into one build.
+    const timer = setTimeout(() => {
+      setInFlight(true);
+      buildEverything({ dataKey, csvFiles: files.map((f) => f.csv), records: basedOn, settings: buildSettings, archive })
+        .then((res) => {
+          if (mine !== latest.current) return;
+          setBuilt((prev) => ({
+            people: res.people,
+            rows: res.rows ?? prev?.rows ?? NO_ROWS,
+            companies: res.companies,
+            basedOn,
+            index: new Map(res.people.map((p, i) => [p.id, i])),
+          }));
+          setInFlight(false);
+        })
+        .catch(() => {
+          if (mine === latest.current) setInFlight(false);
+        });
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [ready, dataset, buildSettings, archive, rebuildToken]);
+
+  /** True while everyone is (re)built: the first time there is nothing to show, later it is an update. */
+  const building = inFlight || (ready && !!dataset && !built);
+
+  const rows: Connection[] = built?.rows ?? NO_ROWS;
+  const companies = built?.companies ?? NO_COMPANIES;
+  const people = useMemo(() => {
+    if (!built) return NO_PEOPLE;
+    const { people: base, basedOn, index } = built;
+    const changed: string[] = [];
+    for (const id in records) if (records[id] !== basedOn[id]) changed.push(id);
+    for (const id in basedOn) if (!(id in records)) changed.push(id);
+    if (!changed.length) return base;
+    const out = base.slice();
+    const today = todayISO();
+    for (const id of changed) {
+      const i = index.get(id);
+      if (i !== undefined) out[i] = patchPerson(base[i], records[id] ?? {}, buildSettings, today);
+    }
+    return out;
+  }, [built, records, buildSettings]);
   const byId = useMemo(() => new Map(people.map((p) => [p.id, p])), [people]);
 
   // ---- actions --------------------------------------------------------------------
@@ -360,6 +433,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     const snap = snapshots.find((s) => s.at === at);
     if (!snap) return;
     commitRecords(() => ({ ...snap.records }));
+    setRebuildToken((t) => t + 1);
   }, [snapshots, commitRecords]);
 
   const updateRecord = useCallback<DataContext["updateRecord"]>((id, patch, activity) => {
@@ -406,11 +480,13 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     }
     // The person always gets a manual override; rules then cover everyone else with the same title.
     updateRecord(id, (rec) => ({ classification: { ...rec.classification, ...patch } }), { kind: "classification", text: `Classified as ${describe}${learn ? " (saved as a rule)" : ""}` });
+    setRebuildToken((t) => t + 1);
     return affected;
   }, [byId, people, updateRecord, updateSettings]);
 
   const resetClassification = useCallback((id: string) => {
     updateRecord(id, { classification: undefined }, { kind: "classification", text: "Reset to automatic classification" });
+    setRebuildToken((t) => t + 1);
   }, [updateRecord]);
 
   const deleteRule = useCallback((ruleId: string) => updateSettings((s) => ({ ...s, rules: s.rules.filter((r) => r.id !== ruleId) })), [updateSettings]);
@@ -490,7 +566,10 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     }
     if (data.app !== "netlens") throw new Error("Not a NesT backup file.");
     if (data.settings) updateSettings(() => mergeSettings(data.settings));
-    if (data.records) commitRecords((prev) => ({ ...prev, ...data.records }));
+    if (data.records) {
+      commitRecords((prev) => ({ ...prev, ...data.records }));
+      setRebuildToken((t) => t + 1);
+    }
     if (data.archive) {
       setArchive(data.archive);
       void dbSet("archive", data.archive);
@@ -521,11 +600,11 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const data = useMemo<DataContext>(() => ({
-    ready, dataset, people, byId, settings, records, archive, savedAt, snapshots,
+    ready, dataset, people, building, companies, byId, settings, records, archive, savedAt, snapshots,
     importCsv, importArchive, loadSample, updateRecord, setStatus, setClassification, resetClassification, updateSettings,
     deleteRule, toggleTarget, saveSegment, deleteSegment, createList, updateList, deleteList, addToList, removeFromList, exportBackup, importBackup, resetWorkspace, removeDatasetFile,
     completeFollowUp, restoreSnapshot,
-  }), [ready, dataset, people, byId, settings, records, archive, savedAt, snapshots, importCsv, importArchive, loadSample,
+  }), [ready, dataset, people, building, companies, byId, settings, records, archive, savedAt, snapshots, importCsv, importArchive, loadSample,
     updateRecord, setStatus, setClassification, resetClassification, updateSettings, deleteRule, toggleTarget, saveSegment,
     deleteSegment, createList, updateList, deleteList, addToList, removeFromList,
     exportBackup, importBackup, resetWorkspace, removeDatasetFile, completeFollowUp, restoreSnapshot]);

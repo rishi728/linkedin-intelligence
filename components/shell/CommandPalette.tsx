@@ -6,7 +6,6 @@ import {
   ArrowRight, BarChart3, Bell, Building2, Compass, Download, Home, KanbanSquare, ListChecks, Search,
   Send, Settings as SettingsIcon, Sparkles, Stethoscope, Users,
 } from "lucide-react";
-import { groupCompanies } from "@/lib/workspace/insights";
 import type { Filters } from "@/lib/workspace/types";
 import { Avatar, cx } from "@/components/ui";
 import { useUI, useWorkspace } from "@/components/workspace/store";
@@ -21,7 +20,7 @@ interface Command {
 
 /** ⌘K / Ctrl-K: jump anywhere, find anyone, start anything. */
 export function CommandPalette() {
-  const { people, settings, dataset } = useWorkspace();
+  const { people, companies, settings, dataset } = useWorkspace();
   const { openPerson, setPeopleFilters, openWizard, openExport } = useUI();
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -57,8 +56,6 @@ export function CommandPalette() {
     router.push(path);
     setOpen(false);
   };
-
-  const companies = useMemo(() => (open ? groupCompanies(people, settings) : []), [open, people, settings]);
 
   const base: Command[] = useMemo(() => [
     { id: "home", label: "Home", icon: Home, run: () => go("/home") },
