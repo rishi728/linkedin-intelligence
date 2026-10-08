@@ -172,7 +172,7 @@ export function PrivacyView() {
                   letterSpacing: "-0.01em", color: "#0F2D24", lineHeight: 1.08,
                 }}>
                   Privacy so simple,<br />
-                  <span style={{ fontStyle: "italic", color: "#1A4336" }}>there's nothing</span> to hide.
+                  <span style={{ fontStyle: "italic", color: "#1A4336" }}>there&apos;s nothing</span> to hide.
                 </h1>
 
                 <p style={{ fontSize: "clamp(16px, 1.4vw, 20px)", color: "#57534e", fontWeight: 400, lineHeight: 1.6, maxWidth: 560 }}>

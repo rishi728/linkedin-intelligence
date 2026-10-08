@@ -5,7 +5,7 @@ import { ArrowRight } from "lucide-react";
 import { applyFilters } from "@/lib/workspace/filters";
 import { focusFilters, focusIsUseful } from "@/lib/workspace/focus";
 import { followUpBuckets } from "@/lib/workspace/insights";
-import { todayISO } from "@/lib/workspace/dates";
+import { addDays, toISODate, todayISO } from "@/lib/workspace/dates";
 import type { Filters } from "@/lib/workspace/types";
 import { Button } from "@/components/ui";
 import { ArchiveImport } from "@/components/workspace/ArchiveImport";
@@ -386,9 +386,9 @@ export function HomeView() {
   );
   const replied = useMemo(() => people.filter((p) => p.history?.theyReplied).length, [people]);
   const addedRecently = useMemo(() => {
-    const cutoff = Date.now() - 30 * 86_400_000;
-    return people.filter((p) => p.connectedOn && p.connectedOn.getTime() >= cutoff).length;
-  }, [people]);
+    const cutoff = addDays(today, -30);
+    return people.filter((p) => p.connectedOn && toISODate(p.connectedOn) >= cutoff).length;
+  }, [people, today]);
 
   const due = useMemo(() => {
     const b = followUpBuckets(people, settings, today);

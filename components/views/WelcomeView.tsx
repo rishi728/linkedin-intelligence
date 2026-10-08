@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CsvFormatError } from "@/lib/analyzer";
 import { isZip, readZipCsvs, splitExport, ZipError } from "@/lib/zip";
+import type { Settings } from "@/lib/workspace/types";
 import { useWorkspace } from "@/components/workspace/store";
 
 /* ------------------------------------------------------------------ */
@@ -611,7 +612,7 @@ export function WelcomeView() {
                   <button
                     onClick={() => {
                       loadSample();
-                      updateSettings((s: any) => ({ ...s, focus: { ...s.focus, confirmedAt: new Date().toISOString() } }));
+                      updateSettings((s) => ({ ...s, focus: { ...s.focus, confirmedAt: new Date().toISOString() } }));
                       router.push("/home");
                     }}
                     style={{
@@ -634,7 +635,7 @@ export function WelcomeView() {
           </div>
           )}
           {activeTab === "demo" && (
-          <DemoTabContent loadSample={loadSample} updateSettings={updateSettings} router={router} hasData={!!dataset} destination={destination} />
+          <DemoTabContent loadSample={loadSample} updateSettings={updateSettings} router={router} hasData={!!dataset} setDestination={(p) => { destination.current = p; }} />
           )}
           {activeTab === "privacy" && (
           <PrivacyTabContent walkthroughOpen={walkthroughOpen} setWalkthroughOpen={setWalkthroughOpen} />
@@ -696,7 +697,7 @@ function ExportModal({
   people: { category?: string }[];
   modalTab: "summary" | "edit";
   setModalTab: (t: "summary" | "edit") => void;
-  updateSettings: (fn: (s: any) => any) => void;
+  updateSettings: (fn: (s: Settings) => Settings) => void;
   onConfirm: () => void;
 }) {
   const [editName, setEditName] = useState(settings.profile.name);
@@ -713,7 +714,7 @@ function ExportModal({
     .slice(0, 4);
 
   const saveEdits = () => {
-    updateSettings((s: any) => ({
+    updateSettings((s) => ({
       ...s,
       profile: { ...s.profile, name: editName, background: editBg, schools: editSchools },
     }));
@@ -721,7 +722,7 @@ function ExportModal({
 
   const confirmAndFinish = () => {
     if (modalTab === "edit") saveEdits();
-    updateSettings((s: any) => ({ ...s, focus: { ...s.focus, confirmedAt: new Date().toISOString() } }));
+    updateSettings((s) => ({ ...s, focus: { ...s.focus, confirmedAt: new Date().toISOString() } }));
     onConfirm();
   };
 
@@ -949,13 +950,13 @@ function ExportModal({
 /* ------------------------------------------------------------------ */
 /*  Demo tab content                                                   */
 /* ------------------------------------------------------------------ */
-function DemoTabContent({ loadSample, updateSettings, router, hasData, destination }: { loadSample: () => void; updateSettings: (fn: (s: any) => any) => void; router: any; hasData: boolean; destination: { current: string } }) {
+function DemoTabContent({ loadSample, updateSettings, router, hasData, setDestination }: { loadSample: () => void; updateSettings: (fn: (s: Settings) => Settings) => void; router: ReturnType<typeof useRouter>; hasData: boolean; setDestination: (path: string) => void }) {
   const [activeScreen, setActiveScreen] = useState(0);
   const tryIt = (path: string) => {
     if (!hasData) {
-      destination.current = path;
+      setDestination(path);
       loadSample();
-      updateSettings((s: any) => ({ ...s, focus: { ...s.focus, confirmedAt: new Date().toISOString() } }));
+      updateSettings((s) => ({ ...s, focus: { ...s.focus, confirmedAt: new Date().toISOString() } }));
     }
     router.push(path);
   };
@@ -1130,7 +1131,7 @@ function DemoTabContent({ loadSample, updateSettings, router, hasData, destinati
             <button
               onClick={() => {
                 loadSample();
-                updateSettings((s: any) => ({ ...s, focus: { ...s.focus, confirmedAt: new Date().toISOString() } }));
+                updateSettings((s) => ({ ...s, focus: { ...s.focus, confirmedAt: new Date().toISOString() } }));
                 router.push("/home");
               }}
               className="cta-main"
@@ -1206,7 +1207,7 @@ function PrivacyTabContent({ walkthroughOpen, setWalkthroughOpen }: { walkthroug
                 letterSpacing: "-0.01em", color: "#0C2D22", lineHeight: 1.08,
               }}>
                 Privacy so simple,<br />
-                <span style={{ fontStyle: "italic", color: "#114B3A" }}>there's nothing</span> to hide.
+                <span style={{ fontStyle: "italic", color: "#114B3A" }}>there&apos;s nothing</span> to hide.
               </h1>
               <p style={{ fontSize: "clamp(16px, 1.4vw, 20px)", color: "#64748b", fontWeight: 300, lineHeight: 1.6, maxWidth: 560 }}>
                 No remote cloud databases. No password requests. No automated web-bots scraping your account. All contact intelligence computes right inside your own browser window.

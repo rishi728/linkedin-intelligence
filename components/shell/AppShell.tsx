@@ -32,12 +32,14 @@ const SIDEBAR_NAV: Array<{ section?: string; href: string; label: string; icon: 
   { href: "/health", label: "Data health", icon: Stethoscope },
 ];
 
-const BOTTOM_NAV: Array<{ href: string; label: string; short: string; icon: typeof Home; countKey?: string }> = [
+/** `wide` tabs only appear from the md breakpoint up; on a phone they live in the Menu. */
+const BOTTOM_NAV: Array<{ href: string; label: string; short: string; icon: typeof Home; countKey?: string; wide?: boolean }> = [
   { href: "/home", label: "Home", short: "Home", icon: Home },
   { href: "/find", label: "Find people", short: "Find", icon: Search },
   { href: "/outreach", label: "Outreach", short: "Outreach", icon: Send },
   { href: "/people", label: "People", short: "People", icon: Users },
   { href: "/analytics", label: "Network", short: "Network", icon: BarChart3 },
+  { href: "/companies", label: "Companies", short: "Companies", icon: Building2, wide: true },
   { href: "/health", label: "Data health", short: "Health", icon: Stethoscope },
   { href: "/review", label: "Review", short: "Review", icon: ListChecks, countKey: "/review" },
 ];
@@ -109,7 +111,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <Link href="/home" className="flex items-center gap-2" prefetch={false}>
           <Logo size={56} />
         </Link>
-        <span className="hidden items-center gap-1.5 rounded-full bg-[#ecfdf5] px-2.5 py-1 text-[11px] font-medium text-[#065f46] sm:flex">
+        <span className="hidden shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-[#ecfdf5] px-2.5 py-1 text-[11px] font-medium text-[#065f46] sm:flex">
           <span className={cx("size-1.5 rounded-full bg-[#10B981]", building && "animate-pulse")} />
           {building ? "Updating…" : `${people.length.toLocaleString()} conn. synced`}
         </span>
@@ -117,24 +119,24 @@ export function AppShell({ children }: { children: ReactNode }) {
           <button
             type="button"
             onClick={() => document.dispatchEvent(new CustomEvent("li:open-search"))}
-            className="flex h-8 w-full items-center gap-2 rounded-full border border-[#E8E6DF] bg-[#FAFAF5] px-3 text-[12.5px] text-[#64748b] transition hover:border-[#d6d3c7]"
+            className="flex h-8 w-full items-center gap-2 overflow-hidden whitespace-nowrap rounded-full border border-[#E8E6DF] bg-[#FAFAF5] px-3 text-[12.5px] text-[#64748b] transition hover:border-[#d6d3c7]"
           >
             <Search size={13} />
             Search connections, companies...
           </button>
         </div>
         {people.length >= 5000 && (
-          <span className="hidden items-center gap-1.5 rounded-full bg-[#FEF3C7] px-2.5 py-1 text-[11px] font-semibold text-[#92400e] md:flex">
+          <span className="hidden shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-[#FEF3C7] px-2.5 py-1 text-[11px] font-semibold text-[#92400e] xl:flex">
             Volume: &gt;{Math.floor(people.length / 1000) * 1000} (High Activity!)
           </span>
         )}
-        <div className="hidden md:flex">
+        <div className="hidden whitespace-nowrap lg:flex">
           <BackupNudge />
         </div>
         <Link
           href="/settings"
           prefetch={false}
-          className="hidden items-center gap-1.5 rounded-full border border-[#E8E6DF] px-3 py-1.5 text-[11px] font-medium text-[#64748b] transition hover:bg-[#f1f0eb] hover:text-[#0f172a] md:flex"
+          className="hidden shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-[#E8E6DF] px-3 py-1.5 text-[11px] font-medium text-[#64748b] transition hover:bg-[#f1f0eb] hover:text-[#0f172a] md:flex"
         >
           <SettingsIcon size={12} />
           Settings
@@ -142,7 +144,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <Link
           href="/?welcome"
           prefetch={false}
-          className="hidden items-center gap-1.5 rounded-full border border-[#E8E6DF] px-3 py-1.5 text-[11px] font-medium text-[#64748b] transition hover:bg-[#f1f0eb] hover:text-[#0f172a] md:flex"
+          className="hidden shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-[#E8E6DF] px-3 py-1.5 text-[11px] font-medium text-[#64748b] transition hover:bg-[#f1f0eb] hover:text-[#0f172a] md:flex"
         >
           <Home size={12} />
           Main site
@@ -275,14 +277,15 @@ export function AppShell({ children }: { children: ReactNode }) {
                 href={item.href}
                 prefetch={false}
                 className={cx(
-                  "relative flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-[10px] font-medium transition-all duration-200 sm:flex-row sm:gap-1.5 sm:px-2 sm:py-2.5 sm:text-[11.5px]",
+                  "relative flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-[10px] font-medium transition-all duration-200 sm:flex-row sm:gap-1.5 sm:px-1.5 sm:py-2.5 sm:text-[11.5px] lg:px-2",
+                  item.wide && "max-md:hidden",
                   active
                     ? "bg-[#34d399] font-bold text-[#06281d] shadow-md"
                     : "text-[#d1e7dd] hover:bg-white/10 hover:text-white",
                 )}
               >
                 <item.icon size={16} className={active ? "text-[#06281d]" : "text-[#6ee7b7]"} />
-                <span className="hidden tracking-tight sm:inline">{item.label}</span>
+                <span className="hidden whitespace-nowrap tracking-tight sm:inline">{item.label}</span>
                 <span className="tracking-tight sm:hidden">{item.short}</span>
                 {count !== undefined && count > 0 && (
                   <span className="absolute right-0.5 top-0 rounded-full bg-[#FEF3C7] px-1.5 text-[9px] font-bold text-[#92400e] sm:static sm:ml-0.5">
