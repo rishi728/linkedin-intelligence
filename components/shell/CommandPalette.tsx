@@ -58,7 +58,7 @@ export function CommandPalette() {
     setOpen(false);
   };
 
-  const companies = useMemo(() => (open ? groupCompanies(people, settings).slice(0, 400) : []), [open, people, settings]);
+  const companies = useMemo(() => (open ? groupCompanies(people, settings) : []), [open, people, settings]);
 
   const base: Command[] = useMemo(() => [
     { id: "home", label: "Home", icon: Home, run: () => go("/home") },
@@ -83,21 +83,35 @@ export function CommandPalette() {
   const results = useMemo(() => {
     const term = q.trim().toLowerCase();
     if (!term) return { commands: base.slice(0, 9), persons: [], comps: [] as typeof companies };
-    return {
-      commands: base.filter((c) => c.label.toLowerCase().includes(term)).slice(0, 5),
-      persons: people.filter((p) => p.haystack.includes(term)).slice(0, 6),
-      comps: companies.filter((c) => c.name.toLowerCase().includes(term)).slice(0, 4),
-    };
+
+    const commands = base.filter((c) => c.label.toLowerCase().includes(term)).slice(0, 5);
+    // A person is found by their name. Their company, title and notes are not enough on
+    // their own, otherwise typing a company would open whoever happens to be listed first.
+    const byName = people.filter((p) => p.name.toLowerCase().includes(term));
+    const comps = companies
+      .filter((c) => c.name.toLowerCase().includes(term))
+      .sort((a, b) => {
+        const rank = (n: string) => (n.toLowerCase() === term ? 0 : n.toLowerCase().startsWith(term) ? 1 : 2);
+        return rank(a.name) - rank(b.name) || b.count - a.count;
+      })
+      .slice(0, 4);
+    const persons = (byName.length ? byName : comps.length || commands.length ? [] : people.filter((p) => p.haystack.includes(term))).slice(0, 6);
+    return { commands, persons, comps };
   }, [q, base, people, companies]);
 
-  const flat = useMemo(
-    () => [
-      ...results.commands.map((c) => ({ kind: "command" as const, c })),
-      ...results.persons.map((p) => ({ kind: "person" as const, p })),
-      ...results.comps.map((c) => ({ kind: "company" as const, c })),
-    ],
-    [results],
-  );
+  const flat = useMemo(() => {
+    const commands = results.commands.map((c) => ({ kind: "command" as const, c }));
+    const persons = results.persons.map((p) => ({ kind: "person" as const, p }));
+    const comps = results.comps.map((c) => ({ kind: "company" as const, c }));
+    const term = q.trim().toLowerCase();
+    // Enter takes the first row, so the order says what the query most likely meant:
+    // a command typed in full, then a person's name, then a company, then the rest.
+    if (!term) return commands;
+    if (results.commands.some((c) => c.label.toLowerCase() === term)) return [...commands, ...persons, ...comps];
+    if (persons.length && results.persons.some((p) => p.name.toLowerCase().includes(term))) return [...persons, ...comps, ...commands];
+    if (comps.length) return [...comps, ...commands, ...persons];
+    return [...commands, ...persons];
+  }, [results, q]);
 
   if (!open || !dataset) return null;
 
