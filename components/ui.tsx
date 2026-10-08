@@ -29,7 +29,7 @@ export function Button({
       type="button"
       className={cx(
         "inline-flex select-none items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border font-medium transition disabled:pointer-events-none disabled:opacity-45",
-        size === "sm" ? "h-7 px-2.5 text-[12px]" : "h-8 px-3 text-[13px]",
+        size === "sm" ? "h-7 px-2.5 text-[12px] max-sm:h-9" : "h-8 px-3 text-[13px] max-sm:h-10",
         BUTTON_STYLES[variant],
         className,
       )}
@@ -47,7 +47,7 @@ export function IconButton({ label, icon: Icon, className, size = 14, ...props }
       type="button"
       title={label}
       aria-label={label}
-      className={cx("inline-flex size-7 items-center justify-center rounded-lg text-muted transition hover:bg-hover hover:text-ink disabled:opacity-40", className)}
+      className={cx("inline-flex size-7 items-center justify-center rounded-lg text-muted transition hover:bg-hover hover:text-ink disabled:opacity-40 max-sm:size-9", className)}
       {...props}
     >
       <Icon size={size} />
@@ -99,7 +99,7 @@ export function Field({ label, hint, children, className }: { label: string; hin
 const CONTROL = "w-full rounded-lg border border-line bg-panel px-2.5 text-[13px] text-ink outline-none transition placeholder:text-faint focus:border-accent focus:ring-2 focus:ring-[var(--ring)]";
 
 export function Input({ className, ...props }: InputHTMLAttributes<HTMLInputElement>) {
-  return <input className={cx(CONTROL, "h-8", className)} {...props} />;
+  return <input className={cx(CONTROL, "h-8 max-sm:h-10", className)} {...props} />;
 }
 
 export function Textarea({ className, ...props }: TextareaHTMLAttributes<HTMLTextAreaElement>) {
@@ -109,7 +109,7 @@ export function Textarea({ className, ...props }: TextareaHTMLAttributes<HTMLTex
 export function Select({ className, children, ...props }: SelectHTMLAttributes<HTMLSelectElement>) {
   return (
     <div className="relative">
-      <select className={cx(CONTROL, "h-8 appearance-none pr-7", className)} {...props}>
+      <select className={cx(CONTROL, "h-8 appearance-none pr-7 max-sm:h-10", className)} {...props}>
         {children}
       </select>
       <ChevronDown size={13} className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-muted" />
@@ -140,7 +140,7 @@ export function Segmented<T extends string>({ value, onChange, options }: { valu
           title={o.title}
           onClick={() => onChange(o.value)}
           className={cx(
-            "inline-flex h-6 items-center gap-1 rounded-md px-2 text-[12px] font-medium transition",
+            "inline-flex h-6 items-center gap-1 rounded-md px-2 text-[12px] font-medium transition max-sm:h-8 max-sm:px-3",
             value === o.value ? "bg-accent-soft text-accent" : "text-muted hover:text-ink",
           )}
         >
@@ -352,7 +352,7 @@ export function EmptyState({ icon: Icon, title, body, action }: { icon?: IconTyp
     <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-line px-6 py-12 text-center">
       {Icon ? <Icon size={20} className="mb-3 text-faint" /> : null}
       <p className="text-[14px] font-medium">{title}</p>
-      {body ? <p className="mt-1 max-w-sm text-[12.5px] text-muted">{body}</p> : null}
+      {body ? <div className="mt-1 max-w-sm text-[12.5px] text-muted">{body}</div> : null}
       {action ? <div className="mt-4">{action}</div> : null}
     </div>
   );

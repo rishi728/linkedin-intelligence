@@ -78,9 +78,9 @@ export function OutreachView() {
       />
 
       <PageBody>
-        <div className="flex min-h-full">
+        <div className="flex min-h-full max-md:flex-col">
           {/* ---- the lists the user made ---------------------------------- */}
-          <aside className="w-[210px] shrink-0 border-r border-line p-2">
+          <aside className="w-[210px] shrink-0 border-r border-line p-2 max-md:flex max-md:w-full max-md:items-center max-md:gap-1 max-md:overflow-x-auto max-md:[scrollbar-width:none] max-md:[&::-webkit-scrollbar]:hidden max-md:border-b max-md:border-r-0 max-md:[&>*]:w-auto max-md:[&>*]:shrink-0">
             <button
               type="button"
               onClick={() => setListId(null)}
@@ -115,13 +115,29 @@ export function OutreachView() {
                 <EmptyState
                   title={open ? "This list is empty" : "Nobody here yet"}
                   body={
-                    open
-                      ? "Pick people on the People page and choose “Add to list”."
-                      : "Pick people on the People page and give them a status. They show up here, and you change their status right in the table."
+                    open ? (
+                      "Pick people on the People page and choose “Add to list”."
+                    ) : (
+                      <span className="mt-1 block text-left">
+                        <span className="block text-center">This is your pipeline: everyone you have messaged or plan to.</span>
+                        <ol className="mx-auto mt-3 max-w-xs space-y-1.5 text-[12.5px] text-ink-2">
+                          <li><b>1. Add people.</b> Give someone a status on the People page.</li>
+                          <li><b>2. Message them.</b> Start a session, copy the message and send it yourself.</li>
+                          <li><b>3. Follow up.</b> Reminders land here and on Home.</li>
+                        </ol>
+                      </span>
+                    )
                   }
                   action={
-                    <span className="flex gap-2">
-                      <Button variant="primary" icon={UserPlus} onClick={() => router.push("/find")}>Find people</Button>
+                    <span className="flex flex-wrap justify-center gap-2">
+                      {open ? (
+                        <Button variant="primary" icon={UserPlus} onClick={() => router.push("/find")}>Find people</Button>
+                      ) : (
+                        <>
+                          <Button variant="primary" icon={Send} onClick={() => router.push("/session")}>Start a session</Button>
+                          <Button icon={UserPlus} onClick={() => router.push("/find")}>Find people</Button>
+                        </>
+                      )}
                       {open ? (
                         <Button
                           icon={Trash2}

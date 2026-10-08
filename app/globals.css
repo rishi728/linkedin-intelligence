@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 :root {
+  color-scheme: light;
   --canvas: #fcfcfa;
   --sidebar: #f6f5f1;
   --panel: #ffffff;
@@ -30,40 +31,6 @@
   --t-slate: #475569;  --t-slate-bg: #edf0f3;
   --t-red: #b42318;    --t-red-bg: #fdecea;
   --bar: #0f766e;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --canvas: #111214;
-    --sidebar: #0c0d0f;
-    --panel: #17181b;
-    --subtle: #151619;
-    --hover: #1f2126;
-    --line: #25272c;
-    --line-strong: #33363c;
-    --ink: #ecedef;
-    --ink-2: #b9bcc3;
-    --muted: #80848d;
-    --faint: #565a62;
-    --accent: #2eb5a0;
-    --accent-hover: #4ccab6;
-    --accent-soft: #11302b;
-    --accent-ink: #04201b;
-    --ring: rgba(46, 181, 160, 0.4);
-    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 16px rgba(0, 0, 0, 0.3);
-    --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.55);
-
-    --t-gray: #a4a8b0;   --t-gray-bg: #22242a;
-    --t-blue: #8db0ff;   --t-blue-bg: #17223d;
-    --t-violet: #c2a6ff; --t-violet-bg: #251b3d;
-    --t-amber: #f1bd62;  --t-amber-bg: #33260f;
-    --t-orange: #ff9f70; --t-orange-bg: #37200f;
-    --t-teal: #5fd3c0;   --t-teal-bg: #11302b;
-    --t-green: #7ad796;  --t-green-bg: #15301e;
-    --t-slate: #a7b3c4;  --t-slate-bg: #1f252d;
-    --t-red: #ff8d84;    --t-red-bg: #3a1714;
-    --bar: #2eb5a0;
-  }
 }
 
 @theme inline {

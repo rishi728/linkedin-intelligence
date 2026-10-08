@@ -44,7 +44,7 @@ export function Guide() {
     <aside
       role="dialog"
       aria-label="Guide"
-      className="anim-rise fixed bottom-4 left-4 z-40 w-[330px] max-w-[calc(100vw-2rem)] rounded-2xl border border-line bg-panel p-4 shadow-float"
+      className="anim-rise fixed bottom-[76px] left-4 z-40 w-[330px] max-w-[calc(100vw-2rem)] rounded-2xl border border-line bg-panel p-4 shadow-float"
     >
       <button
         type="button"

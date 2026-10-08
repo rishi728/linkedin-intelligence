@@ -385,6 +385,10 @@ export function HomeView() {
     [people, focus, settings],
   );
   const replied = useMemo(() => people.filter((p) => p.history?.theyReplied).length, [people]);
+  const addedRecently = useMemo(() => {
+    const cutoff = Date.now() - 30 * 86_400_000;
+    return people.filter((p) => p.connectedOn && p.connectedOn.getTime() >= cutoff).length;
+  }, [people]);
 
   const due = useMemo(() => {
     const b = followUpBuckets(people, settings, today);
@@ -405,17 +409,17 @@ export function HomeView() {
   return (
     <div style={{ maxWidth: 960, margin: "0 auto", padding: "24px 20px 40px" }}>
       {/* ====== GREETING ====== */}
-      <div style={{ display: "flex", alignItems: "flex-start", gap: 16, marginBottom: 28, flexWrap: "wrap" }}>
-        <div style={{ flexShrink: 0 }}>
+      <div className="flex flex-wrap items-start gap-4 max-sm:grid max-sm:grid-cols-[72px_1fr] max-sm:gap-x-3 max-sm:gap-y-3" style={{ marginBottom: 28 }}>
+        <div className="max-sm:row-span-2 max-sm:w-[72px] max-sm:[&_svg]:h-auto max-sm:[&_svg]:w-full" style={{ flexShrink: 0 }}>
           <WavingOwl />
         </div>
-        <div style={{ flex: 1 }}>
-          <h1 style={{ fontSize: 28, fontWeight: 700, color: "#0f172a", letterSpacing: "-0.02em", lineHeight: 1.2 }}>
+        <div className="min-w-0 max-sm:contents" style={{ flex: 1 }}>
+          <h1 className="max-sm:col-start-2 max-sm:self-end" style={{ fontSize: "clamp(22px, 6vw, 28px)", fontWeight: 700, color: "#0f172a", letterSpacing: "-0.02em", lineHeight: 1.2 }}>
             {greeting}{firstName ? `, ${firstName}` : ""}.
           </h1>
-          <p style={{ fontSize: 14, color: "#94a3b8", marginTop: 2 }}>{context}</p>
+          <p className="max-sm:col-start-2 max-sm:self-start" style={{ fontSize: 14, color: "#94a3b8", marginTop: 2 }}>{context}</p>
           {/* Speech bubble */}
-          <div style={{
+          <div className="max-sm:col-span-2" style={{
             position: "relative", marginTop: 12, padding: "12px 16px", borderRadius: 16,
             background: "linear-gradient(135deg, #f0fdf4, #ecfdf5)",
             border: "1px solid #bbf7d0",
@@ -435,13 +439,13 @@ export function HomeView() {
                 OWLIE
               </span>
               <p style={{ fontSize: 13, color: "#334155", lineHeight: 1.6, marginTop: 4 }}>
-                &ldquo;Wooaah, you are really active! <strong>{people.length.toLocaleString()} connections</strong> is an incredible network. Let&rsquo;s find your warmest signals.&rdquo;
+                &ldquo;{people.length >= 500 ? "Wooaah, you are really active! " : "Nice start! "}<strong>{people.length.toLocaleString()} connections</strong>{people.length >= 500 ? " is an incredible network." : " to work with."} Let&rsquo;s find your warmest signals.&rdquo;
               </p>
             </div>
           </div>
         </div>
         {!focused && (
-          <div style={{
+          <div className="max-sm:col-span-2" style={{
             flexShrink: 0, padding: "10px 16px", borderRadius: 12,
             border: "1px solid #E8E6DF", background: "#fff",
             textAlign: "center",
@@ -484,9 +488,11 @@ export function HomeView() {
               <svg width="15" height="15" fill="none" stroke="#D97706" strokeWidth="2" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
             </span>
             <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "#94a3b8" }}>Total Connections</span>
-            <span style={{ marginLeft: "auto", fontSize: 9, fontWeight: 600, color: "#059669", background: "#ecfdf5", padding: "2px 7px", borderRadius: 6 }}>
-              +{Math.min(people.length, 48)} total
-            </span>
+            {addedRecently > 0 ? (
+              <span style={{ marginLeft: "auto", fontSize: 9, fontWeight: 600, color: "#059669", background: "#ecfdf5", padding: "2px 7px", borderRadius: 6 }}>
+                +{addedRecently.toLocaleString()} in 30 days
+              </span>
+            ) : null}
           </div>
           <div style={{ fontSize: 11, fontWeight: 600, color: "#94a3b8" }}>Everyone in your network</div>
           <div style={{ position: "relative", zIndex: 0 }}>

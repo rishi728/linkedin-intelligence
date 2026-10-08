@@ -13,19 +13,23 @@ const mono = JetBrains_Mono({
   subsets: ["latin"],
 });
 
+// Landing-page only, so they load when used instead of being preloaded on every screen.
 const newsreader = Newsreader({
   variable: "--font-newsreader",
+  preload: false,
   subsets: ["latin"],
   style: ["normal", "italic"],
 });
 
 const jakarta = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
+  preload: false,
   subsets: ["latin"],
 });
 
 const caveat = Caveat({
   variable: "--font-caveat",
+  preload: false,
   subsets: ["latin"],
   weight: "600",
 });

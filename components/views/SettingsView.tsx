@@ -118,7 +118,7 @@ export function SettingsView() {
     <>
       <PageHeader
         title="Settings"
-        subtitle="Goals, targets, pipeline, templates and your data, all stored in this browser"
+        subtitle="Goals, targets, pipeline, reminders and your data, all stored in this browser"
         actions={
           <Segmented
             value={tab}
@@ -139,12 +139,12 @@ export function SettingsView() {
           {tab === "goals" ? (
             <>
               <Card>
-                <CardTitle hint="Used in message templates and to spot alumni">About you</CardTitle>
+                <CardTitle hint="Your name appears on Home, and your schools are used to spot alumni">About you</CardTitle>
                 <div className="grid gap-3 p-4 pt-3 sm:grid-cols-2">
                   <Field label="Your name">
                     <Input defaultValue={settings.profile.name} onBlur={(e) => updateSettings((s) => ({ ...s, profile: { ...s.profile, name: e.target.value } }))} placeholder="Rishi" />
                   </Field>
-                  <Field label="One line about you" hint="Used as {{my_background}} in messages">
+                  <Field label="One line about you" hint="Fills {{my_background}} in the Outreach session templates that fill in details">
                     <Input defaultValue={settings.profile.background} onBlur={(e) => updateSettings((s) => ({ ...s, profile: { ...s.profile, background: e.target.value } }))} placeholder="a final-year student at NIT Warangal" />
                   </Field>
                   <Field label="Your schools" className="sm:col-span-2" hint="Connections there (or in their clubs) are marked as alumni">

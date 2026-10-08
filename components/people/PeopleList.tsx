@@ -66,13 +66,13 @@ export function PeopleList({
   return (
     <div ref={parentRef} className="scroll-thin min-h-0 flex-1 overflow-auto">
       {mode === "table" ? (
-        <div className="sticky top-0 z-10 grid grid-cols-[30px_minmax(190px,2fr)_minmax(130px,1.1fr)_minmax(140px,1.2fr)_150px_34px] items-center gap-3 border-b border-line bg-canvas px-4 py-1.5 text-[11px] font-medium uppercase tracking-wide text-muted">
+        <div className="sticky top-0 z-10 grid grid-cols-[28px_minmax(0,1fr)_auto] md:grid-cols-[30px_minmax(190px,2fr)_minmax(130px,1.1fr)_minmax(140px,1.2fr)_150px_34px] items-center gap-3 border-b border-line bg-canvas px-4 py-1.5 text-[11px] font-medium uppercase tracking-wide text-muted">
           <span />
           <span>Person</span>
-          <span>Company</span>
-          <span>What they do</span>
+          <span className="hidden md:block">Company</span>
+          <span className="hidden md:block">What they do</span>
           <span>Status</span>
-          <span />
+          <span className="hidden md:block" />
         </div>
       ) : null}
 
@@ -150,7 +150,7 @@ export function PeopleList({
                 role="row"
                 style={style}
                 className={cx(
-                  "group relative grid grid-cols-[30px_minmax(190px,2fr)_minmax(130px,1.1fr)_minmax(140px,1.2fr)_150px_34px] items-center gap-3 border-b border-line/50 px-4 transition",
+                  "group relative grid grid-cols-[28px_minmax(0,1fr)_auto] md:grid-cols-[30px_minmax(190px,2fr)_minmax(130px,1.1fr)_minmax(140px,1.2fr)_150px_34px] items-center gap-3 border-b border-line/50 px-4 transition",
                   isOpen ? "bg-accent-soft/50" : isSelected ? "bg-accent-soft/30" : "hover:bg-hover",
                 )}
               >
@@ -163,14 +163,15 @@ export function PeopleList({
                       <span className="truncate text-[13.5px] font-semibold tracking-tight group-hover:text-accent">{person.name}</span>
                       {person.needsReview ? <ConfidenceBadge person={person} showPercent={false} /> : null}
                     </span>
-                    <span className="block truncate text-[12px] text-muted">{person.position || "No title shared"}</span>
+                    <span className="hidden truncate text-[12px] text-muted md:block">{person.position || "No title shared"}</span>
+                    <span className="block truncate text-[12px] text-muted md:hidden">{[person.position || "No title shared", person.company].filter(Boolean).join(" · ")}</span>
                   </span>
                 </button>
-                <span className="truncate text-[12.5px] text-ink-2" title={person.company}>
+                <span className="hidden truncate text-[12.5px] text-ink-2 md:block" title={person.company}>
                   {person.company || "-"}
                   {person.isTarget ? <span className="ml-1 text-[11px] text-accent" title="Target company">★</span> : null}
                 </span>
-                <span className="min-w-0 truncate text-[12px] text-muted" title={person.category}>
+                <span className="hidden min-w-0 truncate text-[12px] text-muted md:block" title={person.category}>
                   {person.category === NOPRO ? <span className="text-muted">No role data</span> : person.category}
                 </span>
                 <span className="min-w-0"><StatusMenu person={person} /></span>
@@ -180,12 +181,12 @@ export function PeopleList({
                     target="_blank"
                     rel="noopener noreferrer"
                     title="Open on LinkedIn"
-                    className="text-faint opacity-0 transition hover:text-accent focus-visible:opacity-100 group-hover:opacity-100"
+                    className="hidden text-faint opacity-0 transition hover:text-accent focus-visible:opacity-100 group-hover:opacity-100 md:block"
                     aria-label={`Open ${person.name} on LinkedIn`}
                   >
                     <ExternalLink size={13} />
                   </a>
-                ) : <span />}
+                ) : <span className="hidden md:block" />}
               </div>
             );
           })}

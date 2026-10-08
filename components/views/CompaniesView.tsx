@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Building2, Download, Search, Star, UserPlus } from "lucide-react";
+import { ArrowLeft, Building2, Download, Search, Star, UserPlus } from "lucide-react";
 import { groupCompanies } from "@/lib/workspace/insights";
 import { PageHeader } from "@/components/shell/AppShell";
 import { Avatar, BarRow, Button, Card, CardTitle, Input, Pill, Segmented, Toggle, cx } from "@/components/ui";
@@ -17,6 +17,8 @@ export function CompaniesView() {
   const [q, setQ] = useState("");
   const [scope, setScope] = useState<"all" | "targets">("all");
   const [activeKey, setActiveKey] = useState<string | null>(null);
+  /** Below md the list and the detail are two screens, not two columns. */
+  const [showDetail, setShowDetail] = useState(false);
 
   const groups = useMemo(() => groupCompanies(people, settings), [people, settings]);
   const filtered = useMemo(() => {
@@ -40,7 +42,7 @@ export function CompaniesView() {
         }
       />
       <div className="flex min-h-0 flex-1">
-        <div className="flex w-[320px] shrink-0 flex-col border-r border-line">
+        <div className={cx("flex w-[320px] shrink-0 flex-col border-r border-line max-md:w-full max-md:border-r-0", showDetail && "max-md:hidden")}>
           <div className="border-b border-line p-2.5">
             <div className="relative">
               <Search size={14} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted" />
@@ -52,7 +54,7 @@ export function CompaniesView() {
               <button
                 key={g.key}
                 type="button"
-                onClick={() => setActiveKey(g.key)}
+                onClick={() => { setActiveKey(g.key); setShowDetail(true); }}
                 className={cx(
                   "mb-0.5 flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left transition",
                   active?.key === g.key ? "bg-accent-soft" : "hover:bg-hover",
@@ -72,7 +74,10 @@ export function CompaniesView() {
           </div>
         </div>
 
-        <div className="scroll-thin min-h-0 flex-1 overflow-auto p-5">
+        <div className={cx("scroll-thin min-h-0 flex-1 overflow-auto p-5 max-sm:p-4", !showDetail && "max-md:hidden")}>
+          <button type="button" onClick={() => setShowDetail(false)} className="mb-3 inline-flex items-center gap-1 text-[12.5px] font-medium text-muted hover:text-ink md:hidden">
+            <ArrowLeft size={13} /> All companies
+          </button>
           {!active ? (
             <p className="text-[13px] text-muted">Pick a company to see who you know there.</p>
           ) : (
@@ -183,14 +188,16 @@ export function CompaniesView() {
                 </CardTitle>
                 <div className="p-2">
                   {active.people.slice(0, 60).map((p) => (
-                    <button key={p.id} type="button" onClick={() => openPerson(p.id)} className="flex w-full items-center gap-3 rounded-lg px-2 py-1.5 text-left transition hover:bg-hover">
-                      <Avatar name={p.name} size={26} />
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate text-[13px] font-medium">{p.name}</span>
-                        <span className="block truncate text-[12px] text-muted">{p.position || p.roleFamily}</span>
-                      </span>
+                    <div key={p.id} className="flex items-center gap-3 rounded-lg px-2 py-1.5 transition hover:bg-hover">
+                      <button type="button" onClick={() => openPerson(p.id)} className="flex min-w-0 flex-1 items-center gap-3 text-left">
+                        <Avatar name={p.name} size={26} />
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-[13px] font-medium">{p.name}</span>
+                          <span className="block truncate text-[12px] text-muted">{p.position || p.roleFamily}</span>
+                        </span>
+                      </button>
                       <StatusMenu person={p} size="sm" align="right" />
-                    </button>
+                    </div>
                   ))}
                   {active.people.length > 60 ? (
                     <p className="px-2 py-2 text-[12px] text-muted">+{active.people.length - 60} more, open in People to see them all.</p>

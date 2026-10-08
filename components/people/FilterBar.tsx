@@ -134,9 +134,9 @@ export function FilterBar({
   }).length;
 
   return (
-    <div className="border-b border-line px-5 py-2.5">
+    <div className="border-b border-line px-4 py-2.5 sm:px-5">
       <div className="flex flex-wrap items-center gap-2">
-        <div className="relative min-w-[240px] flex-1">
+        <div className="relative min-w-0 flex-1 max-sm:basis-full sm:min-w-[240px]">
           <Search size={14} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted" />
           <Input
             value={text}
@@ -163,6 +163,7 @@ export function FilterBar({
           ) : null}
         </div>
 
+        <div className="flex items-center gap-2 max-sm:-mx-4 max-sm:w-[calc(100%+2rem)] max-sm:overflow-x-auto max-sm:[scrollbar-width:none] max-sm:[&::-webkit-scrollbar]:hidden max-sm:px-4 max-sm:pb-1 max-sm:[&>*]:shrink-0 sm:contents">
         {/* WHO */}
         <Menu width={250} trigger={({ toggle }) => <TriggerButton label="Who" icon={Users} active={n("audiences")} toggle={toggle} />}>
           {() => (
@@ -301,10 +302,11 @@ export function FilterBar({
         </Menu>
 
         {right}
+        </div>
       </div>
 
       {/* One-click shortcuts */}
-      <div className="mt-2 flex flex-wrap items-center gap-1.5">
+      <div className="mt-2 flex items-center gap-1.5 max-sm:-mx-4 max-sm:overflow-x-auto max-sm:[scrollbar-width:none] max-sm:[&::-webkit-scrollbar]:hidden max-sm:px-4 max-sm:pb-1 sm:flex-wrap">
         {QUICK.map((q) => {
           const on = q.on(filters);
           return (
@@ -313,7 +315,7 @@ export function FilterBar({
               type="button"
               onClick={() => onChange(on ? { ...filters, ...Object.fromEntries(Object.keys(q.patch).map((k) => [k, undefined])) } : { ...filters, ...q.patch })}
               className={cx(
-                "rounded-md border px-2 py-0.5 text-[11.5px] transition",
+                "shrink-0 whitespace-nowrap rounded-md border px-2 py-0.5 text-[11.5px] transition max-sm:py-1.5",
                 on ? "border-accent bg-accent-soft/40 text-ink" : "border-line text-muted hover:border-line-strong hover:text-ink",
               )}
             >

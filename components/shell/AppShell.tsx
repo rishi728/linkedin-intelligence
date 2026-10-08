@@ -28,18 +28,25 @@ const SIDEBAR_NAV: Array<{ section?: string; href: string; label: string; icon: 
   { section: "Conversations", href: "/outreach", label: "Outreach", icon: Send },
   { section: "Understand", href: "/analytics", label: "Network", icon: BarChart3 },
   { href: "/companies", label: "Companies", icon: Building2 },
-  { section: "Keep it clean", href: "/review", label: "Review & improve", icon: ListChecks },
+  { section: "Keep it clean", href: "/review", label: "Review", icon: ListChecks },
   { href: "/health", label: "Data health", icon: Stethoscope },
 ];
 
-const BOTTOM_NAV: Array<{ href: string; label: string; icon: typeof Home; countKey?: string }> = [
-  { href: "/home", label: "Home", icon: Home },
-  { href: "/find", label: "Find people", icon: Search },
-  { href: "/outreach", label: "Outreach", icon: Send },
-  { href: "/people", label: "My data", icon: Users },
-  { href: "/health", label: "Data health", icon: Stethoscope },
-  { href: "/review", label: "Data review", icon: ListChecks, countKey: "/review" },
+const BOTTOM_NAV: Array<{ href: string; label: string; short: string; icon: typeof Home; countKey?: string }> = [
+  { href: "/home", label: "Home", short: "Home", icon: Home },
+  { href: "/find", label: "Find people", short: "Find", icon: Search },
+  { href: "/outreach", label: "Outreach", short: "Outreach", icon: Send },
+  { href: "/people", label: "People", short: "People", icon: Users },
+  { href: "/analytics", label: "Network", short: "Network", icon: BarChart3 },
+  { href: "/health", label: "Data health", short: "Health", icon: Stethoscope },
+  { href: "/review", label: "Review", short: "Review", icon: ListChecks, countKey: "/review" },
 ];
+
+/** /session is the Outreach flow, so Outreach stays lit while you are in it. */
+const isActive = (pathname: string, href: string) => {
+  const path = pathname.replace(/\/$/, "");
+  return path === href || (href === "/outreach" && path === "/session");
+};
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { ready, dataset, people, settings, savedAt } = useWorkspace();
@@ -88,9 +95,10 @@ export function AppShell({ children }: { children: ReactNode }) {
           type="button"
           aria-label="Open menu"
           onClick={() => setSidebarOpen(true)}
-          className="grid size-8 place-items-center rounded-lg text-[#64748b] transition hover:bg-[#f1f0eb] md:hidden"
+          className="inline-flex h-9 items-center gap-1.5 rounded-lg px-2 text-[12px] font-medium text-[#475569] transition hover:bg-[#f1f0eb] md:border md:border-[#E8E6DF] md:px-3"
         >
           <MenuIcon size={18} />
+          <span className="hidden md:inline">Menu</span>
         </button>
         <Link href="/home" className="flex items-center gap-2" prefetch={false}>
           <Logo size={56} />
@@ -135,8 +143,9 @@ export function AppShell({ children }: { children: ReactNode }) {
         </Link>
         <button
           type="button"
+          aria-label="Search"
           onClick={() => document.dispatchEvent(new CustomEvent("li:open-search"))}
-          className="grid size-8 place-items-center rounded-lg text-[#64748b] transition hover:bg-[#f1f0eb] md:hidden"
+          className="grid size-9 place-items-center rounded-lg text-[#64748b] transition hover:bg-[#f1f0eb] md:hidden"
         >
           <Search size={17} />
         </button>
@@ -169,7 +178,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
         <nav className="flex-1 overflow-auto px-3 pb-3">
           {SIDEBAR_NAV.map((item) => {
-            const active = pathname.replace(/\/$/, "") === item.href;
+            const active = isActive(pathname, item.href);
             const count = counts[item.href];
             return (
               <div key={item.href}>
@@ -250,9 +259,9 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       {/* ============ BOTTOM NAV BAR ============ */}
       <div className="fixed bottom-3 left-1/2 z-40 w-[calc(100%-24px)] max-w-4xl -translate-x-1/2">
-        <nav className="flex items-center justify-between gap-1.5 rounded-2xl border border-[#1f4a3b] bg-[#0C2D22] p-1.5 shadow-[0_10px_30px_rgba(12,45,34,0.35)] ring-1 ring-black/10">
+        <nav aria-label="Primary" className="flex items-center justify-between gap-0.5 rounded-2xl border border-[#1f4a3b] bg-[#0C2D22] p-1.5 shadow-[0_10px_30px_rgba(12,45,34,0.35)] ring-1 ring-black/10">
           {BOTTOM_NAV.map((item) => {
-            const active = pathname.replace(/\/$/, "") === item.href;
+            const active = isActive(pathname, item.href);
             const count = item.countKey ? counts[item.countKey] : undefined;
             return (
               <Link
@@ -260,7 +269,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 href={item.href}
                 prefetch={false}
                 className={cx(
-                  "relative flex flex-1 items-center justify-center gap-1.5 rounded-xl px-2 py-2.5 text-[11.5px] font-medium transition-all duration-200",
+                  "relative flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-[10px] font-medium transition-all duration-200 sm:flex-row sm:gap-1.5 sm:px-2 sm:py-2.5 sm:text-[11.5px]",
                   active
                     ? "bg-[#34d399] font-bold text-[#06281d] shadow-md"
                     : "text-[#d1e7dd] hover:bg-white/10 hover:text-white",
@@ -268,8 +277,9 @@ export function AppShell({ children }: { children: ReactNode }) {
               >
                 <item.icon size={16} className={active ? "text-[#06281d]" : "text-[#6ee7b7]"} />
                 <span className="hidden tracking-tight sm:inline">{item.label}</span>
+                <span className="tracking-tight sm:hidden">{item.short}</span>
                 {count !== undefined && count > 0 && (
-                  <span className="ml-0.5 rounded-full bg-[#FEF3C7] px-1.5 text-[9px] font-bold text-[#92400e]">
+                  <span className="absolute right-0.5 top-0 rounded-full bg-[#FEF3C7] px-1.5 text-[9px] font-bold text-[#92400e] sm:static sm:ml-0.5">
                     {count > 999 ? `${Math.round(count / 100) / 10}k` : count}
                   </span>
                 )}
@@ -320,12 +330,12 @@ function savedRelative(iso: string): string {
 
 export function PageHeader({ title, subtitle, actions }: { title: string; subtitle?: ReactNode; actions?: ReactNode }) {
   return (
-    <header className="flex h-auto min-h-12 shrink-0 items-center justify-between gap-4 border-b border-[#E8E6DF] bg-white px-5 py-2.5">
-      <div className="min-w-0">
+    <header className="flex h-auto min-h-12 shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-[#E8E6DF] bg-white px-4 py-2.5 sm:px-5">
+      <div className="min-w-0 max-sm:basis-full">
         <h1 className="truncate text-[15px] font-semibold tracking-tight text-[#0f172a]">{title}</h1>
         {subtitle ? <p className="truncate text-[12px] text-[#94a3b8]">{subtitle}</p> : null}
       </div>
-      {actions ? <div className="flex shrink-0 items-center gap-2">{actions}</div> : null}
+      {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
     </header>
   );
 }
