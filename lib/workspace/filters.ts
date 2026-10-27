@@ -1,3 +1,4 @@
+import { makeTextMatcher } from "./textmatch";
 import { CATEGORY_ID, CATS, NOPRO } from "../classifier/categories";
 import { matchCategoriesInText } from "../classifier/search";
 import { sectorLabel, type SectorId } from "../knowledge/sectors";
@@ -120,7 +121,6 @@ export function matchesHealth(p: Person, issue: HealthIssue): boolean {
 }
 
 export function applyFilters(people: Person[], f: Filters, settings: Settings, today = todayISO()): Person[] {
-  const terms = (f.q ?? "").toLowerCase().split(/\s+/).filter(Boolean);
   const audiences = has(f.audiences) ? AUDIENCES.filter((a) => f.audiences!.includes(a.id)) : [];
   const closed = new Set(settings.statuses.filter((s) => s.kind === "closed").map((s) => s.id));
   const companies = has(f.companies) ? new Set(f.companies) : null;
@@ -128,7 +128,9 @@ export function applyFilters(people: Person[], f: Filters, settings: Settings, t
     ? new Set(settings.lists?.find((l) => l.id === f.listId)?.memberIds ?? [])
     : null;
 
-  return people.filter((p) => {
+  const hasText = !!f.q?.trim();
+  const filterWith = (text: ((p: Person) => number) | null) => people.filter((p) => {
+    if (text && text(p) === 0) return false;
     if (has(f.categories) || has(f.roleFamilies)) {
       const inDomain = has(f.categories) && f.categories.includes(CATEGORY_ID[p.category]);
       const inFn = has(f.roleFamilies) && f.roleFamilies.includes(p.roleFamily);
@@ -175,9 +177,17 @@ export function applyFilters(people: Person[], f: Filters, settings: Settings, t
       if (f.followUp === "scheduled" && !scheduled) return false;
       if (f.followUp === "overdue" && !(scheduled && daysBetween(today, p.followUpAt) < 0)) return false;
     }
-    for (const t of terms) if (!p.haystack.includes(t)) return false;
     return true;
   });
+
+  if (!hasText) return filterWith(null);
+  // Complete words first, then word starts, then the middle of words: the first that finds anyone wins,
+  // so "intern" does not drag in "International" while real interns exist.
+  for (const mode of ["whole", "start", "partial"] as const) {
+    const found = filterWith(makeTextMatcher(f.q!, mode));
+    if (found.length) return found;
+  }
+  return [];
 }
 
 // ---------------------------------------------------------------------------
@@ -273,6 +283,17 @@ const SECTOR_ALIASES: Array<[string, SectorId]> = [
   ["professional services", "professional"],
 ];
 
+/** A company name as space-joined tokens. Cached, since the same few thousand objects are asked about every keystroke. */
+const companyTokenCache = new WeakMap<object, string>();
+function companyTokens(c: { name: string }): string {
+  let k = companyTokenCache.get(c);
+  if (k === undefined) {
+    k = tokenize(c.name).join(" ");
+    companyTokenCache.set(c, k);
+  }
+  return k;
+}
+
 export interface ParsedQuery {
   filters: Filters;
   /** What we understood, for display ("Supply Chain", "Manager / Lead"...). */
@@ -326,7 +347,7 @@ export function parseQuery(
     if (DOMAIN_ALIASES.some(([phrase]) => phrase === ck)) return null;
     if (SECTOR_ALIASES.some(([phrase]) => phrase === ck)) return null;
     const hits = companyKeys.filter((c) => {
-      const k = tokenize(c.name).join(" ");
+      const k = companyTokens(c);
       return k === ck || k.startsWith(`${ck} `);
     });
     return hits.length ? hits : null;

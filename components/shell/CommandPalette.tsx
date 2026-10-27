@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowRight, BarChart3, Bell, Building2, Compass, Download, Home, KanbanSquare, ListChecks, Search,
   Send, Settings as SettingsIcon, Sparkles, Stethoscope, Users,
 } from "lucide-react";
+import { searchEverything } from "@/lib/workspace/search";
+import { warmSearchIndex } from "@/lib/workspace/textmatch";
 import type { Filters } from "@/lib/workspace/types";
 import { Avatar, cx } from "@/components/ui";
 import { useUI, useWorkspace } from "@/components/workspace/store";
@@ -77,38 +79,41 @@ export function CommandPalette() {
     ...settings.segments.map((seg) => ({ id: `seg-${seg.id}`, label: `Segment: ${seg.name}`, icon: Compass, run: () => go("/people", seg.filters) })),
   ], [people, settings.segments]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const results = useMemo(() => {
-    const term = q.trim().toLowerCase();
-    if (!term) return { commands: base.slice(0, 9), persons: [], comps: [] as typeof companies };
+  // Index everyone in the background as soon as the bar opens, so the first keystroke is not slow.
+  useEffect(() => (open ? warmSearchIndex(people) : undefined), [open, people]);
 
-    const commands = base.filter((c) => c.label.toLowerCase().includes(term)).slice(0, 5);
-    // A person is found by their name. Their company, title and notes are not enough on
-    // their own, otherwise typing a company would open whoever happens to be listed first.
-    const byName = people.filter((p) => p.name.toLowerCase().includes(term));
-    const comps = companies
-      .filter((c) => c.name.toLowerCase().includes(term))
-      .sort((a, b) => {
-        const rank = (n: string) => (n.toLowerCase() === term ? 0 : n.toLowerCase().startsWith(term) ? 1 : 2);
-        return rank(a.name) - rank(b.name) || b.count - a.count;
-      })
-      .slice(0, 4);
-    const persons = (byName.length ? byName : comps.length || commands.length ? [] : people.filter((p) => p.haystack.includes(term))).slice(0, 6);
-    return { commands, persons, comps };
-  }, [q, base, people, companies]);
+  // Searching 50,000 people per keystroke is cheap, but typing should never wait on it.
+  const deferredQ = useDeferredValue(q);
+  const stale = deferredQ !== q;
+  const search = useMemo(
+    () => (open ? searchEverything(deferredQ, { people, companies, settings }) : null),
+    [open, deferredQ, people, companies, settings],
+  );
 
-  const flat = useMemo(() => {
-    const commands = results.commands.map((c) => ({ kind: "command" as const, c }));
-    const persons = results.persons.map((p) => ({ kind: "person" as const, p }));
-    const comps = results.comps.map((c) => ({ kind: "company" as const, c }));
-    const term = q.trim().toLowerCase();
-    // Enter takes the first row, so the order says what the query most likely meant:
-    // a command typed in full, then a person's name, then a company, then the rest.
-    if (!term) return commands;
-    if (results.commands.some((c) => c.label.toLowerCase() === term)) return [...commands, ...persons, ...comps];
-    if (persons.length && results.persons.some((p) => p.name.toLowerCase().includes(term))) return [...persons, ...comps, ...commands];
-    if (comps.length) return [...comps, ...commands, ...persons];
-    return [...commands, ...persons];
-  }, [results, q]);
+  type Row =
+    | { kind: "all" }
+    | { kind: "command"; c: Command }
+    | { kind: "person"; p: (typeof people)[number] }
+    | { kind: "company"; c: (typeof companies)[number] };
+
+  const term = deferredQ.trim().toLowerCase();
+  const flat = useMemo<Row[]>(() => {
+    if (!term) return base.slice(0, 9).map((c) => ({ kind: "command", c }));
+    const commands: Row[] = base.filter((c) => c.label.toLowerCase().includes(term)).slice(0, 4).map((c) => ({ kind: "command", c }));
+    if (!search) return commands;
+    const persons: Row[] = search.people.map((p) => ({ kind: "person", p }));
+    const comps: Row[] = search.companies.map((c) => ({ kind: "company", c }));
+    // Opening everything the search found is worth a row when there is more than the few shown,
+    // or when the words were understood as a filter (even an honest zero).
+    const all: Row[] = search.total > search.people.length || search.understood.length > 0 ? [{ kind: "all" }] : [];
+
+    // Enter takes the first row, so the order says what the query most likely meant.
+    if (commands.length && base.some((c) => c.label.toLowerCase() === term)) return [...commands, ...all, ...persons, ...comps];
+    if (search.intent === "name") return [...persons, ...all, ...comps, ...commands];
+    if (search.intent === "company") return [...comps, ...all, ...persons, ...commands];
+    if (search.intent === "people") return [...all, ...persons, ...comps, ...commands];
+    return [...all, ...commands, ...comps];
+  }, [term, base, search]);
 
   if (!open || !dataset) return null;
 
@@ -121,7 +126,10 @@ export function CommandPalette() {
       setOpen(false);
     }
     if (item.kind === "company") go("/people", { companies: [item.c.key] });
+    if (item.kind === "all" && search) go("/people", search.filters);
   };
+
+  const label = (k: Row["kind"]) => (k === "person" ? "People" : k === "company" ? "Companies" : k === "command" ? "Go to" : "");
 
   return (
     <div className="fixed inset-0 z-[70] flex items-start justify-center bg-black/30 p-4 pt-[12vh] backdrop-blur-[2px]" onMouseDown={(e) => e.target === e.currentTarget && setOpen(false)}>
@@ -147,47 +155,84 @@ export function CommandPalette() {
                 runAt(active);
               }
             }}
-            placeholder="Search people, companies or actions…"
+            placeholder="Search a name, company, role or phrase…"
             className="h-11 flex-1 bg-transparent text-[14px] outline-none placeholder:text-faint"
           />
           <kbd className="rounded border border-line px-1.5 py-0.5 text-[10px] text-muted">esc</kbd>
         </div>
 
-        <div className="scroll-thin max-h-[52vh] overflow-auto p-1.5">
-          {flat.length === 0 ? <p className="px-3 py-6 text-center text-[12.5px] text-muted">Nothing matches “{q}”.</p> : null}
+        <div className={cx("scroll-thin max-h-[52vh] overflow-auto p-1.5 transition-opacity", stale && "opacity-60")}>
+          {search?.shownFor ? (
+            <p className="px-2.5 pb-1 pt-1.5 text-[12px] text-muted">Showing results for <span className="font-medium text-ink">{search.shownFor}</span></p>
+          ) : null}
+          {search && search.dropped.length ? (
+            <p className="px-2.5 pb-1 pt-1.5 text-[12px] text-muted">
+              Nobody matches everything. Showing the closest, without {search.dropped.join(", ")}.
+            </p>
+          ) : null}
+          {flat.length === 0 ? <p className="px-3 py-6 text-center text-[12.5px] text-muted">Nothing matches &ldquo;{q}&rdquo;. Try a name, a company or a role.</p> : null}
 
           {flat.map((item, i) => {
             const selected = i === active;
             const cls = cx("flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left transition", selected ? "bg-accent-soft" : "hover:bg-hover");
-            if (item.kind === "command") {
-              return (
-                <button key={item.c.id} type="button" onMouseEnter={() => setActive(i)} onClick={() => runAt(i)} className={cls}>
+            const heading = i > 0 && flat[i - 1].kind === item.kind ? "" : label(item.kind);
+            const head = heading ? <p className="px-2.5 pb-0.5 pt-2 text-[10.5px] font-medium uppercase tracking-wide text-muted">{heading}</p> : null;
+            let row: React.ReactNode = null;
+            if (item.kind === "all" && search) {
+              row = (
+                <button type="button" onMouseEnter={() => setActive(i)} onClick={() => runAt(i)} className={cls}>
+                  <Users size={14} className="text-accent" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-[13px] font-medium">
+                      {search.total ? `Show all ${search.total.toLocaleString()} ${search.total === 1 ? "person" : "people"}` : `Show ${search.understood.join(" · ")}`}
+                    </span>
+                    <span className="block truncate text-[11.5px] text-muted">
+                      {search.total ? (search.dropped.length ? "Closest match" : search.understood.join(" · ") || `matching "${search.shownFor ?? search.query}"`) : "Nobody matches yet"}
+                    </span>
+                  </span>
+                  <ArrowRight size={12} className={cx("text-faint", selected ? "opacity-100" : "opacity-0")} />
+                </button>
+              );
+            } else if (item.kind === "command") {
+              row = (
+                <button type="button" onMouseEnter={() => setActive(i)} onClick={() => runAt(i)} className={cls}>
                   <item.c.icon size={14} className="text-muted" />
                   <span className="flex-1 truncate text-[13px]">{item.c.label}</span>
                   {item.c.hint ? <span className="text-[11.5px] text-muted">{item.c.hint}</span> : null}
                   <ArrowRight size={12} className={cx("text-faint", selected ? "opacity-100" : "opacity-0")} />
                 </button>
               );
-            }
-            if (item.kind === "person") {
-              return (
-                <button key={item.p.id} type="button" onMouseEnter={() => setActive(i)} onClick={() => runAt(i)} className={cls}>
+            } else if (item.kind === "person") {
+              row = (
+                <button type="button" onMouseEnter={() => setActive(i)} onClick={() => runAt(i)} className={cls}>
                   <Avatar name={item.p.name} size={22} />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-[13px]">{item.p.name}</span>
-                    <span className="block truncate text-[11.5px] text-muted">{item.p.roleFamily}{item.p.company ? ` · ${item.p.company}` : ""}</span>
+                    <span className="block truncate text-[11.5px] text-muted">{[item.p.position || item.p.roleFamily, item.p.company].filter(Boolean).join(" · ")}</span>
                   </span>
+                </button>
+              );
+            } else if (item.kind === "company") {
+              row = (
+                <button type="button" onMouseEnter={() => setActive(i)} onClick={() => runAt(i)} className={cls}>
+                  <Building2 size={14} className="text-muted" />
+                  <span className="flex-1 truncate text-[13px]">{item.c.name}</span>
+                  <span className="tabular text-[11.5px] text-muted">{item.c.count} {item.c.count === 1 ? "person" : "people"}</span>
                 </button>
               );
             }
             return (
-              <button key={item.c.key} type="button" onMouseEnter={() => setActive(i)} onClick={() => runAt(i)} className={cls}>
-                <Building2 size={14} className="text-muted" />
-                <span className="flex-1 truncate text-[13px]">{item.c.name}</span>
-                <span className="tabular text-[11.5px] text-muted">{item.c.count}</span>
-              </button>
+              <div key={`r-${i}`}>
+                {head}
+                {row}
+              </div>
             );
           })}
+        </div>
+        <div className="flex items-center gap-3 border-t border-line px-3.5 py-1.5 text-[11px] text-muted">
+          <span><kbd className="rounded border border-line px-1">&uarr;</kbd> <kbd className="rounded border border-line px-1">&darr;</kbd> move</span>
+          <span><kbd className="rounded border border-line px-1">Enter</kbd> open</span>
+          <span className="ml-auto hidden sm:inline">Try a name, a company, a role or a phrase like &ldquo;engineer at amazon&rdquo;</span>
         </div>
       </div>
     </div>
