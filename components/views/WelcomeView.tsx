@@ -15,7 +15,7 @@ import { useWorkspace } from "@/components/workspace/store";
 /* ------------------------------------------------------------------ */
 
 export function WelcomeView() {
-  const { ready, dataset, people, settings, updateSettings, importCsv, importArchive } = useWorkspace();
+  const { ready, dataset, people, settings, updateSettings, replaceWithExport } = useWorkspace();
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
@@ -49,11 +49,10 @@ export function WelcomeView() {
       if (isZip(file)) {
         const { connections, archive } = splitExport(await readZipCsvs(await file.arrayBuffer()));
         if (!connections) throw new CsvFormatError("That zip has no Connections.csv in it.");
-        const { total } = importCsv(connections.text, file.name);
+        const { total } = await replaceWithExport(connections.text, file.name, archive);
         if (!total) throw new CsvFormatError("That export has no connections in it.");
-        if (archive.length) importArchive(archive);
       } else {
-        const { total } = importCsv(await file.text(), file.name);
+        const { total } = await replaceWithExport(await file.text(), file.name);
         if (!total) throw new CsvFormatError("That file has no connections in it.");
       }
       setShowModal(true);

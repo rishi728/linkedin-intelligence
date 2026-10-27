@@ -1,11 +1,12 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { FileSpreadsheet, FolderUp, Trash2 } from "lucide-react";
+import { FileSpreadsheet, FolderUp } from "lucide-react";
 import { CsvFormatError } from "@/lib/analyzer";
 import { isZip, readZipCsvs, splitExport, ZipError } from "@/lib/zip";
 import { formatDate } from "@/lib/workspace/dates";
-import { Button, Dialog, Pill, cx } from "@/components/ui";
+import { Button, Dialog, Pill } from "@/components/ui";
+import { downloadBackup } from "@/lib/workspace/autobackup";
 import { useUI, useWorkspace } from "@/components/workspace/store";
 
 /**
@@ -14,11 +15,11 @@ import { useUI, useWorkspace } from "@/components/workspace/store";
  * you have written, statuses, notes, follow-ups, corrections, is touched.
  */
 export function AddData({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { dataset, people, archive, importCsv, importArchive, removeDatasetFile } = useWorkspace();
+  const { dataset, people, archive, importArchive, replaceWithExport, exportBackup } = useWorkspace();
   const { toast } = useUI();
   const csvInput = useRef<HTMLInputElement>(null);
   const archiveInput = useRef<HTMLInputElement>(null);
-  const [mode, setMode] = useState<"add" | "replace">("add");
+  const [pending, setPending] = useState<File | null>(null);
   const [busy, setBusy] = useState<null | "csv" | "archive">(null);
 
   const files = dataset?.files?.length
@@ -32,28 +33,27 @@ export function AddData({ open, onClose }: { open: boolean; onClose: () => void 
   const storedConversations = people.filter((p) => p.history?.messages?.length).length;
   const missingConversations = !!archive && withHistory > 0 && storedConversations === 0;
 
-  const takeCsv = async (file: File | undefined) => {
+  /** A new export replaces everything. If there is data already, ask first and offer a backup. */
+  const pick = (file: File | undefined) => {
     if (!file) return;
+    if (people.length) setPending(file);
+    else void takeCsv(file);
+  };
+
+  const takeCsv = async (file: File) => {
+    setPending(null);
     setBusy("csv");
     try {
       // A whole export .zip does both jobs at once: connections plus the history.
       if (isZip(file)) {
         const { connections, archive: rest } = splitExport(await readZipCsvs(await file.arrayBuffer()));
         if (!connections) throw new CsvFormatError("That zip has no Connections.csv in it.");
-        const { total, added, updated } = importCsv(connections.text, file.name, mode);
-        const extra = rest.length ? importArchive(rest) : null;
-        toast(
-          `${mode === "replace" ? total.toLocaleString() : `${added.toLocaleString()} new · ${updated.toLocaleString()} already known`}` +
-            (extra?.matched ? ` · ${extra.applied} with message history` : ""),
-        );
+        const { total, applied } = await replaceWithExport(connections.text, file.name, rest);
+        toast(`Started fresh with ${total.toLocaleString()} connections` + (applied ? ` · ${applied} with message history` : "") + ".");
         return;
       }
-      const { total, added, updated } = importCsv(await file.text(), file.name, mode);
-      toast(
-        mode === "replace"
-          ? `Starting fresh with ${total.toLocaleString()} connections.`
-          : `${added.toLocaleString()} new · ${updated.toLocaleString()} already known. Everything re-analysed.`,
-      );
+      const { total } = await replaceWithExport(await file.text(), file.name);
+      toast(`Started fresh with ${total.toLocaleString()} connections.`);
     } catch (e) {
       toast(
         e instanceof CsvFormatError || e instanceof ZipError
@@ -88,7 +88,7 @@ export function AddData({ open, onClose }: { open: boolean; onClose: () => void 
       open={open}
       onClose={onClose}
       title="Add data"
-      subtitle="Add a new export any time. Your statuses, notes and corrections are always kept."
+      subtitle="Load a new export any time. It replaces what is here, so download a backup first if you want to keep it."
       width={620}
       footer={<Button variant="primary" onClick={onClose}>Done</Button>}
     >
@@ -98,7 +98,7 @@ export function AddData({ open, onClose }: { open: boolean; onClose: () => void 
         accept=".zip,.csv,text/csv,application/zip"
         className="hidden"
         onChange={(e) => {
-          void takeCsv(e.target.files?.[0]);
+          pick(e.target.files?.[0]);
           e.target.value = "";
         }}
       />
@@ -119,28 +119,9 @@ export function AddData({ open, onClose }: { open: boolean; onClose: () => void 
         <p className="text-[13.5px] font-semibold">Connections</p>
         <p className="mt-0.5 text-[12.5px] text-muted">
           Drop in the whole <strong className="text-ink">export .zip</strong> LinkedIn emails you, or just a{" "}
-          <strong className="text-ink">Connections.csv</strong>. People in more than one file are counted once, and
-          everyone is classified again from scratch.
+          <strong className="text-ink">Connections.csv</strong>. A new export <strong className="text-ink">replaces everything</strong>:
+          the old connections, notes and history are cleared and only the new file is used.
         </p>
-
-        <div className="mt-2.5 flex gap-2">
-          {(["add", "replace"] as const).map((m) => (
-            <button
-              key={m}
-              type="button"
-              onClick={() => setMode(m)}
-              className={cx(
-                "flex-1 rounded-xl border px-3 py-2 text-left transition",
-                mode === m ? "border-accent bg-accent-soft/40" : "border-line hover:border-line-strong",
-              )}
-            >
-              <span className="block text-[12.5px] font-medium">{m === "add" ? "Add to what I have" : "Start fresh"}</span>
-              <span className="mt-0.5 block text-[11.5px] text-muted">
-                {m === "add" ? "Keeps your current connections too" : "Replaces the connections, keeps your notes"}
-              </span>
-            </button>
-          ))}
-        </div>
 
         <Button
           variant="primary"
@@ -160,20 +141,6 @@ export function AddData({ open, onClose }: { open: boolean; onClose: () => void 
                   <span className="block truncate text-[12.5px]">{f.fileName}</span>
                   <span className="block text-[11.5px] text-muted">Added {formatDate(new Date(f.importedAt))}</span>
                 </span>
-                {files.length > 1 ? (
-                  <button
-                    type="button"
-                    aria-label={`Remove ${f.fileName}`}
-                    title="Remove this file"
-                    onClick={() => {
-                      removeDatasetFile(f.fileName);
-                      toast(`${f.fileName} removed.`);
-                    }}
-                    className="shrink-0 text-muted transition hover:text-[var(--t-red)]"
-                  >
-                    <Trash2 size={13} />
-                  </button>
-                ) : null}
               </div>
             ))}
             <p className="pt-0.5 text-[11.5px] text-muted">
@@ -218,6 +185,21 @@ export function AddData({ open, onClose }: { open: boolean; onClose: () => void 
       <p className="mt-4 rounded-lg border border-line bg-subtle px-3 py-2 text-[11.5px] text-muted">
         Nothing is uploaded anywhere. Every file is read in this browser and stays on this device.
       </p>
+      <Dialog
+        open={!!pending}
+        onClose={() => setPending(null)}
+        title="Replace everything?"
+        subtitle={`Loading ${pending?.name ?? "this file"} clears the ${people.length.toLocaleString()} connections here, with their notes, statuses and history. Only the new file is kept.`}
+        width={460}
+        footer={
+          <>
+            <Button onClick={() => setPending(null)}>Cancel</Button>
+            <Button variant="primary" onClick={() => pending && void takeCsv(pending)}>Replace</Button>
+          </>
+        }
+      >
+        <Button icon={FolderUp} onClick={() => downloadBackup(exportBackup())}>Download a backup first</Button>
+      </Dialog>
     </Dialog>
   );
 }

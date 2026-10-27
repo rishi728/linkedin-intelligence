@@ -53,6 +53,8 @@ interface DataContext {
   exportBackup: () => string;
   importBackup: (json: string) => void;
   resetWorkspace: () => Promise<void>;
+  /** Wipes everything, then loads only this export. Bad files change nothing. */
+  replaceWithExport: (connectionsText: string, fileName: string, archiveFiles?: Array<{ name: string; text: string }>) => Promise<{ total: number; applied: number }>;
 }
 
 export interface ArchiveSummary {
@@ -593,12 +595,50 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     setSavedAt(null);
   }, []);
 
+  /**
+   * A new export replaces everything: connections, notes, statuses, message history, lists and
+   * settings. Both files are read before anything is deleted, so a bad file changes nothing.
+   */
+  const replaceWithExport = useCallback(async (
+    connectionsText: string,
+    fileName: string,
+    archiveFiles: Array<{ name: string; text: string }> = [],
+  ) => {
+    const parsed = parseConnectionsCsv(connectionsText); // throws CsvFormatError on bad files
+    const arch = archiveFiles.length ? parseArchive(archiveFiles) : null;
+    await resetWorkspace();
+
+    const file = { fileName, importedAt: now(), csv: connectionsText };
+    const d: Dataset = { files: [file], fileName, importedAt: file.importedAt, csv: connectionsText };
+    setDataset(d);
+    void dbSet("dataset", d);
+
+    let applied = 0;
+    if (arch) {
+      const data: ArchiveData = { importedAt: now(), fileNames: archiveFiles.map((f) => f.name), history: arch.history, counts: arch.counts };
+      setArchive(data);
+      void dbSet("archive", data);
+      const seeded = archiveSeedPatches(parsed, data.history, {});
+      applied = seeded.applied;
+      if (Object.keys(seeded.patches).length) commitRecords(() => seeded.patches);
+      updateSettings((s) => ({
+        ...s,
+        profile: {
+          name: arch.profile?.name ?? "",
+          background: arch.profile?.headline || (arch.positions[0] ? `${arch.positions[0].title} at ${arch.positions[0].company}` : ""),
+          schools: arch.schools,
+        },
+      }));
+    }
+    return { total: parsed.length, applied };
+  }, [resetWorkspace, commitRecords, updateSettings]);
+
   const data = useMemo<DataContext>(() => ({
     ready, dataset, people, building, companies, byId, settings, records, archive, savedAt, snapshots,
-    importCsv, importArchive, updateRecord, setStatus, setClassification, resetClassification, updateSettings,
+    importCsv, importArchive, replaceWithExport, updateRecord, setStatus, setClassification, resetClassification, updateSettings,
     deleteRule, toggleTarget, saveSegment, deleteSegment, createList, updateList, deleteList, addToList, removeFromList, exportBackup, importBackup, resetWorkspace, removeDatasetFile,
     completeFollowUp, restoreSnapshot,
-  }), [ready, dataset, people, building, companies, byId, settings, records, archive, savedAt, snapshots, importCsv, importArchive,
+  }), [ready, dataset, people, building, companies, byId, settings, records, archive, savedAt, snapshots, importCsv, importArchive, replaceWithExport,
     updateRecord, setStatus, setClassification, resetClassification, updateSettings, deleteRule, toggleTarget, saveSegment,
     deleteSegment, createList, updateList, deleteList, addToList, removeFromList,
     exportBackup, importBackup, resetWorkspace, removeDatasetFile, completeFollowUp, restoreSnapshot]);

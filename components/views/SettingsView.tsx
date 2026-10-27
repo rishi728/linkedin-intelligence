@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Download, Plus, Trash2, Upload, X } from "lucide-react";
-import { CsvFormatError } from "@/lib/analyzer";
+import { CsvFormatError, parseConnectionsCsv } from "@/lib/analyzer";
 import { CATEGORY_ID, CATS } from "@/lib/classifier/categories";
 import { ROLE_FAMILIES, familiesOf } from "@/lib/classifier/search";
 import { OPPORTUNITY_TYPES } from "@/lib/workspace/defaults";
@@ -79,7 +79,7 @@ function WeightSlider({ label, hint, value, onCommit }: { label: string; hint: s
 
 export function SettingsView() {
   const {
-    people, settings, updateSettings, deleteRule, deleteSegment, toggleTarget, importCsv, exportBackup, importBackup,
+    people, settings, updateSettings, deleteRule, deleteSegment, toggleTarget, replaceWithExport, exportBackup, importBackup,
     resetWorkspace, dataset, snapshots, restoreSnapshot, savedAt,
   } = useWorkspace();
   const { toast } = useUI();
@@ -480,7 +480,7 @@ export function SettingsView() {
                 <CardTitle hint={`${people.length.toLocaleString()} connections from ${dataset?.fileName}`}>Import connections</CardTitle>
                 <div className="p-4 pt-3">
                   <p className="text-[12.5px] text-muted">
-                    Importing a newer export keeps all your notes, statuses, follow-ups and classifications, they’re matched by LinkedIn profile URL.
+                    Importing a new export replaces everything here: connections, notes, statuses and history. Download a backup first if you want to keep them.
                   </p>
                   <input
                     ref={csvInput}
@@ -492,8 +492,11 @@ export function SettingsView() {
                       e.target.value = "";
                       if (!file) return;
                       try {
-                        const { total, added } = importCsv(await file.text(), file.name);
-                        toast(`Imported ${total.toLocaleString()} connections${added ? ` · ${added.toLocaleString()} new` : ""}.`);
+                        const text = await file.text();
+                        parseConnectionsCsv(text); // reject bad files before asking
+                        if (people.length && !window.confirm(`Replace the ${people.length.toLocaleString()} connections here, with their notes and history, with ${file.name}?`)) return;
+                        const { total } = await replaceWithExport(text, file.name);
+                        toast(`Started fresh with ${total.toLocaleString()} connections.`);
                       } catch (err) {
                         toast(err instanceof CsvFormatError ? err.message : "Could not read that file.");
                       }
