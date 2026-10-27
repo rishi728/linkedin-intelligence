@@ -13,13 +13,6 @@ const Chip = ({ children, on }: { children: ReactNode; on?: boolean }) => (
   }}>{children}</span>
 );
 
-const Key = ({ k, label }: { k: string; label: string }) => (
-  <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "#334155" }}>
-    <kbd style={{ minWidth: 26, textAlign: "center", padding: "3px 7px", borderRadius: 6, background: "#fff", border: `1px solid ${LINE}`, borderBottomWidth: 2, fontWeight: 700, fontFamily: "inherit", color: INK }}>{k}</kbd>
-    {label}
-  </div>
-);
-
 const Card = ({ children }: { children: ReactNode }) => (
   <div style={{ background: "#fff", border: `1px solid ${LINE}`, borderRadius: 12, padding: 14 }}>{children}</div>
 );
@@ -103,13 +96,6 @@ const MOCKS: Record<string, () => ReactNode> = {
           <span style={{ flex: 1, textAlign: "center", padding: "6px 0", borderRadius: 8, fontSize: 11.5, fontWeight: 600, background: "#fff", border: `1px solid ${LINE}`, color: INK }}>Mark sent</span>
         </div>
       </Card>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px 12px" }}>
-        <Key k="C" label="Copy the message" />
-        <Key k="O" label="Open their LinkedIn" />
-        <Key k="S" label="Mark as sent" />
-        <Key k="K" label="Skip" />
-        <Key k="N" label="Not a fit" />
-      </div>
     </div>
   ),
   pipeline: () => (
@@ -202,8 +188,8 @@ const CHAPTERS: Chapter[] = [
     hook: "Work a shortlist like a deck of cards, one person at a time.",
     steps: [
       "Start a session and step through your shortlist.",
-      "Press C to copy the message, O to open their LinkedIn, S to mark it sent.",
-      "K skips, N marks not a fit, and the arrow keys move between people.",
+      "Copy the message, open their LinkedIn, and send it yourself.",
+      "Mark it sent, skip, or mark not a fit, then move to the next person.",
     ],
     tip: "You paste and press send on LinkedIn yourself. NesT never touches your account.",
     mock: "session", go: { label: "Open Outreach", path: "/outreach" },
@@ -311,7 +297,7 @@ export function Playbook({ hasData, tryIt }: { hasData: boolean; tryIt: (path: s
             <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
               <img src="/owl-mascot.png" alt="" width={52} height={52} style={{ objectFit: "contain", flexShrink: 0 }} />
               <div style={{ position: "relative", background: "#ecfdf5", border: "1px solid #a7f3d0", borderRadius: 14, padding: "10px 14px", fontSize: 12.5, color: "#065f46", lineHeight: 1.55 }}>
-                <b>Owlie says:</b> {c.tip}
+                <b>Owlie:</b> {c.tip}
               </div>
             </div>
           </div>
