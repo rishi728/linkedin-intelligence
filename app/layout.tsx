@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Caveat, Inter, JetBrains_Mono, Newsreader, Plus_Jakarta_Sans } from "next/font/google";
+import { RegisterServiceWorker } from "@/components/shell/RegisterServiceWorker";
 import { WorkspaceProvider } from "@/components/workspace/store";
 import "./globals.css";
 
@@ -67,6 +68,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="en" className={`${inter.variable} ${mono.variable} ${newsreader.variable} ${jakarta.variable} ${caveat.variable} h-full`}>
       <body className="h-full">
         <WorkspaceProvider>{children}</WorkspaceProvider>
+        <RegisterServiceWorker />
       </body>
     </html>
   );

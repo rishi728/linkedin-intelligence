@@ -1183,7 +1183,7 @@ function PrivacyTabContent({ walkthroughOpen, setWalkthroughOpen }: { walkthroug
                 No remote cloud databases. No password requests. No automated web-bots scraping your account. All contact intelligence computes right inside your own browser window.
               </p>
               <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 16, paddingTop: 8 }}>
-                {["Zero data uploads", "Client-side only", "No account needed"].map((t) => (
+                {["Zero data uploads", "Client-side only", "Works offline after your first visit"].map((t) => (
                   <div key={t} style={{
                     display: "flex", alignItems: "center", gap: 8,
                     background: "#fff", padding: "8px 14px", borderRadius: 8,

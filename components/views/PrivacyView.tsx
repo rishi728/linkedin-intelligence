@@ -174,7 +174,7 @@ export function PrivacyView() {
 
                 {/* Reassurance badges */}
                 <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 16, paddingTop: 8 }}>
-                  {["Zero data uploads", "Client-side only", "No account needed"].map((t) => (
+                  {["Zero data uploads", "Client-side only", "Works offline after your first visit"].map((t) => (
                     <div key={t} style={{
                       display: "flex", alignItems: "center", gap: 8,
                       background: "#fff", padding: "8px 14px", borderRadius: 8,
