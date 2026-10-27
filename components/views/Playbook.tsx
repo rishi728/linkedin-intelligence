@@ -24,7 +24,6 @@ const Card = ({ children }: { children: ReactNode }) => (
   <div style={{ background: "#fff", border: `1px solid ${LINE}`, borderRadius: 12, padding: 14 }}>{children}</div>
 );
 
-const Placeholder = ({ w }: { w: string }) => <div style={{ height: 8, width: w, borderRadius: 4, background: "#eef0ee" }} />;
 
 const STATUS_FLOW = ["To contact", "Contacted", "Awaiting response", "Follow-up", "Replied", "Call scheduled"];
 const WEIGHTS = [
@@ -80,11 +79,36 @@ const MOCKS: Record<string, () => ReactNode> = {
     </div>
   ),
   session: () => (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-      <Card><div style={{ display: "flex", flexDirection: "column", gap: 7 }}><Placeholder w="55%" /><Placeholder w="80%" /><Placeholder w="40%" /></div></Card>
-      <div style={{ display: "flex", flexDirection: "column", gap: 8, justifyContent: "center" }}>
-        <Key k="C" label="Copy the message" /><Key k="O" label="Open their LinkedIn" /><Key k="S" label="Mark as sent" />
-        <Key k="K" label="Skip" /><Key k="N" label="Not a fit" />
+    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      <Card>
+        <div style={{ textAlign: "center" }}>
+          <div style={{ width: 34, height: 34, borderRadius: "50%", background: "#ecfdf5", color: "#065f46", display: "grid", placeItems: "center", margin: "0 auto 6px", fontSize: 13, fontWeight: 700 }}>?</div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: INK }}>Their name</div>
+          <div style={{ fontSize: 11.5, color: "#475569" }}>Their role</div>
+          <div style={{ fontSize: 11, color: "#64748b" }}>Their company</div>
+          <div style={{ display: "flex", justifyContent: "center", gap: 5, marginTop: 7 }}>
+            <span style={{ padding: "1px 7px", borderRadius: 6, fontSize: 10, fontWeight: 600, background: "#e3f3f0", color: "#0f766e" }}>Target company</span>
+            <span style={{ padding: "1px 7px", borderRadius: 6, fontSize: 10, fontWeight: 600, background: "#f1ebfd", color: "#6d28d9" }}>Alumni</span>
+          </div>
+        </div>
+        <div style={{ marginTop: 10, paddingTop: 8, borderTop: `1px solid ${LINE}` }}>
+          <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "#64748b", marginBottom: 3 }}>Why this person</div>
+          <div style={{ fontSize: 11, color: "#475569" }}>Works at a target company</div>
+        </div>
+        <div style={{ marginTop: 10, border: `1px solid ${LINE}`, borderRadius: 8, background: "#f8faf8", padding: "7px 9px", fontSize: 11, lineHeight: 1.5, color: "#334155" }}>
+          Hi <b style={{ color: "#059669" }}>{"{{first_name}}"}</b>, I came across your work as <b style={{ color: "#059669" }}>{"{{role}}"}</b> at <b style={{ color: "#059669" }}>{"{{company}}"}</b>.
+        </div>
+        <div style={{ display: "flex", gap: 6, marginTop: 9 }}>
+          <span style={{ flex: 1, textAlign: "center", padding: "6px 0", borderRadius: 8, fontSize: 11.5, fontWeight: 600, background: INK, color: "#fff" }}>Copy message</span>
+          <span style={{ flex: 1, textAlign: "center", padding: "6px 0", borderRadius: 8, fontSize: 11.5, fontWeight: 600, background: "#fff", border: `1px solid ${LINE}`, color: INK }}>Mark sent</span>
+        </div>
+      </Card>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px 12px" }}>
+        <Key k="C" label="Copy the message" />
+        <Key k="O" label="Open their LinkedIn" />
+        <Key k="S" label="Mark as sent" />
+        <Key k="K" label="Skip" />
+        <Key k="N" label="Not a fit" />
       </div>
     </div>
   ),
