@@ -34,10 +34,32 @@ const caveat = Caveat({
   weight: "600",
 });
 
+// The public address of the deployed site. Link previews (LinkedIn, WhatsApp, X) need absolute URLs,
+// so change this if the site moves to its own domain.
+const SITE_URL = "https://network-ashen-two.vercel.app";
+const TITLE = "NesT: Network Engagement & Signal Tracker";
+const DESCRIPTION =
+  "Understand your LinkedIn network, find the right people, write your own outreach and never miss a follow-up. Runs in your browser: your data never leaves your device.";
+
 export const metadata: Metadata = {
-  title: { default: "NesT", template: "%s · NesT" },
-  description:
-    "Understand your LinkedIn network, find the right people, prepare personalised outreach and never miss a follow-up. Local-first: your data stays in your browser.",
+  metadataBase: new URL(SITE_URL),
+  title: { default: TITLE, template: "%s · NesT" },
+  description: DESCRIPTION,
+  applicationName: "NesT",
+  openGraph: {
+    type: "website",
+    url: "/",
+    siteName: "NesT",
+    title: "NesT: turn your LinkedIn connections into real opportunities",
+    description: DESCRIPTION,
+    images: [{ url: "/og-image.jpg", width: 1200, height: 630, alt: "NesT, Network Engagement & Signal Tracker" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "NesT: turn your LinkedIn connections into real opportunities",
+    description: DESCRIPTION,
+    images: ["/og-image.jpg"],
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
