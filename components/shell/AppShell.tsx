@@ -267,7 +267,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       {/* ============ BOTTOM NAV BAR ============ */}
       <div className="fixed bottom-3 left-1/2 z-40 w-[calc(100%-24px)] max-w-4xl -translate-x-1/2">
-        <nav aria-label="Primary" className="flex items-center justify-between gap-0.5 rounded-2xl border border-[#1f4a3b] bg-[#0C2D22] p-1.5 shadow-[0_10px_30px_rgba(12,45,34,0.35)] ring-1 ring-black/10">
+        <nav aria-label="Primary" className="flex items-center justify-between gap-0.5 rounded-2xl border border-[#A9CDB9] bg-[#E6F2EC] p-1.5 shadow-[0_10px_30px_rgba(12,45,34,0.2)]">
           {BOTTOM_NAV.map((item) => {
             const active = isActive(pathname, item.href);
             const count = item.countKey ? counts[item.countKey] : undefined;
@@ -280,11 +280,11 @@ export function AppShell({ children }: { children: ReactNode }) {
                   "relative flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-[10px] font-medium transition-all duration-200 sm:flex-row sm:gap-1.5 sm:px-1.5 sm:py-2.5 sm:text-[11.5px] lg:px-2",
                   item.wide && "max-md:hidden",
                   active
-                    ? "bg-[#34d399] font-bold text-[#06281d] shadow-md"
-                    : "text-[#d1e7dd] hover:bg-white/10 hover:text-white",
+                    ? "bg-[#0C2D22] font-bold text-white shadow-[0_2px_8px_rgba(12,45,34,0.35)]"
+                    : "text-[#2F5D4C] hover:bg-white/70 hover:text-[#0C2D22]",
                 )}
               >
-                <item.icon size={16} className={active ? "text-[#06281d]" : "text-[#6ee7b7]"} />
+                <item.icon size={16} className={active ? "text-[#6EE7B7]" : "text-[#3F7A64]"} />
                 <span className="hidden whitespace-nowrap tracking-tight sm:inline">{item.label}</span>
                 <span className="tracking-tight sm:hidden">{item.short}</span>
                 {count !== undefined && count > 0 && (

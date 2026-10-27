@@ -56,3 +56,6 @@ next-env.d.ts
 *.xlsx
 *.xls
 netlens-backup*.json
+
+# generated from scripts/sw-template.js by next.config.ts
+/public/sw.js
