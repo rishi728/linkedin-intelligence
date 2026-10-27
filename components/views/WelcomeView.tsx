@@ -15,9 +15,8 @@ import { useWorkspace } from "@/components/workspace/store";
 /* ------------------------------------------------------------------ */
 
 export function WelcomeView() {
-  const { ready, dataset, people, settings, updateSettings, importCsv, importArchive, loadSample } = useWorkspace();
+  const { ready, dataset, people, settings, updateSettings, importCsv, importArchive } = useWorkspace();
   const router = useRouter();
-  const destination = useRef("/home");
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -25,12 +24,16 @@ export function WelcomeView() {
   const [showModal, setShowModal] = useState(false);
   const [modalTab, setModalTab] = useState<"summary" | "edit">("summary");
   const [activeTab, setActiveTab] = useState<"home" | "demo" | "privacy">("home");
+  const goToUpload = () => {
+    setActiveTab("home");
+    setTimeout(() => document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth", block: "center" }), 80);
+  };
   const [walkthroughOpen, setWalkthroughOpen] = useState(false);
 
   useEffect(() => {
     if (ready && dataset && !showModal) {
       const stayOnLanding = new URLSearchParams(window.location.search).has("welcome");
-      if (!stayOnLanding) router.replace(destination.current);
+      if (!stayOnLanding) router.replace("/home");
     }
   }, [ready, dataset, router, showModal]);
 
@@ -601,7 +604,7 @@ export function WelcomeView() {
                   }}>{error}</p>
                 ) : null}
 
-                <div style={{ marginTop: 12, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+                <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 12 }}>
                   <p style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#64748b" }}>
                     <svg style={{ width: 14, height: 14, stroke: "currentColor", strokeWidth: 2, fill: "none" }} viewBox="0 0 24 24">
                       <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
@@ -609,25 +612,6 @@ export function WelcomeView() {
                     </svg>
                     Stays in this browser
                   </p>
-                  <button
-                    onClick={() => {
-                      loadSample();
-                      updateSettings((s) => ({ ...s, focus: { ...s.focus, confirmedAt: new Date().toISOString() } }));
-                      router.push("/home");
-                    }}
-                    style={{
-                      padding: "6px 14px", borderRadius: 8, fontSize: 13, fontWeight: 500,
-                      background: "#F4F3EE", color: "#334155", border: "1px solid #E8E6DF",
-                      cursor: "pointer", fontFamily: "inherit",
-                      display: "flex", alignItems: "center", gap: 6,
-                    }}
-                  >
-                    <svg style={{ width: 14, height: 14, stroke: "currentColor", strokeWidth: 2, fill: "none" }} viewBox="0 0 24 24">
-                      <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
-                      <polyline points="14 2 14 8 20 8" />
-                    </svg>
-                    Explore with sample data
-                  </button>
                 </div>
               </div>
             </div>
@@ -635,7 +619,7 @@ export function WelcomeView() {
           </div>
           )}
           {activeTab === "demo" && (
-          <DemoTabContent loadSample={loadSample} updateSettings={updateSettings} router={router} hasData={!!dataset} setDestination={(p) => { destination.current = p; }} />
+          <DemoTabContent router={router} hasData={!!dataset} goToUpload={goToUpload} />
           )}
           {activeTab === "privacy" && (
           <PrivacyTabContent walkthroughOpen={walkthroughOpen} setWalkthroughOpen={setWalkthroughOpen} />
@@ -767,12 +751,8 @@ function ExportModal({
               boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
             }}>Archive parsed!</div>
           </div>
-          <div style={{ width: 64, height: 64 }}>
-            <img
-              alt="Inspector Owl Mascot"
-              src="https://lh3.googleusercontent.com/aida/AEtjO1UY91Kw-C8aDDOQbSY0SoXF3GkpkHKNCORY6mY0BYEMThqetM8CH6y88MsU3ZG8TrjGiXAJhpu9S-34dHri-z03tE3uBpUZUKGlMvcPsg8L4Y29evZ3xHzEz8JYQiBP75C9mSYO6x2oweSYh0gbeBkM-AMEYLRywoTNbUD4VGQhq0XFuW-0AzKqeHlkr6BDx2jkqulkJNPySHWEZlgIcd7xAydbINIOdBiF05YBbiEXvCArsVhnVe3hHFg"
-              style={{ width: "100%", height: "100%", objectFit: "contain" }}
-            />
+          <div style={{ width: 64, height: 64, display: "grid", placeItems: "center" }}>
+            <OwlInspecting />
           </div>
         </div>
 
@@ -950,16 +930,10 @@ function ExportModal({
 /* ------------------------------------------------------------------ */
 /*  Demo tab content                                                   */
 /* ------------------------------------------------------------------ */
-function DemoTabContent({ loadSample, updateSettings, router, hasData, setDestination }: { loadSample: () => void; updateSettings: (fn: (s: Settings) => Settings) => void; router: ReturnType<typeof useRouter>; hasData: boolean; setDestination: (path: string) => void }) {
+function DemoTabContent({ router, hasData, goToUpload }: { router: ReturnType<typeof useRouter>; hasData: boolean; goToUpload: () => void }) {
   const [activeScreen, setActiveScreen] = useState(0);
-  const tryIt = (path: string) => {
-    if (!hasData) {
-      setDestination(path);
-      loadSample();
-      updateSettings((s) => ({ ...s, focus: { ...s.focus, confirmedAt: new Date().toISOString() } }));
-    }
-    router.push(path);
-  };
+  // Without data there is nothing to open, so send the visitor to the upload box instead.
+  const tryIt = (path: string) => (hasData ? router.push(path) : goToUpload());
   const screens = [
     {
       title: "Home Dashboard",
@@ -1129,11 +1103,7 @@ function DemoTabContent({ loadSample, updateSettings, router, hasData, setDestin
 
             {/* CTA */}
             <button
-              onClick={() => {
-                loadSample();
-                updateSettings((s) => ({ ...s, focus: { ...s.focus, confirmedAt: new Date().toISOString() } }));
-                router.push("/home");
-              }}
+              onClick={() => (hasData ? router.push("/home") : goToUpload())}
               className="cta-main"
               style={{
                 marginTop: 12, display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
@@ -1143,7 +1113,7 @@ function DemoTabContent({ loadSample, updateSettings, router, hasData, setDestin
                 boxShadow: "0 4px 12px rgba(12,45,34,0.2)",
               }}
             >
-              Try with Sample Data
+              {hasData ? "Open your workspace" : "Add your LinkedIn data"}
               <span className="cta-arrow" style={{
                 width: 22, height: 22, borderRadius: "50%", background: "rgba(255,255,255,0.1)",
                 display: "flex", alignItems: "center", justifyContent: "center",
@@ -1213,7 +1183,7 @@ function PrivacyTabContent({ walkthroughOpen, setWalkthroughOpen }: { walkthroug
                 No remote cloud databases. No password requests. No automated web-bots scraping your account. All contact intelligence computes right inside your own browser window.
               </p>
               <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 16, paddingTop: 8 }}>
-                {["Zero data uploads", "Client-side only", "Works offline"].map((t) => (
+                {["Zero data uploads", "Client-side only", "No account needed"].map((t) => (
                   <div key={t} style={{
                     display: "flex", alignItems: "center", gap: 8,
                     background: "#fff", padding: "8px 14px", borderRadius: 8,
@@ -1260,7 +1230,7 @@ function PrivacyTabContent({ walkthroughOpen, setWalkthroughOpen }: { walkthroug
                   <span style={{ position: "absolute", top: 8, right: 8, fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", background: "#d1fae5", color: "#065f46", padding: "2px 8px", borderRadius: 9999 }}>Local Only</span>
                 </div>
                 <h3 style={{ fontWeight: 700, color: "#0f172a", fontSize: 16, marginBottom: 6 }}>Stays In Your Browser</h3>
-                <p style={{ color: "#64748b", fontSize: 13, lineHeight: 1.6 }}>Your contacts are read and organized inside your personal browser memory. Never uploaded.</p>
+                <p style={{ color: "#64748b", fontSize: 13, lineHeight: 1.6 }}>Your contacts are read and organized inside your browser and saved only on this device. Never uploaded.</p>
               </div>
               <div style={{ paddingTop: 16, marginTop: 16, borderTop: "1px solid #E8E6DF", fontSize: 12, fontWeight: 600, color: "#065f46" }}>Client-side computing</div>
             </div>
@@ -1274,10 +1244,10 @@ function PrivacyTabContent({ walkthroughOpen, setWalkthroughOpen }: { walkthroug
                     </svg>
                     <div style={{ position: "absolute", width: 80, height: 2, background: "#ef4444", transform: "rotate(45deg)", borderRadius: 9999 }} />
                   </div>
-                  <span style={{ position: "absolute", bottom: 8, padding: "2px 10px", borderRadius: 6, background: "#1c1917", color: "#fbbf24", fontSize: 11, fontFamily: "monospace", fontWeight: 700 }}>0 Bytes Sent</span>
+                  <span style={{ position: "absolute", bottom: 8, padding: "2px 10px", borderRadius: 6, background: "#1c1917", color: "#fbbf24", fontSize: 11, fontFamily: "monospace", fontWeight: 700 }}>0 Bytes Uploaded</span>
                 </div>
-                <h3 style={{ fontWeight: 700, color: "#0f172a", fontSize: 16, marginBottom: 6 }}>Zero Cloud Servers</h3>
-                <p style={{ color: "#64748b", fontSize: 13, lineHeight: 1.6 }}>We have no database servers to store or view your contacts, even if we wanted to.</p>
+                <h3 style={{ fontWeight: 700, color: "#0f172a", fontSize: 16, marginBottom: 6 }}>No Data Servers</h3>
+                <p style={{ color: "#64748b", fontSize: 13, lineHeight: 1.6 }}>The site only delivers the app. No server receives your contacts, so we could not see them even if we wanted to.</p>
               </div>
               <div style={{ paddingTop: 16, marginTop: 16, borderTop: "1px solid #E8E6DF", fontSize: 12, fontWeight: 600, color: "#065f46" }}>No remote storage</div>
             </div>
@@ -1315,7 +1285,7 @@ function PrivacyTabContent({ walkthroughOpen, setWalkthroughOpen }: { walkthroug
                   </div>
                 </div>
                 <h3 style={{ fontWeight: 700, color: "#0f172a", fontSize: 16, marginBottom: 6 }}>One-Click Erase Anytime</h3>
-                <p style={{ color: "#64748b", fontSize: 13, lineHeight: 1.6 }}>Close your tab or hit reset. Every cached record vanishes permanently without a trace.</p>
+                <p style={{ color: "#64748b", fontSize: 13, lineHeight: 1.6 }}>Use Reset workspace in Settings and everything NesT saved in this browser is erased. Files you downloaded yourself, like backups, stay where you saved them.</p>
               </div>
               <div style={{ paddingTop: 16, marginTop: 16, borderTop: "1px solid #E8E6DF", fontSize: 12, fontWeight: 600, color: "#065f46" }}>You hold full control</div>
             </div>

@@ -46,3 +46,13 @@ next-env.d.ts
 /pub/
 
 .vercel
+
+# local assistant settings
+/.claude/
+
+# Never commit anyone's LinkedIn export, backups or spreadsheets
+*.csv
+*.zip
+*.xlsx
+*.xls
+netlens-backup*.json

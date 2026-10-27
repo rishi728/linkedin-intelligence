@@ -8,13 +8,6 @@ export function PrivacyView() {
 
   return (
     <>
-      <link rel="preconnect" href="https://fonts.googleapis.com" />
-      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-      <link
-        href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
-        rel="stylesheet"
-      />
-
       <style>{`
         .privacy-root {
           --linen: #FAF8F5;
@@ -25,7 +18,7 @@ export function PrivacyView() {
           --warm-border-light: #EFE9DF;
           --gold-badge: #E59E3F;
           --sage-pill: #D8EFE5;
-          font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+          font-family: var(--font-jakarta), system-ui, sans-serif;
           background-color: #FAF8F5;
           color: #1A1A18;
           -webkit-font-smoothing: antialiased;
@@ -34,8 +27,8 @@ export function PrivacyView() {
         }
         .privacy-root * { box-sizing: border-box; }
         .privacy-root ::selection { background: #10B981; color: #fff; }
-        .prv-serif { font-family: 'Instrument Serif', Georgia, serif; }
-        .prv-hand { font-family: 'Caveat', cursive; }
+        .prv-serif { font-family: var(--font-newsreader), Georgia, serif; }
+        .prv-hand { font-family: var(--font-caveat), cursive; }
         @keyframes floatOwl {
           0%, 100% { transform: translateY(0px) rotate(0deg); }
           50% { transform: translateY(-8px) rotate(0.9deg); }
@@ -181,7 +174,7 @@ export function PrivacyView() {
 
                 {/* Reassurance badges */}
                 <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 16, paddingTop: 8 }}>
-                  {["Zero data uploads", "Client-side only", "Works offline"].map((t) => (
+                  {["Zero data uploads", "Client-side only", "No account needed"].map((t) => (
                     <div key={t} style={{
                       display: "flex", alignItems: "center", gap: 8,
                       background: "#fff", padding: "8px 14px", borderRadius: 8,
@@ -238,13 +231,13 @@ export function PrivacyView() {
                   </div>
                   <h3 style={{ fontWeight: 700, color: "#1c1917", fontSize: 16, marginBottom: 6 }}>Stays In Your Browser</h3>
                   <p style={{ color: "#78716c", fontSize: 13, lineHeight: 1.6 }}>
-                    Your contacts are read and organized inside your personal browser memory. Never uploaded.
+                    Your contacts are read and organized inside your browser and saved only on this device. Never uploaded.
                   </p>
                 </div>
                 <div style={{ paddingTop: 16, marginTop: 16, borderTop: "1px solid #f5f5f4", fontSize: 12, fontWeight: 600, color: "#065f46" }}>Client-side computing</div>
               </article>
 
-              {/* Card 2: Zero Cloud Servers */}
+              {/* Card 2: No Data Servers */}
               <article className="prv-card" style={{
                 background: "#fff", borderRadius: 16, border: "1px solid var(--warm-border)",
                 padding: 24, boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
@@ -262,11 +255,11 @@ export function PrivacyView() {
                       </svg>
                       <div style={{ position: "absolute", width: 80, height: 2, background: "#ef4444", transform: "rotate(45deg)", borderRadius: 9999 }} />
                     </div>
-                    <span style={{ position: "absolute", bottom: 8, padding: "2px 10px", borderRadius: 6, background: "#1c1917", color: "#fbbf24", fontSize: 11, fontFamily: "monospace", fontWeight: 700, letterSpacing: "-0.02em" }}>0 Bytes Sent</span>
+                    <span style={{ position: "absolute", bottom: 8, padding: "2px 10px", borderRadius: 6, background: "#1c1917", color: "#fbbf24", fontSize: 11, fontFamily: "monospace", fontWeight: 700, letterSpacing: "-0.02em" }}>0 Bytes Uploaded</span>
                   </div>
-                  <h3 style={{ fontWeight: 700, color: "#1c1917", fontSize: 16, marginBottom: 6 }}>Zero Cloud Servers</h3>
+                  <h3 style={{ fontWeight: 700, color: "#1c1917", fontSize: 16, marginBottom: 6 }}>No Data Servers</h3>
                   <p style={{ color: "#78716c", fontSize: 13, lineHeight: 1.6 }}>
-                    We have no database servers to store or view your contacts, even if we wanted to.
+                    The site only delivers the app. No server receives your contacts, so we could not see them even if we wanted to.
                   </p>
                 </div>
                 <div style={{ paddingTop: 16, marginTop: 16, borderTop: "1px solid #f5f5f4", fontSize: 12, fontWeight: 600, color: "#065f46" }}>No remote storage</div>
@@ -328,7 +321,7 @@ export function PrivacyView() {
                   </div>
                   <h3 style={{ fontWeight: 700, color: "#1c1917", fontSize: 16, marginBottom: 6 }}>One-Click Erase Anytime</h3>
                   <p style={{ color: "#78716c", fontSize: 13, lineHeight: 1.6 }}>
-                    Close your tab or hit reset. Every cached record vanishes permanently without a trace.
+                    Use Reset workspace in Settings and everything NesT saved in this browser is erased. Files you downloaded yourself, like backups, stay where you saved them.
                   </p>
                 </div>
                 <div style={{ paddingTop: 16, marginTop: 16, borderTop: "1px solid #f5f5f4", fontSize: 12, fontWeight: 600, color: "#065f46" }}>You hold full control</div>

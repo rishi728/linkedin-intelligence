@@ -310,7 +310,7 @@ export function Playbook({ hasData, tryIt }: { hasData: boolean; tryIt: (path: s
           </button>
           <button type="button" onClick={() => tryIt(c.go.path)}
             style={{ padding: "9px 18px", borderRadius: 9999, border: "1px solid #a7f3d0", background: "#ecfdf5", fontFamily: "inherit", fontSize: 13, fontWeight: 600, color: "#065f46", cursor: "pointer" }}>
-            {hasData ? c.go.label : `${c.go.label} with sample data`}
+            {hasData ? c.go.label : "Add your data to try this"}
           </button>
           <button type="button" onClick={() => setI((n) => Math.min(CHAPTERS.length - 1, n + 1))} disabled={i === CHAPTERS.length - 1}
             style={{ padding: "9px 22px", borderRadius: 9999, border: "none", background: INK, fontFamily: "inherit", fontSize: 13, fontWeight: 600, color: "#fff", cursor: i === CHAPTERS.length - 1 ? "default" : "pointer", opacity: i === CHAPTERS.length - 1 ? 0.4 : 1 }}>

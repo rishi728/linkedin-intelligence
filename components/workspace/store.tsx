@@ -4,7 +4,6 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { parseConnectionsCsv, type Connection } from "@/lib/analyzer";
 import { describeArchive, parseArchive, type ArchiveResult } from "@/lib/archive";
 import { titleKey, type CustomRule, type RoleHierarchy } from "@/lib/classifier/corrections";
-import { generateSampleCsv } from "@/lib/sample";
 import { archiveSeedPatches, nextCadenceDate, patchPerson, statusChangePatch } from "@/lib/workspace/build";
 import { buildEverything } from "@/lib/workspace/engineClient";
 import type { CompanyOption } from "@/lib/workspace/engine";
@@ -36,7 +35,6 @@ interface DataContext {
   importArchive: (files: Array<{ name: string; text: string }>) => ArchiveSummary;
   completeFollowUp: (id: string) => void;
   restoreSnapshot: (at: string) => void;
-  loadSample: () => void;
   updateRecord: (id: string, patch: PersonRecord | ((rec: PersonRecord) => PersonRecord), activity?: Omit<Activity, "at">) => void;
   setStatus: (ids: string[], status: string) => void;
   setClassification: (id: string, patch: Partial<RoleHierarchy>, learn: null | "exact") => number;
@@ -367,10 +365,6 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     return { total: parsed.length, added, updated: parsed.length - added };
   }, [rows, dataset]);
 
-  const loadSample = useCallback(() => {
-    importCsv(generateSampleCsv(), "sample-connections.csv");
-  }, [importCsv]);
-
   const importArchive = useCallback((files: Array<{ name: string; text: string }>): ArchiveSummary => {
     const parsed: ArchiveResult = parseArchive(files);
     const data: ArchiveData = {
@@ -601,10 +595,10 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
 
   const data = useMemo<DataContext>(() => ({
     ready, dataset, people, building, companies, byId, settings, records, archive, savedAt, snapshots,
-    importCsv, importArchive, loadSample, updateRecord, setStatus, setClassification, resetClassification, updateSettings,
+    importCsv, importArchive, updateRecord, setStatus, setClassification, resetClassification, updateSettings,
     deleteRule, toggleTarget, saveSegment, deleteSegment, createList, updateList, deleteList, addToList, removeFromList, exportBackup, importBackup, resetWorkspace, removeDatasetFile,
     completeFollowUp, restoreSnapshot,
-  }), [ready, dataset, people, building, companies, byId, settings, records, archive, savedAt, snapshots, importCsv, importArchive, loadSample,
+  }), [ready, dataset, people, building, companies, byId, settings, records, archive, savedAt, snapshots, importCsv, importArchive,
     updateRecord, setStatus, setClassification, resetClassification, updateSettings, deleteRule, toggleTarget, saveSegment,
     deleteSegment, createList, updateList, deleteList, addToList, removeFromList,
     exportBackup, importBackup, resetWorkspace, removeDatasetFile, completeFollowUp, restoreSnapshot]);
