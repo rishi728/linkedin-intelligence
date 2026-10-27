@@ -126,7 +126,7 @@ const MOCKS: Record<string, () => ReactNode> = {
   backup: () => (
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
       <Card>
-        <div style={{ fontSize: 12, color: "#334155", lineHeight: 1.6 }}>Saved on this device only. Pick a backup file once and NesT keeps it current in the background.</div>
+        <div style={{ fontSize: 12, color: "#334155", lineHeight: 1.6 }}>Saved on this device only. Pick a backup file once and NEST keeps it current in the background.</div>
       </Card>
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}><Chip on>Backup file</Chip><Chip>Daily snapshots</Chip><Chip>Restore anytime</Chip></div>
     </div>
@@ -141,7 +141,7 @@ interface Chapter {
 const CHAPTERS: Chapter[] = [
   {
     name: "Gather the twigs", short: "Data", where: "Home drop zone, then Data health",
-    hook: "Your network already exists. NesT only needs to see it once.",
+    hook: "Your network already exists. NEST only needs to see it once.",
     steps: [
       "On LinkedIn, request your data archive and choose Larger data only.",
       "Drop the whole .zip in. Your connections arrive, and your message history comes with them.",
@@ -191,7 +191,7 @@ const CHAPTERS: Chapter[] = [
       "Copy the message, open their LinkedIn, and send it yourself.",
       "Mark it sent, skip, or mark not a fit, then move to the next person.",
     ],
-    tip: "You paste and press send on LinkedIn yourself. NesT never touches your account.",
+    tip: "You paste and press send on LinkedIn yourself. NEST never touches your account.",
     mock: "session", go: { label: "Open Outreach", path: "/outreach" },
   },
   {
@@ -220,11 +220,11 @@ const CHAPTERS: Chapter[] = [
     name: "Keep the nest safe", short: "Backup", where: "Settings, then Data and Rules",
     hook: "Your data lives in your browser, so give it a safety net.",
     steps: [
-      "In Settings, Data, pick a backup file once and NesT keeps it current.",
+      "In Settings, Data, pick a backup file once and NEST keeps it current.",
       "Fix a wrongly placed job title in Review, and teach it so the same title lands right next time.",
       "Restore from a backup or a daily snapshot whenever you need to.",
     ],
-    tip: "Clearing your browser data clears NesT too, so keep that backup file.",
+    tip: "Clearing your browser data clears NEST too, so keep that backup file.",
     mock: "backup", go: { label: "Open Settings", path: "/settings" },
   },
 ];

@@ -326,7 +326,7 @@ export function SettingsView() {
           {tab === "outreach" ? (
             <>
               <Card>
-                <CardTitle hint="After you message someone, NesT reminds you to check back if they have not replied">Follow-up reminders</CardTitle>
+                <CardTitle hint="After you message someone, NEST reminds you to check back if they have not replied">Follow-up reminders</CardTitle>
                 <div className="p-4 pt-3">
                   <Checkbox
                     checked={settings.cadence.enabled}

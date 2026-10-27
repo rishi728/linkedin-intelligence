@@ -2,7 +2,7 @@ export function Logo({ size = 24, className }: { size?: number; className?: stri
   return (
     <img
       src="/nest-logo.webp"
-      alt="NesT"
+      alt="NEST"
       width={size}
       height={size}
       className={className}

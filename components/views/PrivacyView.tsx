@@ -321,7 +321,7 @@ export function PrivacyView() {
                   </div>
                   <h3 style={{ fontWeight: 700, color: "#1c1917", fontSize: 16, marginBottom: 6 }}>One-Click Erase Anytime</h3>
                   <p style={{ color: "#78716c", fontSize: 13, lineHeight: 1.6 }}>
-                    Use Reset workspace in Settings and everything NesT saved in this browser is erased. Files you downloaded yourself, like backups, stay where you saved them.
+                    Use Reset workspace in Settings and everything NEST saved in this browser is erased. Files you downloaded yourself, like backups, stay where you saved them.
                   </p>
                 </div>
                 <div style={{ paddingTop: 16, marginTop: 16, borderTop: "1px solid #f5f5f4", fontSize: 12, fontWeight: 600, color: "#065f46" }}>You hold full control</div>

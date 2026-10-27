@@ -178,7 +178,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="flex h-14 items-center justify-between px-4">
           <div className="flex items-center gap-2">
             <Logo size={48} />
-            <span className="text-[14px] font-semibold tracking-tight text-[#0C2D22]">NesT</span>
+            <span className="text-[14px] font-semibold tracking-tight text-[#0C2D22]">NEST</span>
           </div>
           <button type="button" onClick={() => setSidebarOpen(false)} className="text-[#64748b] hover:text-[#0f172a]">
             <X size={18} />

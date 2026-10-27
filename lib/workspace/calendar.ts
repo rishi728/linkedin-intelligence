@@ -19,10 +19,10 @@ export function buildFollowUpCalendar(people: Person[], settings: Settings, toda
   const lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//NesT//Follow-ups//EN",
+    "PRODID:-//NEST//Follow-ups//EN",
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
-    "X-WR-CALNAME:NesT follow-ups",
+    "X-WR-CALNAME:NEST follow-ups",
   ];
 
   for (const p of due) {

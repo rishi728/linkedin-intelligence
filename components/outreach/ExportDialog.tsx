@@ -14,7 +14,7 @@ export function ExportDialog() {
   const { exportRequest, openExport, toast } = useUI();
   const [columns, setColumns] = useState<string[]>(DEFAULT_EXPORT_COLUMNS);
   const [includeSummary, setIncludeSummary] = useState(true);
-  const [fileName, setFileName] = useState(`NesT ${todayISO()}`);
+  const [fileName, setFileName] = useState(`NEST ${todayISO()}`);
   const [busy, setBusy] = useState(false);
   const [filters, setFilters] = useState(exportRequest?.filters ?? {});
   const [request, setRequest] = useState(exportRequest);
@@ -43,7 +43,7 @@ export function ExportDialog() {
       const buffer = await buildTrackerWorkbook(rows, settings, {
         columns,
         includeSummary,
-        title: exportRequest.title ?? "NesT outreach list",
+        title: exportRequest.title ?? "NEST outreach list",
       });
       await downloadWorkbook(buffer, fileName);
       toast(`Exported ${rows.length.toLocaleString()} people.`);

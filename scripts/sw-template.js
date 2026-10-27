@@ -1,4 +1,4 @@
-// NesT offline support. After the first visit the app opens and runs with no connection.
+// NEST offline support. After the first visit the app opens and runs with no connection.
 //
 // It does not depend on the build's file layout: at install it reads the pages it is served and the
 // scripts and styles those pages point to, and saves what it finds. It only handles same-origin GET

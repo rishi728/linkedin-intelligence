@@ -211,7 +211,7 @@ export function WelcomeView() {
           <div className="w-wrap w-header" style={{ maxWidth: 1280, margin: "0 auto", padding: "0 48px", height: 80, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             {/* Logo */}
             <a href="#" className="w-logo" style={{ display: "flex", alignItems: "center", gap: 14, textDecoration: "none" }}>
-              <img src="/nest-logo.webp" alt="NesT" style={{ height: 44, objectFit: "contain" }} />
+              <img src="/nest-logo.webp" alt="NEST" style={{ height: 44, objectFit: "contain" }} />
             </a>
 
             {/* Nav tabs */}
@@ -272,7 +272,7 @@ export function WelcomeView() {
           <section className="hero-glow" style={{ position: "relative", paddingTop: 40, paddingBottom: 80, overflow: "hidden" }}>
             <div className="w-wrap" style={{ maxWidth: 1280, margin: "0 auto", padding: "0 48px" }}>
               <div style={{ display: "flex", justifyContent: "center", marginBottom: 32 }}>
-                <img src="/nest-logo.webp" alt="NesT - Network Engagement & Signal Tracker" style={{ maxWidth: 840, width: "100%" }} />
+                <img src="/nest-logo.webp" alt="NEST - Network Engagement & Signal Tracker" style={{ maxWidth: 840, width: "100%" }} />
               </div>
               <div className="w-split" style={{ display: "grid", gridTemplateColumns: "7fr 5fr", gap: 48, alignItems: "center", marginBottom: 64 }}>
                 {/* Left: headline */}
@@ -1284,7 +1284,7 @@ function PrivacyTabContent({ walkthroughOpen, setWalkthroughOpen }: { walkthroug
                   </div>
                 </div>
                 <h3 style={{ fontWeight: 700, color: "#0f172a", fontSize: 16, marginBottom: 6 }}>One-Click Erase Anytime</h3>
-                <p style={{ color: "#64748b", fontSize: 13, lineHeight: 1.6 }}>Use Reset workspace in Settings and everything NesT saved in this browser is erased. Files you downloaded yourself, like backups, stay where you saved them.</p>
+                <p style={{ color: "#64748b", fontSize: 13, lineHeight: 1.6 }}>Use Reset workspace in Settings and everything NEST saved in this browser is erased. Files you downloaded yourself, like backups, stay where you saved them.</p>
               </div>
               <div style={{ paddingTop: 16, marginTop: 16, borderTop: "1px solid #E8E6DF", fontSize: 12, fontWeight: 600, color: "#065f46" }}>You hold full control</div>
             </div>
